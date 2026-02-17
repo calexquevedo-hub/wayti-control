@@ -3,6 +3,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 import { env } from "./config/env";
@@ -62,12 +63,26 @@ app.use("/api/system-params", systemParamsRoutes);
 // --- CONFIGURAÇÃO DE PRODUÇÃO ---
 const clientDistPath =
   process.env.CLIENT_DIST_PATH || path.join(__dirname, "../../client/dist");
-app.use(express.static(clientDistPath));
+const clientIndexPath = path.join(clientDistPath, "index.html");
+const hasClientBuild = fs.existsSync(clientIndexPath);
+
+if (hasClientBuild) {
+  app.use(express.static(clientDistPath));
+}
+
 app.get("*", (req, res) => {
   if (req.path.startsWith("/api")) {
     return res.status(404).json({ error: "API endpoint not found" });
   }
-  return res.sendFile(path.join(clientDistPath, "index.html"), (err) => {
+
+  if (!hasClientBuild) {
+    return res.status(404).json({
+      error: "Frontend build not found on API service",
+      message: "Use /health or /api/* endpoints. Frontend is deployed separately.",
+    });
+  }
+
+  return res.sendFile(clientIndexPath, (err) => {
     if (err) {
       console.error("Erro ao servir index.html:", err);
       res.status(500).send("Erro ao carregar aplicação (build do frontend não encontrado).");
