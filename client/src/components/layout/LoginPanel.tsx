@@ -42,34 +42,36 @@ export function LoginPanel({ onLogin }: LoginPanelProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit} method="post" autoComplete="on">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium" htmlFor="login-email">
                 E-mail
+                <Input
+                  id="login-email"
+                  name="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="seu.nome@empresa.com.br"
+                  type="email"
+                  autoComplete="username"
+                  aria-label="E-mail"
+                />
               </label>
-              <Input
-                id="login-email"
-                name="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="seu.nome@empresa.com.br"
-                type="email"
-                autoComplete="username"
-              />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium" htmlFor="login-password">
                 Senha
+                <Input
+                  id="login-password"
+                  name="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Digite sua senha"
+                  type="password"
+                  autoComplete="current-password"
+                  aria-label="Senha"
+                />
               </label>
-              <Input
-                id="login-password"
-                name="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Digite sua senha"
-                type="password"
-                autoComplete="current-password"
-              />
             </div>
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <Button className="gap-2" disabled={loading} type="submit">
