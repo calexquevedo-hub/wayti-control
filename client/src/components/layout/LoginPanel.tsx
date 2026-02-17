@@ -44,8 +44,12 @@ export function LoginPanel({ onLogin }: LoginPanelProps) {
         <CardContent>
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">E-mail</label>
+              <label className="text-sm font-medium" htmlFor="login-email">
+                E-mail
+              </label>
               <Input
+                id="login-email"
+                name="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="seu.nome@empresa.com.br"
@@ -54,8 +58,12 @@ export function LoginPanel({ onLogin }: LoginPanelProps) {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Senha</label>
+              <label className="text-sm font-medium" htmlFor="login-password">
+                Senha
+              </label>
               <Input
+                id="login-password"
+                name="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Digite sua senha"
