@@ -159,6 +159,7 @@ async function ensureAdminUser() {
   const updates: Record<string, unknown> = {};
   if (!existing.name) updates.name = "Administrador";
   if (!existing.profile) updates.profile = adminProfile.id;
+  if (!existing.passwordHash) updates.passwordHash = passwordHash;
   if (typeof existing.isActive !== "boolean") updates.isActive = true;
   if (typeof existing.mustChangePassword !== "boolean") updates.mustChangePassword = true;
   if (Object.keys(updates).length) {
