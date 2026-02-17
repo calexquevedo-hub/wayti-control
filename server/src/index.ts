@@ -152,7 +152,7 @@ async function ensureAdminUser() {
       passwordHash,
       profile: adminProfile.id,
       isActive: true,
-      mustChangePassword: true,
+      mustChangePassword: false,
     });
     return;
   }
@@ -161,7 +161,7 @@ async function ensureAdminUser() {
   if (!existing.profile) updates.profile = adminProfile.id;
   if (!existing.passwordHash) updates.passwordHash = passwordHash;
   if (typeof existing.isActive !== "boolean") updates.isActive = true;
-  if (typeof existing.mustChangePassword !== "boolean") updates.mustChangePassword = true;
+  if (existing.mustChangePassword !== false) updates.mustChangePassword = false;
   if (Object.keys(updates).length) {
     await UserModel.findByIdAndUpdate(existing.id, updates);
   }
