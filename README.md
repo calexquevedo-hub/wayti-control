@@ -1,73 +1,120 @@
 # WayTI Control
 
-Aplicação web para gestão de demanda de TI com foco em follow-ups de projetos, contratos, custos, compras e implantações.
+Plataforma full stack para operação de TI com gestão de demandas, chamados, ativos, contratos, automações e controle de acesso por perfil (ACL).
 
-## Stack
-- Frontend: TypeScript + React + Vite + Tailwind CSS + shadcn/ui
-- Backend: Node.js + Express + MongoDB (Mongoose)
+## Visão Geral
 
-## Credenciais de demo
-- E-mail: `admin@admin.com`
-- Senha: `admin123`
+O projeto foi desenhado para operação diária de times de TI com foco em:
+- Visibilidade de fluxo (Kanban de demandas)
+- Execução operacional (chamados, ativos e contratos)
+- Governança (auditoria, aprovações, permissões e cofre)
 
-## Estrutura
-- `client/` interface web
-- `server/` API + MongoDB
+## Arquitetura
 
-## Como rodar (necessita Node.js)
-1. `cd client`
-2. `npm install`
-3. `cp .env.example .env`
-3. `npm run dev`
+- Frontend: React + TypeScript + Vite + Tailwind + Radix UI
+- Backend: Node.js + Express + TypeScript + Mongoose
+- Banco: MongoDB
+- Deploy local/prod simplificado: Docker Compose
 
-Em outro terminal:
-1. `cd server`
-2. `npm install`
-3. `cp .env.example .env`
-4. `npm run dev`
+## Estrutura do Repositório
 
-## Observações
-- O frontend exige a API online para carregar dados.
-- A API já possui endpoints e modelos Mongoose para integrar com MongoDB.
-- Para produção, substitua o login local por autenticação server-side.
+- `client/`: interface web
+- `server/`: API e regras de negócio
+- `docker-compose.yml`: orquestra app + Mongo
+- `Dockerfile`: build multi-stage (frontend + backend)
 
-## Endpoints principais
-- `POST /api/auth/login`
-- `GET /api/demands`
-- `POST /api/demands`
-- `PATCH /api/demands/:id`
-- `POST /api/demands/:id/contact`
-- `POST /api/demands/:id/escalate`
-- `GET /api/external-parties`
-- `GET /api/tickets`
-- `GET /api/reports/summary`
-- `GET /api/reports/executive`
-- `GET /api/vault`
+## Pré-requisitos
 
-## Funcionalidades adicionadas
-- Criação e edição de demandas pelo frontend.
-- CRUD básico de follow-ups com reagendamento e conclusão.
-- Exportação de relatórios em CSV e PDF (via impressão).
-- Filtros e busca por status, tipo e palavra-chave.
-- Detalhes da demanda com linha do tempo.
-- Auditoria básica de alterações (API + interface).
-- Painel executivo com gráficos de orçamento e top demandas.
-- Workflow de aprovação com status, aprovador e notas.
-- Auditoria com filtros por ator e ação.
-- Workflow multi-etapas com SLA configurável.
-- Notificações simuladas (e-mail/Slack) ao mudar status.
-- Evolucao mensal de gastos no dashboard.
-- Cofre de senhas com criptografia AES-256-GCM e auditoria.
+- Node.js 20+ para desenvolvimento do frontend
+- Node.js 18+ para backend local
+- Docker Desktop (opcional, recomendado para ambiente completo)
 
-## Workflow multi-etapas
-- Formato sugerido no campo de etapas: `Etapa|Responsavel|SLA`, separados por vírgula.
-- Exemplo: `Comite Tecnico|Marina|3, Financeiro|Fernanda|4`
+## Execução Local (sem Docker)
 
-## Migracao de datas
-- O modelo agora usa `Date` para `lastUpdate`, `followUps.dueDate` e `audits.at`.
-- Rode **uma vez**:
-  1. `cd server`
-  2. `npm run migrate:dates`
+### 1) Backend
 
-## Cofre de senhas
-- Configure `VAULT_MASTER_KEY` no `.env` do servidor (32 bytes em base64 ou 64 hex).
+```bash
+cd server
+npm install
+cp .env.example .env
+npm run build
+npm run dev
+```
+
+### 2) Frontend
+
+```bash
+cd client
+npm install
+npm run build
+npm run dev
+```
+
+A aplicação frontend por padrão aponta para a API via variável `VITE_API_URL`.
+
+## Execução com Docker
+
+```bash
+docker compose up --build -d
+```
+
+Validação:
+
+```bash
+docker compose ps
+curl -i http://localhost:3000/health
+```
+
+Resposta esperada:
+
+```json
+{"status":"ok"}
+```
+
+## Scripts Principais
+
+### Backend (`server/package.json`)
+
+- `npm run dev`: sobe API em modo desenvolvimento
+- `npm run build`: compila TypeScript
+- `npm run start`: roda build compilado
+- `npm run seed`: cria perfis ACL padrão e migra usuários
+- `npm run migrate:dates`: migração de campos de data
+
+### Frontend (`client/package.json`)
+
+- `npm run dev`: Vite em desenvolvimento
+- `npm run build`: build de produção
+- `npm run preview`: preview local do build
+
+## Segurança e Controle de Acesso
+
+O sistema usa ACL por perfil (`Profile`) com permissões granulares por módulo:
+- `tickets`, `demands`, `assets`, `contracts`: `view/create/edit/delete`
+- `users`: `view/manage`
+- `reports`: `view`
+- `settings`: `manage`
+
+Perfis padrão de sistema:
+- `Administrador`
+- `Técnico`
+- `Solicitante`
+
+Regras de proteção implementadas:
+- Perfil `Administrador` protegido contra alteração de permissões críticas
+- Perfis de sistema não podem ser excluídos
+- Perfil em uso por usuários não pode ser excluído
+
+## Auditoria de Dependências
+
+Auditorias recentes (npm audit) em `client` e `server`:
+- `0 vulnerabilities`
+
+## Projeto no GitHub
+
+Repositório oficial:
+- [https://github.com/calexquevedo-hub/wayti-control](https://github.com/calexquevedo-hub/wayti-control)
+
+## Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para detalhes.
