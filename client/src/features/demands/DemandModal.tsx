@@ -47,10 +47,10 @@ const defaults: DemandFormInput = {
   categoria: "",
   epico: "",
   responsavel: "",
-  prazo: null,
-  proximo_follow_up: null,
-  ultimo_contato: null,
-  escalonar_em: null,
+  prazo: "",
+  proximo_follow_up: "",
+  ultimo_contato: "",
+  escalonar_em: "",
   dono_externo: "",
   impacto: "Médio",
   dependencia: "",
@@ -108,10 +108,10 @@ export function DemandModal({
       categoria: raw.categoria ?? demandToEdit.category ?? "",
       epico: raw.epico ?? demandToEdit.epic ?? "",
       responsavel: raw.responsavel ?? demandToEdit.responsible ?? "",
-      prazo: toDateInput(raw.prazo) ?? null,
-      proximo_follow_up: toDateInput(raw.proximo_follow_up ?? demandToEdit.nextFollowUpAt) ?? null,
-      ultimo_contato: toDateInput(raw.ultimo_contato ?? demandToEdit.lastContactAt) ?? null,
-      escalonar_em: toDateInput(raw.escalonar_em) ?? null,
+      prazo: toDateInput(raw.prazo) ?? "",
+      proximo_follow_up: toDateInput(raw.proximo_follow_up ?? demandToEdit.nextFollowUpAt) ?? "",
+      ultimo_contato: toDateInput(raw.ultimo_contato ?? demandToEdit.lastContactAt) ?? "",
+      escalonar_em: toDateInput(raw.escalonar_em) ?? "",
       dono_externo: raw.dono_externo ?? "",
       impacto: (raw.impacto ?? demandToEdit.impact ?? "Médio") as DemandFormValues["impacto"],
       dependencia: raw.dependencia ?? "",
@@ -176,34 +176,55 @@ export function DemandModal({
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label>Status</Label>
-                  <select className="h-10 rounded-md border border-input bg-transparent px-3 text-sm" {...form.register("status")}> 
-                    <option value="Backlog">Backlog</option>
-                    <option value="Esta semana">Esta semana</option>
-                    <option value="Em execução">Em execução</option>
-                    <option value="Aguardando terceiros">Aguardando terceiros</option>
-                    <option value="Concluído">Concluído</option>
-                    <option value="Cancelado">Cancelado</option>
-                  </select>
+                  <Select
+                    onValueChange={(value) =>
+                      form.setValue("status", value as DemandFormValues["status"], { shouldValidate: true })
+                    }
+                    value={form.watch("status") || "Backlog"}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Backlog">Backlog</SelectItem>
+                      <SelectItem value="Esta semana">Esta semana</SelectItem>
+                      <SelectItem value="Em execução">Em execução</SelectItem>
+                      <SelectItem value="Aguardando terceiros">Aguardando terceiros</SelectItem>
+                      <SelectItem value="Concluído">Concluído</SelectItem>
+                      <SelectItem value="Cancelado">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label>Prioridade</Label>
-                  <select className="h-10 rounded-md border border-input bg-transparent px-3 text-sm" {...form.register("prioridade")}>
-                    <option value="P0">P0</option>
-                    <option value="P1">P1</option>
-                    <option value="P2">P2</option>
-                    <option value="P3">P3</option>
-                  </select>
+                  <Select
+                    onValueChange={(value) =>
+                      form.setValue("prioridade", value as DemandFormValues["prioridade"], { shouldValidate: true })
+                    }
+                    value={form.watch("prioridade") || "P2"}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Prioridade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="P0">P0 - Crítico</SelectItem>
+                      <SelectItem value="P1">P1 - Alta</SelectItem>
+                      <SelectItem value="P2">P2 - Média</SelectItem>
+                      <SelectItem value="P3">P3 - Baixa</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label>Categoria</Label>
                   <Select
-                    value={form.watch("categoria") || undefined}
+                    value={form.watch("categoria") || ""}
                     onValueChange={(value) => form.setValue("categoria", value, { shouldValidate: true })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a categoria" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="">Selecione...</SelectItem>
                       {CATEGORIES.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
@@ -215,13 +236,14 @@ export function DemandModal({
                 <div className="grid gap-2">
                   <Label>Épico</Label>
                   <Select
-                    value={form.watch("epico") || undefined}
+                    value={form.watch("epico") || ""}
                     onValueChange={(value) => form.setValue("epico", value, { shouldValidate: true })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o épico" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="">Selecione...</SelectItem>
                       {EPICS.map((epic) => (
                         <SelectItem key={epic} value={epic}>
                           {epic}
@@ -239,11 +261,11 @@ export function DemandModal({
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label>Prazo Final</Label>
-                  <Input type="date" value={form.watch("prazo") ?? ""} onChange={(e) => form.setValue("prazo", e.target.value || null)} />
+                  <Input type="date" value={form.watch("prazo") || ""} onChange={(e) => form.setValue("prazo", e.target.value || "")} />
                 </div>
                 <div className="grid gap-2">
                   <Label>Próximo Follow-up</Label>
-                  <Input type="date" value={form.watch("proximo_follow_up") ?? ""} onChange={(e) => form.setValue("proximo_follow_up", e.target.value || null)} />
+                  <Input type="date" value={form.watch("proximo_follow_up") || ""} onChange={(e) => form.setValue("proximo_follow_up", e.target.value || "")} />
                 </div>
               </div>
             </TabsContent>
@@ -256,11 +278,21 @@ export function DemandModal({
                 </div>
                 <div className="grid gap-2">
                   <Label>Impacto</Label>
-                  <select className="h-10 rounded-md border border-input bg-transparent px-3 text-sm" {...form.register("impacto")}>
-                    <option value="Alto">Alto</option>
-                    <option value="Médio">Médio</option>
-                    <option value="Baixo">Baixo</option>
-                  </select>
+                  <Select
+                    onValueChange={(value) =>
+                      form.setValue("impacto", value as DemandFormValues["impacto"], { shouldValidate: true })
+                    }
+                    value={form.watch("impacto") || "Médio"}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Impacto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Alto">Alto</SelectItem>
+                      <SelectItem value="Médio">Médio</SelectItem>
+                      <SelectItem value="Baixo">Baixo</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label>Dependência</Label>
@@ -282,11 +314,11 @@ export function DemandModal({
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label>Último contato</Label>
-                  <Input type="date" value={form.watch("ultimo_contato") ?? ""} onChange={(e) => form.setValue("ultimo_contato", e.target.value || null)} />
+                  <Input type="date" value={form.watch("ultimo_contato") || ""} onChange={(e) => form.setValue("ultimo_contato", e.target.value || "")} />
                 </div>
                 <div className="grid gap-2">
                   <Label>Escalonar em</Label>
-                  <Input type="date" value={form.watch("escalonar_em") ?? ""} onChange={(e) => form.setValue("escalonar_em", e.target.value || null)} />
+                  <Input type="date" value={form.watch("escalonar_em") || ""} onChange={(e) => form.setValue("escalonar_em", e.target.value || "")} />
                 </div>
               </div>
             </TabsContent>
