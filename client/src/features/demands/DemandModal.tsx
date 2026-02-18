@@ -61,6 +61,8 @@ const defaults: DemandFormInput = {
   checklist: [],
 };
 
+const EMPTY_SELECT_VALUE = "__none__";
+
 function toDateInput(value: string | Date | null | undefined): string | null {
   if (!value) return null;
   if (value instanceof Date) return value.toISOString().slice(0, 10);
@@ -217,13 +219,16 @@ export function DemandModal({
                 <div className="grid gap-2">
                   <Label>Categoria</Label>
                   <Select
-                    value={form.watch("categoria") || undefined}
-                    onValueChange={(value) => form.setValue("categoria", value, { shouldValidate: true })}
+                    value={form.watch("categoria") || EMPTY_SELECT_VALUE}
+                    onValueChange={(value) =>
+                      form.setValue("categoria", value === EMPTY_SELECT_VALUE ? "" : value, { shouldValidate: true })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a categoria" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value={EMPTY_SELECT_VALUE}>Selecione...</SelectItem>
                       {CATEGORIES.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
@@ -235,13 +240,16 @@ export function DemandModal({
                 <div className="grid gap-2">
                   <Label>Épico</Label>
                   <Select
-                    value={form.watch("epico") || undefined}
-                    onValueChange={(value) => form.setValue("epico", value, { shouldValidate: true })}
+                    value={form.watch("epico") || EMPTY_SELECT_VALUE}
+                    onValueChange={(value) =>
+                      form.setValue("epico", value === EMPTY_SELECT_VALUE ? "" : value, { shouldValidate: true })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o épico" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value={EMPTY_SELECT_VALUE}>Selecione...</SelectItem>
                       {EPICS.map((epic) => (
                         <SelectItem key={epic} value={epic}>
                           {epic}
