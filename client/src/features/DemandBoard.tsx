@@ -12,11 +12,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { fetchDemands, moveDemand } from "@/lib/api";
-import type { Demand, DemandPriority, DemandStatus } from "@/types";
 import { DemandModal } from "@/features/demands/DemandModal";
-import type { DemandFormValues } from "@/features/demands/demand.schema";
 import { KanbanCard } from "@/features/demands/components/KanbanCard";
+import { KanbanColumn } from "@/features/demands/components/KanbanColumn";
+import type { DemandFormValues } from "@/features/demands/demand.schema";
+import { fetchDemands, moveDemand } from "@/lib/api";
+import type { Demand, DemandStatus } from "@/types";
 
 const COLUMNS: DemandStatus[] = [
   "Backlog",
@@ -81,7 +82,6 @@ function toDemandPayload(values: DemandFormValues, current?: Demand): Partial<De
     : 0;
 
   return {
-    // legacy fields used by existing app
     name: values.titulo,
     type: current?.type ?? "projeto",
     category: values.categoria as any,
@@ -106,7 +106,6 @@ function toDemandPayload(values: DemandFormValues, current?: Demand): Partial<De
       isCompleted: item.checado,
     })),
 
-    // new explicit fields for kanban schema
     titulo: values.titulo,
     categoria: values.categoria,
     prioridade: values.prioridade,
@@ -133,6 +132,7 @@ export function DemandBoard({
   onCreate,
   onUpdate,
   onDelete,
+  onAddComment,
 }: DemandBoardProps) {
   const [boardDemands, setBoardDemands] = useState<Demand[]>([]);
   const [search, setSearch] = useState("");
@@ -141,6 +141,7 @@ export function DemandBoard({
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDemand, setEditingDemand] = useState<Demand | null>(null);
+  const [createStatus, setCreateStatus] = useState<DemandStatus>("Backlog");
 
   useEffect(() => {
     let mounted = true;
@@ -180,7 +181,7 @@ export function DemandBoard({
   }, [token]);
 
   const handleDragOver = useCallback((_update: DragUpdate) => {
-    // Intencionalmente vazio: callback estável evita rebind em DragDropContext.
+    // callback estável
   }, []);
 
   const handleCardClick = useCallback((demand: Demand) => {
@@ -188,28 +189,37 @@ export function DemandBoard({
     setModalOpen(true);
   }, []);
 
-  const handleDragEnd = useCallback(async (result: DropResult) => {
-    if (!result.destination) return;
-    const { destination, source, draggableId } = result;
-    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
+  const handleCreateInColumn = useCallback((status: DemandStatus) => {
+    setEditingDemand(null);
+    setCreateStatus(status);
+    setModalOpen(true);
+  }, []);
 
-    const nextStatus = destination.droppableId as DemandStatus;
-    const previous = [...boardDemands];
+  const handleDragEnd = useCallback(
+    async (result: DropResult) => {
+      if (!result.destination) return;
+      const { destination, source, draggableId } = result;
+      if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
-    setBoardDemands((prev) => prev.map((d) => (d.id === draggableId ? { ...d, status: nextStatus } : d)));
+      const nextStatus = destination.droppableId as DemandStatus;
+      const previous = [...boardDemands];
 
-    try {
-      if (token) {
-        await moveDemand(token, draggableId, { status: nextStatus, index: destination.index });
-      } else {
-        const response = await onUpdate(draggableId, { status: nextStatus, lastUpdate: new Date() });
-        if (!response.ok) throw new Error(response.message ?? "Falha ao mover demanda.");
+      setBoardDemands((prev) => prev.map((d) => (d.id === draggableId ? { ...d, status: nextStatus } : d)));
+
+      try {
+        if (token) {
+          await moveDemand(token, draggableId, { status: nextStatus, index: destination.index });
+        } else {
+          const response = await onUpdate(draggableId, { status: nextStatus, lastUpdate: new Date() });
+          if (!response.ok) throw new Error(response.message ?? "Falha ao mover demanda.");
+        }
+      } catch (e: any) {
+        setBoardDemands(previous);
+        setError(e?.message ?? "Falha ao mover demanda.");
       }
-    } catch (e: any) {
-      setBoardDemands(previous);
-      setError(e?.message ?? "Falha ao mover demanda.");
-    }
-  }, [boardDemands, onUpdate, token]);
+    },
+    [boardDemands, onUpdate, token]
+  );
 
   async function saveDemand(values: DemandFormValues, demandId?: string) {
     setError(null);
@@ -225,11 +235,11 @@ export function DemandBoard({
                 ...(toDemandPayload(values, demand) as Partial<Demand>),
                 lastUpdate: new Date(),
               }
-            : demand,
-        ),
+            : demand
+        )
       );
     } else {
-      const optimisticDemand = createOptimisticDemand(values);
+      const optimisticDemand = createOptimisticDemand({ ...values, status: values.status || createStatus });
       setBoardDemands((prev) => [optimisticDemand, ...prev]);
       const payload = toDemandPayload(values) as Omit<Demand, "id">;
       try {
@@ -262,6 +272,7 @@ export function DemandBoard({
           <Button
             onClick={() => {
               setEditingDemand(null);
+              setCreateStatus("Backlog");
               setModalOpen(true);
             }}
           >
@@ -301,18 +312,15 @@ export function DemandBoard({
               const items = filtered.filter((d) => d.status === status);
               return (
                 <Droppable key={status} droppableId={status}>
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className="min-w-[320px] max-w-[360px] rounded-xl border border-border/60 bg-background/40 p-3"
-                    >
-                      <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-sm font-semibold">{status}</h3>
-                        <Badge variant="outline">{items.length}</Badge>
-                      </div>
-
-                      <div className="space-y-3">
+                  {(provided, snapshot) => (
+                    <div ref={provided.innerRef} {...provided.droppableProps}>
+                      <KanbanColumn
+                        title={status}
+                        count={items.length}
+                        isDraggingOver={snapshot.isDraggingOver}
+                        onAddCard={() => handleCreateInColumn(status)}
+                        placeholder={provided.placeholder}
+                      >
                         {items.map((demand, index) => (
                           <Draggable key={demand.id} draggableId={demand.id} index={index}>
                             {(drag) => (
@@ -327,8 +335,7 @@ export function DemandBoard({
                             )}
                           </Draggable>
                         ))}
-                        {provided.placeholder}
-                      </div>
+                      </KanbanColumn>
                     </div>
                   )}
                 </Droppable>
@@ -344,9 +351,13 @@ export function DemandBoard({
           setModalOpen(false);
           setEditingDemand(null);
         }}
+        token={token}
         demandToEdit={editingDemand}
-        onSave={saveDemand}
+        onSave={(values, demandId) =>
+          saveDemand(demandId ? values : { ...values, status: values.status || createStatus }, demandId)
+        }
         onDelete={deleteFromModal}
+        onAddComment={onAddComment}
       />
     </Card>
   );

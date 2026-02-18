@@ -1,7 +1,6 @@
 import { memo } from "react";
 import { CheckSquare, Clock3, DollarSign } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Demand, DemandPriority } from "@/types";
 
@@ -17,16 +16,17 @@ const priorityTone: Record<DemandPriority, string> = {
   P3: "bg-emerald-500",
 };
 
+const categoryTone = [
+  "bg-sky-500",
+  "bg-violet-500",
+  "bg-emerald-500",
+  "bg-amber-500",
+  "bg-rose-500",
+  "bg-cyan-500",
+];
+
 function getTitle(demand: Demand) {
   return ((demand as Demand & { titulo?: string }).titulo ?? demand.name ?? "").trim();
-}
-
-function getCategory(demand: Demand) {
-  return ((demand as Demand & { categoria?: string }).categoria ?? demand.category ?? "").toString();
-}
-
-function getEpic(demand: Demand) {
-  return ((demand as Demand & { epico?: string }).epico ?? demand.epic ?? "").toString();
 }
 
 function getSequentialId(demand: Demand) {
@@ -54,13 +54,18 @@ function getDeadline(demand: Demand): Date | null {
 
 function getDeadlineTone(deadline: Date | null) {
   if (!deadline) return "text-slate-500 dark:text-slate-400";
+
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const due = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
   const diffDays = Math.floor((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (diffDays < 0) return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 rounded px-1.5 py-0.5";
-  if (diffDays <= 2) return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300 rounded px-1.5 py-0.5";
+  if (diffDays < 0) {
+    return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 rounded px-1.5 py-0.5";
+  }
+  if (diffDays <= 2) {
+    return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300 rounded px-1.5 py-0.5";
+  }
   return "text-slate-500 dark:text-slate-400";
 }
 
@@ -78,6 +83,12 @@ function initials(name?: string) {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
+function hashIndex(value: string, size: number) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  return Math.abs(hash) % size;
+}
+
 function KanbanCardBase({ demand, onClick }: KanbanCardProps) {
   const checklist = getChecklistMeta(demand);
   const deadline = getDeadline(demand);
@@ -86,6 +97,9 @@ function KanbanCardBase({ demand, onClick }: KanbanCardProps) {
   const oneOff = Number((demand as Demand & { financeiro_one_off?: number }).financeiro_one_off ?? demand.financialOneOff ?? 0);
   const totalFinancial = monthly + oneOff;
   const isChecklistDone = checklist.total > 0 && checklist.done === checklist.total;
+  const category = ((demand as Demand & { categoria?: string }).categoria ?? demand.category ?? "").toString();
+  const epic = ((demand as Demand & { epico?: string }).epico ?? demand.epic ?? "").toString();
+  const categoryBarTone = categoryTone[hashIndex(category || epic || demand.id, categoryTone.length)];
 
   return (
     <Card
@@ -95,16 +109,9 @@ function KanbanCardBase({ demand, onClick }: KanbanCardProps) {
       <CardContent className="p-3">
         <div className="mb-2 flex items-start justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1">
-            <span className={`inline-block h-1.5 w-8 rounded-full ${priorityTone[demand.priority]}`} title={`Prioridade ${demand.priority}`} />
-            {getCategory(demand) ? (
-              <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-normal">
-                {getCategory(demand)}
-              </Badge>
-            ) : null}
-            {getEpic(demand) ? (
-              <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-normal">
-                {getEpic(demand)}
-              </Badge>
+            <span className={`inline-block h-2 w-12 rounded-full ${priorityTone[demand.priority]}`} title={`Prioridade ${demand.priority}`} />
+            {(category || epic) ? (
+              <span className={`inline-block h-2 w-12 rounded-full ${categoryBarTone}`} title={category || epic} />
             ) : null}
           </div>
           <span className="font-mono text-[10px] text-slate-400">{getSequentialId(demand)}</span>

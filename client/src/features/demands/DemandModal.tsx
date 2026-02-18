@@ -1,22 +1,31 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
+import {
+  Archive,
+  CalendarDays,
+  CheckSquare,
+  Copy,
+  DollarSign,
+  ListTodo,
+  MessageSquare,
+  Plus,
+  Trash2,
+  UserCircle2,
+} from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -24,8 +33,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { fetchDomainItems } from "@/lib/api";
 import type { Demand } from "@/types";
-import { CATEGORIES, EPICS } from "./constants";
 import {
   demandSchema,
   type DemandFormInput,
@@ -35,10 +45,14 @@ import {
 interface DemandModalProps {
   isOpen: boolean;
   onClose: () => void;
+  token?: string;
   demandToEdit?: Demand | null;
   onSave: (values: DemandFormValues, demandId?: string) => Promise<void>;
   onDelete?: (demandId: string) => Promise<void>;
+  onAddComment?: (demandId: string, message: string) => Promise<{ ok: boolean; message?: string }>;
 }
+
+const EMPTY_SELECT_VALUE = "__none__";
 
 const defaults: DemandFormInput = {
   titulo: "",
@@ -61,22 +75,35 @@ const defaults: DemandFormInput = {
   checklist: [],
 };
 
-const EMPTY_SELECT_VALUE = "__none__";
-
-function toDateInput(value: string | Date | null | undefined): string | null {
-  if (!value) return null;
+function toDateInput(value: string | Date | null | undefined): string {
+  if (!value) return "";
   if (value instanceof Date) return value.toISOString().slice(0, 10);
   return String(value).slice(0, 10);
+}
+
+function toDate(value: unknown): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  const parsed = new Date(String(value));
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 export function DemandModal({
   isOpen,
   onClose,
+  token,
   demandToEdit,
   onSave,
   onDelete,
+  onAddComment,
 }: DemandModalProps) {
   const isEdit = Boolean(demandToEdit?.id);
+  const [saving, setSaving] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [epicOptions, setEpicOptions] = useState<string[]>([]);
+  const [domainsLoading, setDomainsLoading] = useState(false);
 
   const form = useForm<DemandFormInput, unknown, DemandFormValues>({
     resolver: zodResolver(demandSchema),
@@ -96,11 +123,11 @@ export function DemandModal({
       return;
     }
 
-    const raw = demandToEdit as any;
+    const raw = demandToEdit as Demand & Record<string, any>;
     const checklist = Array.isArray(raw.checklist)
       ? raw.checklist
       : Array.isArray(demandToEdit.tasks)
-      ? demandToEdit.tasks.map((t: any) => ({ texto: t.title ?? "", checado: Boolean(t.isCompleted) }))
+      ? demandToEdit.tasks.map((task) => ({ texto: task.title ?? "", checado: Boolean(task.isCompleted) }))
       : [];
 
     form.reset({
@@ -110,10 +137,10 @@ export function DemandModal({
       categoria: raw.categoria ?? demandToEdit.category ?? "",
       epico: raw.epico ?? demandToEdit.epic ?? "",
       responsavel: raw.responsavel ?? demandToEdit.responsible ?? "",
-      prazo: toDateInput(raw.prazo) ?? "",
-      proximo_follow_up: toDateInput(raw.proximo_follow_up ?? demandToEdit.nextFollowUpAt) ?? "",
-      ultimo_contato: toDateInput(raw.ultimo_contato ?? demandToEdit.lastContactAt) ?? "",
-      escalonar_em: toDateInput(raw.escalonar_em) ?? "",
+      prazo: toDateInput(raw.prazo),
+      proximo_follow_up: toDateInput(raw.proximo_follow_up ?? demandToEdit.nextFollowUpAt),
+      ultimo_contato: toDateInput(raw.ultimo_contato ?? demandToEdit.lastContactAt),
+      escalonar_em: toDateInput(raw.escalonar_em),
       dono_externo: raw.dono_externo ?? "",
       impacto: (raw.impacto ?? demandToEdit.impact ?? "Médio") as DemandFormValues["impacto"],
       dependencia: raw.dependencia ?? "",
@@ -123,66 +150,234 @@ export function DemandModal({
       financeiro_one_off: Number(raw.financeiro_one_off ?? demandToEdit.financialOneOff ?? 0),
       checklist,
     });
-  }, [isOpen, demandToEdit, form]);
+  }, [demandToEdit, form, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !token) return;
+    let mounted = true;
+
+    setDomainsLoading(true);
+    Promise.all([fetchDomainItems(token, "CATEGORY"), fetchDomainItems(token, "EPIC")])
+      .then(([categories, epics]) => {
+        if (!mounted) return;
+        setCategoryOptions(categories.map((item) => item.label));
+        setEpicOptions(epics.map((item) => item.label));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setCategoryOptions([]);
+        setEpicOptions([]);
+      })
+      .finally(() => {
+        if (mounted) setDomainsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [isOpen, token]);
 
   const checklist = form.watch("checklist") ?? [];
-  const done = checklist.filter((i) => i.checado).length;
-  const progress = checklist.length ? Math.round((done / checklist.length) * 100) : 0;
+  const doneChecklist = checklist.filter((item) => item.checado).length;
+  const checklistProgress = checklist.length ? Math.round((doneChecklist / checklist.length) * 100) : 0;
 
-  async function submit(values: DemandFormValues) {
-    await onSave(values, demandToEdit?.id);
-    onClose();
+  const activity = useMemo(() => {
+    if (!demandToEdit) return [];
+    const comments = (demandToEdit.comments ?? []).map((comment) => ({
+      at: toDate(comment.at) ?? new Date(),
+      author: comment.author,
+      text: comment.message,
+      type: "comment" as const,
+    }));
+
+    const audits = (demandToEdit.audits ?? []).map((audit) => ({
+      at: toDate(audit.at) ?? new Date(),
+      author: audit.actor,
+      text: audit.notes ?? `${audit.action}${audit.field ? ` (${audit.field})` : ""}`,
+      type: "audit" as const,
+    }));
+
+    return [...comments, ...audits]
+      .sort((a, b) => b.at.getTime() - a.at.getTime())
+      .slice(0, 25);
+  }, [demandToEdit]);
+
+  async function handleSubmit(values: DemandFormValues) {
+    setSaving(true);
+    setStatusMsg(null);
+    try {
+      await onSave(values, demandToEdit?.id);
+      onClose();
+    } catch (error: any) {
+      setStatusMsg(error?.message ?? "Falha ao salvar demanda.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  async function removeDemand() {
+  async function handleDelete() {
     if (!isEdit || !demandToEdit?.id || !onDelete) return;
     await onDelete(demandToEdit.id);
     onClose();
   }
 
+  async function handleAddComment() {
+    if (!demandToEdit?.id || !onAddComment || !commentDraft.trim()) return;
+    const result = await onAddComment(demandToEdit.id, commentDraft.trim());
+    if (!result.ok) {
+      setStatusMsg(result.message ?? "Falha ao comentar.");
+      return;
+    }
+    setCommentDraft("");
+    setStatusMsg("Comentário registrado. Reabra o card para atualizar a atividade.");
+  }
+
+  const categoryChoices = useMemo(() => {
+    const current = form.watch("categoria");
+    const values = [...categoryOptions];
+    if (current && !values.includes(current)) values.push(current);
+    return values;
+  }, [categoryOptions, form]);
+
+  const epicChoices = useMemo(() => {
+    const current = form.watch("epico");
+    const values = [...epicOptions];
+    if (current && !values.includes(current)) values.push(current);
+    return values;
+  }, [epicOptions, form]);
+
   return (
     <Dialog open={isOpen} onOpenChange={(next) => !next && onClose()}>
-      <DialogContent className="max-w-5xl p-0 overflow-hidden">
-        <div className="sticky top-0 z-10 border-b bg-background px-6 py-4">
-          <DialogHeader className="m-0">
-            <div className="flex items-center justify-between">
-              <DialogTitle>{isEdit ? "Editar Demanda" : "Nova Demanda"}</DialogTitle>
-              <div className="flex items-center gap-2">
-                {isEdit ? (
-                  <Badge variant="secondary">
-                    #{(demandToEdit as Demand & { sequentialId?: number })?.sequentialId ?? demandToEdit?.id}
-                  </Badge>
-                ) : null}
-                <Badge variant="outline">{form.watch("status")}</Badge>
-              </div>
+      <DialogContent className="max-h-[92vh] max-w-6xl overflow-y-auto p-0">
+        <DialogHeader className="border-b px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <DialogTitle className="text-xl font-semibold">
+                {form.watch("titulo") || (isEdit ? "Editar Demanda" : "Nova Demanda")}
+              </DialogTitle>
+              <DialogDescription>
+                {isEdit
+                  ? `na lista ${form.watch("status")}${demandToEdit?.sequentialId ? ` • #${demandToEdit.sequentialId}` : ""}`
+                  : `na lista ${form.watch("status")}`}
+              </DialogDescription>
             </div>
-          </DialogHeader>
-        </div>
+            <Badge variant="outline">{form.watch("prioridade")}</Badge>
+          </div>
+        </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(submit)} className="max-h-[78vh] overflow-y-auto px-6 py-4">
-          <Tabs defaultValue="geral" className="w-full">
-            <TabsList className="grid grid-cols-4 w-full">
-              <TabsTrigger value="geral">Visão Geral</TabsTrigger>
-              <TabsTrigger value="detalhes">Detalhes & Contexto</TabsTrigger>
-              <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-              <TabsTrigger value="checklist">Checklist</TabsTrigger>
-            </TabsList>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="grid grid-cols-12 gap-6 px-6 py-5">
+          <section className="col-span-12 space-y-6 lg:col-span-8">
+            <div className="space-y-2">
+              <Label htmlFor="titulo">Título</Label>
+              <Input id="titulo" {...form.register("titulo")} />
+              {form.formState.errors.titulo ? (
+                <p className="text-xs text-destructive">{form.formState.errors.titulo.message}</p>
+              ) : null}
+            </div>
 
-            <TabsContent value="geral" className="space-y-4 mt-4">
-              <div className="grid gap-2">
-                <Label htmlFor="titulo">Título</Label>
-                <Input id="titulo" {...form.register("titulo")} />
-                {form.formState.errors.titulo ? <p className="text-xs text-destructive">{form.formState.errors.titulo.message}</p> : null}
+            <div className="space-y-2">
+              <Label htmlFor="resumo_executivo">Descrição</Label>
+              <Textarea id="resumo_executivo" rows={7} {...form.register("resumo_executivo")} />
+            </div>
+
+            <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="inline-flex items-center gap-2 text-sm font-medium">
+                  <ListTodo className="h-4 w-4" /> Checklist
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {doneChecklist}/{checklist.length}
+                </span>
+              </div>
+              <Progress value={checklistProgress} className="mb-3" />
+
+              <div className="space-y-2">
+                {checklistArray.fields.map((item, index) => (
+                  <div key={item.id} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(form.watch(`checklist.${index}.checado`))}
+                      onChange={(event) =>
+                        form.setValue(`checklist.${index}.checado`, event.target.checked)
+                      }
+                      className="h-4 w-4"
+                    />
+                    <Input {...form.register(`checklist.${index}.texto`)} />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => checklistArray.remove(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-3"
+                onClick={() => checklistArray.append({ texto: "", checado: false })}
+              >
+                <Plus className="mr-2 h-4 w-4" /> Adicionar item
+              </Button>
+            </div>
+
+            <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+              <div className="mb-3 inline-flex items-center gap-2 text-sm font-medium">
+                <MessageSquare className="h-4 w-4" /> Atividade
+              </div>
+              <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+                {activity.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sem histórico ainda.</p>
+                ) : (
+                  activity.map((item, index) => (
+                    <div key={`${item.at.toISOString()}-${index}`} className="rounded-md border border-border/50 p-2">
+                      <p className="text-xs text-muted-foreground">
+                        {item.author} • {item.at.toLocaleString("pt-BR")}
+                      </p>
+                      <p className="text-sm">{item.text}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {isEdit ? (
+                <div className="mt-3 flex gap-2">
+                  <Input
+                    value={commentDraft}
+                    onChange={(event) => setCommentDraft(event.target.value)}
+                    placeholder="Escrever um comentário..."
+                  />
+                  <Button type="button" onClick={handleAddComment}>Comentar</Button>
+                </div>
+              ) : null}
+            </div>
+          </section>
+
+          <aside className="col-span-12 space-y-4 lg:col-span-4">
+            <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+              <p className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Propriedades</p>
+
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label className="inline-flex items-center gap-1">
+                    <UserCircle2 className="h-3.5 w-3.5" /> Membro
+                  </Label>
+                  <Input {...form.register("responsavel")} />
+                </div>
+
+                <div className="space-y-1">
                   <Label>Status</Label>
                   <Select
-                    onValueChange={(value) =>
-                      form.setValue("status", value as DemandFormValues["status"], { shouldValidate: true })
-                    }
                     value={form.watch("status") || "Backlog"}
+                    onValueChange={(value) =>
+                      form.setValue("status", value as DemandFormValues["status"], {
+                        shouldValidate: true,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Status" />
@@ -197,13 +392,16 @@ export function DemandModal({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2">
+
+                <div className="space-y-1">
                   <Label>Prioridade</Label>
                   <Select
-                    onValueChange={(value) =>
-                      form.setValue("prioridade", value as DemandFormValues["prioridade"], { shouldValidate: true })
-                    }
                     value={form.watch("prioridade") || "P2"}
+                    onValueChange={(value) =>
+                      form.setValue("prioridade", value as DemandFormValues["prioridade"], {
+                        shouldValidate: true,
+                      })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Prioridade" />
@@ -216,183 +414,123 @@ export function DemandModal({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2">
+
+                <div className="space-y-1">
                   <Label>Categoria</Label>
                   <Select
                     value={form.watch("categoria") || EMPTY_SELECT_VALUE}
                     onValueChange={(value) =>
-                      form.setValue("categoria", value === EMPTY_SELECT_VALUE ? "" : value, { shouldValidate: true })
+                      form.setValue("categoria", value === EMPTY_SELECT_VALUE ? "" : value, {
+                        shouldValidate: true,
+                      })
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione a categoria" />
+                      <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={EMPTY_SELECT_VALUE}>Selecione...</SelectItem>
-                      {CATEGORIES.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
+                      {domainsLoading ? (
+                        <SelectItem value="__loading_category__" disabled>
+                          Carregando...
                         </SelectItem>
-                      ))}
+                      ) : categoryChoices.length === 0 ? (
+                        <SelectItem value="__empty_category__" disabled>
+                          Sem categorias
+                        </SelectItem>
+                      ) : (
+                        categoryChoices.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2">
+
+                <div className="space-y-1">
                   <Label>Épico</Label>
                   <Select
                     value={form.watch("epico") || EMPTY_SELECT_VALUE}
                     onValueChange={(value) =>
-                      form.setValue("epico", value === EMPTY_SELECT_VALUE ? "" : value, { shouldValidate: true })
+                      form.setValue("epico", value === EMPTY_SELECT_VALUE ? "" : value, {
+                        shouldValidate: true,
+                      })
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o épico" />
+                      <SelectValue placeholder="Épico" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={EMPTY_SELECT_VALUE}>Selecione...</SelectItem>
-                      {EPICS.map((epic) => (
-                        <SelectItem key={epic} value={epic}>
-                          {epic}
+                      {domainsLoading ? (
+                        <SelectItem value="__loading_epic__" disabled>
+                          Carregando...
                         </SelectItem>
-                      ))}
+                      ) : epicChoices.length === 0 ? (
+                        <SelectItem value="__empty_epic__" disabled>
+                          Sem épicos
+                        </SelectItem>
+                      ) : (
+                        epicChoices.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2 md:col-span-2">
-                  <Label>Responsável</Label>
-                  <Input {...form.register("responsavel")} />
-                </div>
-              </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Prazo Final</Label>
-                  <Input type="date" value={form.watch("prazo") || ""} onChange={(e) => form.setValue("prazo", e.target.value || "")} />
+                <div className="space-y-1">
+                  <Label className="inline-flex items-center gap-1">
+                    <CalendarDays className="h-3.5 w-3.5" /> Prazo
+                  </Label>
+                  <Input
+                    type="date"
+                    value={form.watch("prazo") || ""}
+                    onChange={(event) => form.setValue("prazo", event.target.value || "")}
+                  />
                 </div>
-                <div className="grid gap-2">
-                  <Label>Próximo Follow-up</Label>
-                  <Input type="date" value={form.watch("proximo_follow_up") || ""} onChange={(e) => form.setValue("proximo_follow_up", e.target.value || "")} />
-                </div>
-              </div>
-            </TabsContent>
 
-            <TabsContent value="detalhes" className="space-y-4 mt-4">
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="grid gap-2">
-                  <Label>Dono Externo</Label>
-                  <Input {...form.register("dono_externo")} />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Impacto</Label>
-                  <Select
-                    onValueChange={(value) =>
-                      form.setValue("impacto", value as DemandFormValues["impacto"], { shouldValidate: true })
-                    }
-                    value={form.watch("impacto") || "Médio"}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Impacto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Alto">Alto</SelectItem>
-                      <SelectItem value="Médio">Médio</SelectItem>
-                      <SelectItem value="Baixo">Baixo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Dependência</Label>
-                  <Input {...form.register("dependencia")} />
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>Resumo Executivo</Label>
-                <Textarea rows={5} {...form.register("resumo_executivo")} />
-              </div>
-
-              <div className="grid gap-2">
-                <Label>Link/Evidência</Label>
-                <Input {...form.register("link_evidencia")} placeholder="https://..." />
-                {form.formState.errors.link_evidencia ? <p className="text-xs text-destructive">{form.formState.errors.link_evidencia.message}</p> : null}
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Último contato</Label>
-                  <Input type="date" value={form.watch("ultimo_contato") || ""} onChange={(e) => form.setValue("ultimo_contato", e.target.value || "")} />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Escalonar em</Label>
-                  <Input type="date" value={form.watch("escalonar_em") || ""} onChange={(e) => form.setValue("escalonar_em", e.target.value || "")} />
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="financeiro" className="space-y-4 mt-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Financeiro Mensal</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
-                    <Input type="number" step="0.01" inputMode="decimal" className="pl-9" {...form.register("financeiro_mensal")} />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Financeiro One-off</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
-                    <Input type="number" step="0.01" inputMode="decimal" className="pl-9" {...form.register("financeiro_one_off")} />
+                <div className="space-y-1">
+                  <Label className="inline-flex items-center gap-1">
+                    <DollarSign className="h-3.5 w-3.5" /> Financeiro (R$)
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="number" step="0.01" {...form.register("financeiro_mensal")} />
+                    <Input type="number" step="0.01" {...form.register("financeiro_one_off")} />
                   </div>
                 </div>
               </div>
-            </TabsContent>
+            </div>
 
-            <TabsContent value="checklist" className="space-y-4 mt-4">
+            <div className="rounded-lg border border-border/60 bg-background/60 p-4">
+              <p className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Ações</p>
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Progresso</span>
-                  <span>{done}/{checklist.length}</span>
-                </div>
-                <Progress value={progress} />
-              </div>
-
-              <div className="space-y-2">
-                {checklistArray.fields.map((item, index) => (
-                  <div key={item.id} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(form.watch(`checklist.${index}.checado`))}
-                      onChange={(e) => form.setValue(`checklist.${index}.checado`, e.target.checked)}
-                      className="h-4 w-4"
-                    />
-                    <Input {...form.register(`checklist.${index}.texto`)} />
-                    <Button type="button" variant="ghost" size="icon" onClick={() => checklistArray.remove(index)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              <Button type="button" variant="outline" onClick={() => checklistArray.append({ texto: "", checado: false })}>
-                <Plus className="h-4 w-4 mr-2" /> Adicionar Item
-              </Button>
-            </TabsContent>
-          </Tabs>
-
-          <DialogFooter className="mt-6 flex items-center justify-between">
-            <div>
-              {isEdit ? (
-                <Button type="button" variant="destructive" onClick={removeDemand}>
-                  Excluir Demanda
+                <Button type="submit" className="w-full" disabled={saving}>
+                  {saving ? "Salvando..." : "Salvar"}
                 </Button>
-              ) : null}
+                <Button type="button" variant="outline" className="w-full" disabled>
+                  <Copy className="mr-2 h-4 w-4" /> Copiar
+                </Button>
+                <Button type="button" variant="outline" className="w-full" disabled>
+                  <Archive className="mr-2 h-4 w-4" /> Arquivar
+                </Button>
+                {isEdit ? (
+                  <Button type="button" variant="destructive" className="w-full" onClick={handleDelete}>
+                    <Trash2 className="mr-2 h-4 w-4" /> Excluir
+                  </Button>
+                ) : null}
+                <Button type="button" variant="ghost" className="w-full" onClick={onClose}>
+                  Cancelar
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
-              <Button type="submit">{isEdit ? "Salvar alterações" : "Criar demanda"}</Button>
-            </div>
-          </DialogFooter>
+
+            {statusMsg ? <p className="text-xs text-amber-600 dark:text-amber-300">{statusMsg}</p> : null}
+          </aside>
         </form>
       </DialogContent>
     </Dialog>
