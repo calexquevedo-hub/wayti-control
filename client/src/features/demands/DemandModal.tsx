@@ -128,7 +128,7 @@ function FollowUpPicker({
           {selectedDate ? format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) : "Definir Follow-up"}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto p-0">
+      <PopoverContent align="start" className="w-auto min-w-[320px] p-0">
         <div className="w-[320px] p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Definir Follow-up
