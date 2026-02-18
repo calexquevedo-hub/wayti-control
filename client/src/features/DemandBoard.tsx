@@ -37,6 +37,48 @@ interface DemandBoardProps {
   onAddComment: (id: string, message: string) => Promise<{ ok: boolean; message?: string }>;
 }
 
+function isBlank(value: unknown) {
+  return typeof value !== "string" || value.trim().length === 0;
+}
+
+function mergeDemandIdentity(next: Demand, prev?: Demand): Demand {
+  if (!prev) return next;
+
+  const categoria = !isBlank((next as any).categoria)
+    ? String((next as any).categoria)
+    : !isBlank((next as any).category)
+    ? String((next as any).category)
+    : !isBlank((prev as any).categoria)
+    ? String((prev as any).categoria)
+    : String((prev as any).category ?? "");
+
+  const epico = !isBlank((next as any).epico)
+    ? String((next as any).epico)
+    : !isBlank((next as any).epic)
+    ? String((next as any).epic)
+    : !isBlank((prev as any).epico)
+    ? String((prev as any).epico)
+    : String((prev as any).epic ?? "");
+
+  const responsavel = !isBlank((next as any).responsavel)
+    ? String((next as any).responsavel)
+    : !isBlank((next as any).responsible)
+    ? String((next as any).responsible)
+    : !isBlank((prev as any).responsavel)
+    ? String((prev as any).responsavel)
+    : String((prev as any).responsible ?? "");
+
+  return {
+    ...next,
+    categoria,
+    category: ((next as any).category || categoria) as Demand["category"],
+    epico,
+    epic: (next as any).epic || epico,
+    responsavel,
+    responsible: (next as any).responsible || responsavel,
+  };
+}
+
 function createOptimisticDemand(values: DemandFormValues): Demand {
   const now = new Date();
   const progress = values.checklist.length
@@ -153,7 +195,12 @@ export function DemandBoard({
       }
       try {
         const data = await fetchDemands(token);
-        if (mounted) setBoardDemands(data);
+        if (mounted) {
+          setBoardDemands((prev) => {
+            const prevById = new Map(prev.map((item) => [item.id, item]));
+            return data.map((item) => mergeDemandIdentity(item, prevById.get(item.id)));
+          });
+        }
       } catch {
         if (mounted) setBoardDemands(demands);
       }
@@ -177,7 +224,10 @@ export function DemandBoard({
   const reloadDemands = useCallback(async () => {
     if (!token) return;
     const data = await fetchDemands(token);
-    setBoardDemands(data);
+    setBoardDemands((prev) => {
+      const prevById = new Map(prev.map((item) => [item.id, item]));
+      return data.map((item) => mergeDemandIdentity(item, prevById.get(item.id)));
+    });
   }, [token]);
 
   const handleDragOver = useCallback((_update: DragUpdate) => {
