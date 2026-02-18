@@ -163,7 +163,8 @@ export function AccessControl({ token }: AccessControlProps) {
         });
         setUsers((prev) => [data.user, ...prev]);
         setTempPassword(data.tempPassword);
-        setUsersStatus("Usuário criado com sucesso.");
+        setUsersStatus(`Usuário criado com sucesso. Senha temporária: ${data.tempPassword}`);
+        setUserDialogOpen(false);
       } else {
         const updated = await updateUser(token, userDraft.id, {
           name: userDraft.name.trim(),
@@ -289,7 +290,9 @@ export function AccessControl({ token }: AccessControlProps) {
                 Novo usuário
               </Button>
             </div>
-            {usersStatus ? <p className="text-xs text-amber-300">{usersStatus}</p> : null}
+            {usersStatus ? (
+              <p className="text-xs text-amber-700 dark:text-amber-300">{usersStatus}</p>
+            ) : null}
             {users.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
                 Nenhum usuário cadastrado.
@@ -366,7 +369,9 @@ export function AccessControl({ token }: AccessControlProps) {
                 Criar novo perfil
               </Button>
             </div>
-            {profilesStatus ? <p className="text-xs text-amber-300">{profilesStatus}</p> : null}
+            {profilesStatus ? (
+              <p className="text-xs text-amber-700 dark:text-amber-300">{profilesStatus}</p>
+            ) : null}
             {profiles.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
                 Nenhum perfil cadastrado.
@@ -484,7 +489,7 @@ export function AccessControl({ token }: AccessControlProps) {
               </select>
             </div>
             {tempPassword ? (
-              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-200">
+              <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200">
                 Senha temporária: <span className="font-semibold">{tempPassword}</span>
               </div>
             ) : null}
