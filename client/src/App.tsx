@@ -399,21 +399,31 @@ export default function App() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Nova senha</label>
+              <label className="text-sm font-medium" htmlFor="first-access-new-password">
+                Nova senha
+              </label>
               <Input
+                id="first-access-new-password"
+                name="newPassword"
                 type="password"
                 value={passwordDraft}
                 onChange={(event) => setPasswordDraft(event.target.value)}
                 placeholder="Mínimo de 8 caracteres"
+                autoComplete="new-password"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Confirmar senha</label>
+              <label className="text-sm font-medium" htmlFor="first-access-confirm-password">
+                Confirmar senha
+              </label>
               <Input
+                id="first-access-confirm-password"
+                name="confirmPassword"
                 type="password"
                 value={passwordConfirm}
                 onChange={(event) => setPasswordConfirm(event.target.value)}
                 placeholder="Repita a senha"
+                autoComplete="new-password"
               />
             </div>
             {passwordError ? <p className="text-sm text-destructive">{passwordError}</p> : null}

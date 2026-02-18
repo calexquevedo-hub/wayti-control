@@ -39,6 +39,10 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
+      <DialogPrimitive.Title className="sr-only">Janela</DialogPrimitive.Title>
+      <DialogPrimitive.Description className="sr-only">
+        Conteúdo da janela de diálogo.
+      </DialogPrimitive.Description>
       {children}
       <DialogClose className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
         <X className="h-4 w-4" />
