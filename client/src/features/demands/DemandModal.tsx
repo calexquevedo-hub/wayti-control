@@ -93,6 +93,85 @@ function toDate(value: unknown): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function FollowUpPicker({
+  value,
+  open,
+  onOpenChange,
+  onChange,
+}: {
+  value?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onChange: (value: string) => void;
+}) {
+  const selectedDate = useMemo(() => {
+    if (!value) return undefined;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  }, [value]);
+
+  const setDate = (date?: Date) => {
+    if (!date) {
+      onChange("");
+      onOpenChange(false);
+      return;
+    }
+    onChange(format(date, "yyyy-MM-dd"));
+    onOpenChange(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>
+        <Button type="button" variant="outline" className="w-full justify-start">
+          <CalendarClock className="mr-2 h-4 w-4" />
+          {selectedDate ? format(selectedDate, "dd/MM/yyyy", { locale: ptBR }) : "Definir Follow-up"}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto p-0">
+        <div className="w-[320px] p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Definir Follow-up
+          </p>
+          <div className="mb-3 grid grid-cols-2 gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={() => setDate(addDays(new Date(), 1))}>
+              Amanhã
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setDate(addDays(new Date(), 3))}>
+              +3 Dias
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setDate(addDays(new Date(), 7))}>
+              Próx. Semana
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setDate(addMonths(new Date(), 1))}>
+              Próx. Mês
+            </Button>
+          </div>
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => setDate(date)}
+            locale={ptBR}
+            initialFocus
+            className="rounded-md border"
+          />
+          <div className="mt-2 border-t pt-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="w-full justify-start text-muted-foreground"
+              onClick={() => setDate(undefined)}
+            >
+              Limpar Data
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function DemandModal({
   isOpen,
   onClose,
@@ -310,24 +389,6 @@ export function DemandModal({
   }, [form, users]);
 
   const followUpValue = form.watch("proximo_follow_up");
-  const selectedFollowUpDate = useMemo(() => {
-    if (!followUpValue) return undefined;
-    const parsed = new Date(followUpValue);
-    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
-  }, [followUpValue]);
-
-  const setFollowUpDate = (date?: Date) => {
-    if (!date) {
-      form.setValue("proximo_follow_up", "", { shouldValidate: true, shouldDirty: true });
-      setFollowUpPickerOpen(false);
-      return;
-    }
-    form.setValue("proximo_follow_up", format(date, "yyyy-MM-dd"), {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-    setFollowUpPickerOpen(false);
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(next) => !next && onClose()}>
@@ -615,44 +676,17 @@ export function DemandModal({
                   <Label className="inline-flex items-center gap-1">
                     <CalendarClock className="h-3.5 w-3.5" /> Próximo Follow-up
                   </Label>
-                  <Popover open={followUpPickerOpen} onOpenChange={setFollowUpPickerOpen}>
-                    <PopoverTrigger asChild>
-                      <Button type="button" variant="outline" className="w-full justify-start">
-                        <CalendarClock className="mr-2 h-4 w-4" />
-                        {selectedFollowUpDate
-                          ? format(selectedFollowUpDate, "dd/MM/yyyy", { locale: ptBR })
-                          : "Definir Follow-up"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="w-auto p-3">
-                      <div className="mb-3 grid grid-cols-2 gap-2">
-                        <Button type="button" size="sm" variant="outline" onClick={() => setFollowUpDate(addDays(new Date(), 1))}>
-                          Amanhã
-                        </Button>
-                        <Button type="button" size="sm" variant="outline" onClick={() => setFollowUpDate(addDays(new Date(), 3))}>
-                          +3 Dias
-                        </Button>
-                        <Button type="button" size="sm" variant="outline" onClick={() => setFollowUpDate(addDays(new Date(), 7))}>
-                          Próx. Semana
-                        </Button>
-                        <Button type="button" size="sm" variant="outline" onClick={() => setFollowUpDate(addMonths(new Date(), 1))}>
-                          Próx. Mês
-                        </Button>
-                      </div>
-                      <div className="mb-3">
-                        <Button type="button" size="sm" variant="ghost" className="w-full justify-start text-muted-foreground" onClick={() => setFollowUpDate(undefined)}>
-                          Limpar
-                        </Button>
-                      </div>
-                      <Calendar
-                        mode="single"
-                        selected={selectedFollowUpDate}
-                        onSelect={(date) => setFollowUpDate(date)}
-                        locale={ptBR}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <FollowUpPicker
+                    value={followUpValue || ""}
+                    open={followUpPickerOpen}
+                    onOpenChange={setFollowUpPickerOpen}
+                    onChange={(value) =>
+                      form.setValue("proximo_follow_up", value, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      })
+                    }
+                  />
                 </div>
 
                 <div className="space-y-2">
