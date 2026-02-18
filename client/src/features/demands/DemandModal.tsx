@@ -304,6 +304,9 @@ export function DemandModal({
   const checklist = form.watch("checklist") ?? [];
   const doneChecklist = checklist.filter((item) => item.checado).length;
   const checklistProgress = checklist.length ? Math.round((doneChecklist / checklist.length) * 100) : 0;
+  const currentCategoria = form.watch("categoria");
+  const currentEpico = form.watch("epico");
+  const currentResponsavel = form.watch("responsavel");
 
   const activity = useMemo(() => {
     if (!demandToEdit) return [];
@@ -381,25 +384,22 @@ export function DemandModal({
   }
 
   const categoryChoices = useMemo(() => {
-    const current = form.watch("categoria");
     const values = [...categoryOptions];
-    if (current && !values.includes(current)) values.push(current);
+    if (currentCategoria && !values.includes(currentCategoria)) values.push(currentCategoria);
     return values;
-  }, [categoryOptions, form]);
+  }, [categoryOptions, currentCategoria]);
 
   const epicChoices = useMemo(() => {
-    const current = form.watch("epico");
     const values = [...epicOptions];
-    if (current && !values.includes(current)) values.push(current);
+    if (currentEpico && !values.includes(currentEpico)) values.push(currentEpico);
     return values;
-  }, [epicOptions, form]);
+  }, [epicOptions, currentEpico]);
 
   const userChoices = useMemo(() => {
-    const current = form.watch("responsavel");
     const base = users.map((item) => item.name);
-    if (current && !base.includes(current)) base.unshift(current);
+    if (currentResponsavel && !base.includes(currentResponsavel)) base.unshift(currentResponsavel);
     return Array.from(new Set(base));
-  }, [form, users]);
+  }, [users, currentResponsavel]);
 
   const followUpValue = form.watch("proximo_follow_up");
 
