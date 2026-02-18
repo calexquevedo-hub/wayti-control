@@ -981,7 +981,10 @@ export async function createUser(token: string, payload: { name: string; email: 
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!response.ok) throw new Error("Falha ao criar usuário.");
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao criar usuário.");
+  }
   return (await response.json()) as { user: User; tempPassword: string };
 }
 

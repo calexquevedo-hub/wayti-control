@@ -11,31 +11,59 @@ import { SystemParamsModel } from "../models/SystemParams";
 
 const router = Router();
 
+function extractErrorMessage(error: unknown, fallback: string) {
+  if (
+    error &&
+    typeof error === "object" &&
+    "code" in error &&
+    (error as { code?: number }).code === 11000
+  ) {
+    return "E-mail já está em uso.";
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 router.get("/", requireAuth, checkPermission("users", "view"), async (_req, res) => {
   const users = await UserModel.find().populate("profile").sort({ createdAt: -1 });
   return res.json(users.map((u) => u.toJSON()));
 });
 
 router.post("/", requireAuth, checkPermission("users", "manage"), async (req, res) => {
-  const payload = req.body as { email: string; name: string; profileId: string };
-  if (!payload.email || !payload.name || !payload.profileId) {
-    return res.status(400).json({ message: "email, name e profileId são obrigatórios." });
+  try {
+    const payload = req.body as { email: string; name: string; profileId: string };
+    if (!payload.email || !payload.name || !payload.profileId) {
+      return res.status(400).json({ message: "email, name e profileId são obrigatórios." });
+    }
+
+    const profile = await ProfileModel.findById(payload.profileId);
+    if (!profile) {
+      return res.status(400).json({ message: "Perfil inválido." });
+    }
+
+    const email = payload.email.toLowerCase().trim();
+    const exists = await UserModel.findOne({ email });
+    if (exists) {
+      return res.status(400).json({ message: "E-mail já está em uso." });
+    }
+
+    const tempPassword = crypto.randomBytes(6).toString("base64url");
+    const user = await UserModel.create({
+      email,
+      name: payload.name.trim(),
+      profile: payload.profileId,
+      passwordHash: await bcrypt.hash(tempPassword, 10),
+      isActive: true,
+      mustChangePassword: true,
+    });
+    const created = await UserModel.findById(user.id).populate("profile");
+    return res.status(201).json({ user: created?.toJSON(), tempPassword });
+  } catch (error) {
+    console.error("Erro ao criar usuário:", error);
+    return res.status(500).json({ message: extractErrorMessage(error, "Falha ao criar usuário.") });
   }
-  const profile = await ProfileModel.findById(payload.profileId);
-  if (!profile) {
-    return res.status(400).json({ message: "Perfil inválido." });
-  }
-  const tempPassword = crypto.randomBytes(6).toString("base64url");
-  const user = await UserModel.create({
-    email: payload.email.toLowerCase(),
-    name: payload.name,
-    profile: payload.profileId,
-    passwordHash: await bcrypt.hash(tempPassword, 10),
-    isActive: true,
-    mustChangePassword: true,
-  });
-  const created = await UserModel.findById(user.id).populate("profile");
-  return res.status(201).json({ user: created?.toJSON(), tempPassword });
 });
 
 router.patch("/:id", requireAuth, checkPermission("users", "manage"), async (req, res) => {
