@@ -60,4 +60,12 @@ const ProfileSchema = new Schema(
   { timestamps: true }
 );
 
+ProfileSchema.set("toJSON", {
+  versionKey: false,
+  transform: (_doc, ret: any) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+  },
+});
+
 export const ProfileModel = mongoose.model<IProfile>("Profile", ProfileSchema);

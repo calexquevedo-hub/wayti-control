@@ -1,6 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import mongoose from "mongoose";
 
 import { requireAuth } from "../middleware/auth";
 import { checkPermission } from "../middleware/permissionMiddleware";
@@ -36,6 +37,9 @@ router.post("/", requireAuth, checkPermission("users", "manage"), async (req, re
     const payload = req.body as { email: string; name: string; profileId: string };
     if (!payload.email || !payload.name || !payload.profileId) {
       return res.status(400).json({ message: "email, name e profileId são obrigatórios." });
+    }
+    if (!mongoose.Types.ObjectId.isValid(payload.profileId)) {
+      return res.status(400).json({ message: "Perfil inválido." });
     }
 
     const profile = await ProfileModel.findById(payload.profileId);

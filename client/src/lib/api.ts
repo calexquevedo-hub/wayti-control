@@ -940,7 +940,11 @@ export async function fetchProfiles(token: string) {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) throw new Error("Falha ao carregar perfis.");
-  return (await response.json()) as Profile[];
+  const data = (await response.json()) as Array<Profile & { _id?: string }>;
+  return data.map((profile) => ({
+    ...profile,
+    id: profile.id ?? profile._id ?? "",
+  }));
 }
 
 export async function createProfile(token: string, payload: Partial<Profile>) {
