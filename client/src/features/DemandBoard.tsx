@@ -16,7 +16,7 @@ import { DemandModal } from "@/features/demands/DemandModal";
 import { KanbanCard } from "@/features/demands/components/KanbanCard";
 import { KanbanColumn } from "@/features/demands/components/KanbanColumn";
 import type { DemandFormValues } from "@/features/demands/demand.schema";
-import { fetchDemands, moveDemand } from "@/lib/api";
+import { moveDemand } from "@/lib/api";
 import type { Demand, DemandStatus } from "@/types";
 
 const COLUMNS: DemandStatus[] = [
@@ -186,31 +186,11 @@ export function DemandBoard({
   const [createStatus, setCreateStatus] = useState<DemandStatus>("Backlog");
 
   useEffect(() => {
-    let mounted = true;
-
-    async function load() {
-      if (!token) {
-        setBoardDemands(demands);
-        return;
-      }
-      try {
-        const data = await fetchDemands(token);
-        if (mounted) {
-          setBoardDemands((prev) => {
-            const prevById = new Map(prev.map((item) => [item.id, item]));
-            return data.map((item) => mergeDemandIdentity(item, prevById.get(item.id)));
-          });
-        }
-      } catch {
-        if (mounted) setBoardDemands(demands);
-      }
-    }
-
-    void load();
-    return () => {
-      mounted = false;
-    };
-  }, [token, demands]);
+    setBoardDemands((prev) => {
+      const prevById = new Map(prev.map((item) => [item.id, item]));
+      return demands.map((item) => mergeDemandIdentity(item, prevById.get(item.id)));
+    });
+  }, [demands]);
 
   const filtered = useMemo(() => {
     return boardDemands.filter((d) => {
@@ -220,15 +200,6 @@ export function DemandBoard({
       return okSearch && okPriority;
     });
   }, [boardDemands, search, priorityFilter]);
-
-  const reloadDemands = useCallback(async () => {
-    if (!token) return;
-    const data = await fetchDemands(token);
-    setBoardDemands((prev) => {
-      const prevById = new Map(prev.map((item) => [item.id, item]));
-      return data.map((item) => mergeDemandIdentity(item, prevById.get(item.id)));
-    });
-  }, [token]);
 
   const handleDragOver = useCallback((_update: DragUpdate) => {
     // callback estável
@@ -300,18 +271,12 @@ export function DemandBoard({
         throw error;
       }
     }
-
-    if (token) void reloadDemands();
   }
 
   async function deleteFromModal(demandId: string | number) {
     const result = await onDelete(String(demandId), "Excluída via modal");
     if (!result.ok) throw new Error(result.message ?? "Falha ao excluir demanda.");
-    if (token) {
-      await reloadDemands();
-    } else {
-      setBoardDemands((prev) => prev.filter((d) => d.id !== String(demandId)));
-    }
+    setBoardDemands((prev) => prev.filter((d) => d.id !== String(demandId)));
   }
 
   return (
