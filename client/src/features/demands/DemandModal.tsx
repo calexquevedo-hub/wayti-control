@@ -214,30 +214,43 @@ export function DemandModal({
     }
 
     const raw = demandToEdit as Demand & Record<string, any>;
+    const safeDate = (value?: string | null) => (value ? String(value).slice(0, 10) : "");
+    const safeISO = (value?: string | null) => (value ? new Date(value).toISOString() : "");
+    const pick = (...keys: string[]) => {
+      for (const key of keys) {
+        const value = raw[key];
+        if (value !== undefined && value !== null && value !== "") return value;
+      }
+      return "";
+    };
+
     const checklist = Array.isArray(raw.checklist)
       ? raw.checklist
-      : Array.isArray(demandToEdit.tasks)
-      ? demandToEdit.tasks.map((task) => ({ texto: task.title ?? "", checado: Boolean(task.isCompleted) }))
+      : Array.isArray(raw.tasks)
+      ? raw.tasks.map((task: Record<string, unknown>) => ({
+          texto: String(task.title ?? ""),
+          checado: Boolean(task.isCompleted),
+        }))
       : [];
 
     form.reset({
-      titulo: raw.titulo ?? demandToEdit.name ?? "",
-      status: (raw.status ?? demandToEdit.status ?? "Backlog") as DemandFormValues["status"],
-      prioridade: (raw.prioridade ?? demandToEdit.priority ?? "P2") as DemandFormValues["prioridade"],
-      categoria: raw.categoria ?? demandToEdit.category ?? "",
-      epico: raw.epico ?? demandToEdit.epic ?? "",
-      responsavel: raw.responsavel ?? demandToEdit.responsible ?? "",
-      prazo: toDateInput(raw.prazo),
-      proximo_follow_up: toDateInput(raw.proximo_follow_up ?? demandToEdit.nextFollowUpAt),
-      ultimo_contato: toDateInput(raw.ultimo_contato ?? demandToEdit.lastContactAt),
-      escalonar_em: toDateInput(raw.escalonar_em),
-      dono_externo: raw.dono_externo ?? "",
-      impacto: (raw.impacto ?? demandToEdit.impact ?? "Médio") as DemandFormValues["impacto"],
-      dependencia: raw.dependencia ?? "",
-      resumo_executivo: raw.resumo_executivo ?? demandToEdit.executiveSummary ?? "",
-      link_evidencia: raw.link_evidencia ?? "",
-      financeiro_mensal: Number(raw.financeiro_mensal ?? demandToEdit.financialMonthly ?? 0),
-      financeiro_one_off: Number(raw.financeiro_one_off ?? demandToEdit.financialOneOff ?? 0),
+      titulo: String(pick("titulo", "name")),
+      status: (pick("status") || "Backlog") as DemandFormValues["status"],
+      prioridade: (pick("prioridade", "priority") || "P2") as DemandFormValues["prioridade"],
+      categoria: String(pick("categoria", "category")),
+      epico: String(pick("epico", "epic")),
+      responsavel: String(pick("responsavel", "responsible")),
+      prazo: safeDate(pick("prazo", "deadline")),
+      proximo_follow_up: safeISO(pick("proximo_follow_up", "nextFollowUpAt")),
+      ultimo_contato: safeDate(pick("ultimo_contato", "lastContactAt")),
+      escalonar_em: safeDate(pick("escalonar_em")),
+      dono_externo: String(pick("dono_externo")),
+      impacto: (pick("impacto", "impact") || "Médio") as DemandFormValues["impacto"],
+      dependencia: String(pick("dependencia")),
+      resumo_executivo: String(pick("resumo_executivo", "executiveSummary", "description")),
+      link_evidencia: String(pick("link_evidencia")),
+      financeiro_mensal: Number(pick("financeiro_mensal", "financialMonthly") || 0),
+      financeiro_one_off: Number(pick("financeiro_one_off", "financialOneOff") || 0),
       checklist,
     });
   }, [demandToEdit, form, isOpen]);
