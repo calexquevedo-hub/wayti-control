@@ -217,14 +217,13 @@ export function DemandModal({
                 <div className="grid gap-2">
                   <Label>Categoria</Label>
                   <Select
-                    value={form.watch("categoria") || ""}
+                    value={form.watch("categoria") || undefined}
                     onValueChange={(value) => form.setValue("categoria", value, { shouldValidate: true })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a categoria" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Selecione...</SelectItem>
                       {CATEGORIES.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
@@ -236,14 +235,13 @@ export function DemandModal({
                 <div className="grid gap-2">
                   <Label>Épico</Label>
                   <Select
-                    value={form.watch("epico") || ""}
+                    value={form.watch("epico") || undefined}
                     onValueChange={(value) => form.setValue("epico", value, { shouldValidate: true })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o épico" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Selecione...</SelectItem>
                       {EPICS.map((epic) => (
                         <SelectItem key={epic} value={epic}>
                           {epic}
