@@ -177,13 +177,13 @@ export function Dashboard({ demands, tickets }: DashboardProps) {
               Chamados ativos no período
             </CardContent>
           </Card>
-          <Card className="bg-card/70">
+          <Card className="status-warning-card">
             <CardHeader>
-              <CardDescription>Vencidos</CardDescription>
-              <CardTitle>{ticketMetrics.overdueCount}</CardTitle>
+              <CardDescription className="font-semibold text-[var(--status-warning-fg)]">Vencidos</CardDescription>
+              <CardTitle className="text-[var(--status-warning-strong)]">{ticketMetrics.overdueCount}</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center gap-2 text-sm text-muted-foreground">
-              <AlertTriangle className="h-4 w-4 text-amber-300" />
+            <CardContent className="flex items-center gap-2 text-sm font-medium text-[var(--status-warning-fg)]">
+              <AlertTriangle className="h-4 w-4 text-[var(--status-warning-strong)]" />
               SLA estourado
             </CardContent>
           </Card>
@@ -197,13 +197,13 @@ export function Dashboard({ demands, tickets }: DashboardProps) {
               Sem responsável definido
             </CardContent>
           </Card>
-          <Card className="bg-card/70">
+          <Card className="status-success-card">
             <CardHeader>
-              <CardDescription>Resolvidos Hoje</CardDescription>
-              <CardTitle>{ticketMetrics.resolvedCount}</CardTitle>
+              <CardDescription className="font-semibold text-[var(--status-success-fg)]">Resolvidos Hoje</CardDescription>
+              <CardTitle className="text-[var(--status-success-strong)]">{ticketMetrics.resolvedCount}</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+            <CardContent className="flex items-center gap-2 text-sm font-medium text-[var(--status-success-fg)]">
+              <CheckCircle2 className="h-4 w-4 text-[var(--status-success-strong)]" />
               Produtividade no período
             </CardContent>
           </Card>

@@ -1594,14 +1594,14 @@ export function Tickets({
           ))}
         </div>
         {slaSummary.overdue > 0 || slaSummary.warning > 0 ? (
-          <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
+          <div className="status-warning-card mt-4 rounded-lg p-3 text-sm font-medium">
             {slaSummary.overdue > 0 ? (
-              <p className="font-semibold">
+              <p className="font-semibold text-[var(--status-warning-strong)]">
                 {slaSummary.overdue} chamado(s) com SLA estourado.
               </p>
             ) : null}
             {slaSummary.warning > 0 ? (
-              <p className="text-xs text-amber-100/80">
+              <p className="text-xs text-[var(--status-warning-fg)]">
                 {slaSummary.warning} chamado(s) vencem em breve.
               </p>
             ) : null}
@@ -1612,13 +1612,13 @@ export function Tickets({
             <p className="text-xs text-muted-foreground">Chamados abertos</p>
             <p className="text-lg font-semibold text-foreground">{slaSummary.total}</p>
           </div>
-          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
-            <p className="text-xs text-amber-200">SLA estourado</p>
-            <p className="text-lg font-semibold text-amber-100">{slaSummary.overdue}</p>
+          <div className="status-warning-card rounded-lg p-3">
+            <p className="text-xs font-semibold text-[var(--status-warning-fg)]">SLA estourado</p>
+            <p className="text-lg font-semibold text-[var(--status-warning-strong)]">{slaSummary.overdue}</p>
           </div>
-          <div className="rounded-lg border border-orange-500/40 bg-orange-500/10 p-3">
-            <p className="text-xs text-orange-200">Vence em breve</p>
-            <p className="text-lg font-semibold text-orange-100">{slaSummary.warning}</p>
+          <div className="status-warning-card rounded-lg p-3">
+            <p className="text-xs font-semibold text-[var(--status-warning-fg)]">Vence em breve</p>
+            <p className="text-lg font-semibold text-[var(--status-warning-strong)]">{slaSummary.warning}</p>
           </div>
         </div>
       </CardHeader>

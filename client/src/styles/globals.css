@@ -28,6 +28,17 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221 83% 53%;
     --radius: 0.75rem;
+
+    /* Status tokens (WCAG AA on light surfaces) */
+    --status-warning-fg: #92400e;
+    --status-warning-bg: #fff7ed;
+    --status-warning-border: #f59e0b;
+    --status-warning-strong: #b45309;
+
+    --status-success-fg: #065f46;
+    --status-success-bg: #ecfdf5;
+    --status-success-border: #34d399;
+    --status-success-strong: #047857;
   }
 
   .dark {
@@ -50,6 +61,16 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+
+    --status-warning-fg: #fbbf24;
+    --status-warning-bg: rgba(245, 158, 11, 0.16);
+    --status-warning-border: rgba(245, 158, 11, 0.45);
+    --status-warning-strong: #fcd34d;
+
+    --status-success-fg: #34d399;
+    --status-success-bg: rgba(16, 185, 129, 0.14);
+    --status-success-border: rgba(52, 211, 153, 0.45);
+    --status-success-strong: #6ee7b7;
   }
 }
 
@@ -70,4 +91,16 @@ body {
 
 * {
   @apply border-border;
+}
+
+.status-warning-card {
+  background: var(--status-warning-bg);
+  color: var(--status-warning-fg);
+  border: 1px solid var(--status-warning-border);
+}
+
+.status-success-card {
+  background: var(--status-success-bg);
+  color: var(--status-success-fg);
+  border: 1px solid var(--status-success-border);
 }
