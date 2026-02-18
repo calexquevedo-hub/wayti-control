@@ -536,26 +536,26 @@ export function DemandModal({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={EMPTY_SELECT_VALUE}>Selecione...</SelectItem>
+                      {userChoices.map((name) => (
+                        <SelectItem key={name} value={name}>
+                          <span className="inline-flex items-center gap-2">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
+                              {name.slice(0, 2).toUpperCase()}
+                            </span>
+                            {name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                      {userChoices.length === 0 ? (
+                        <SelectItem value="__empty_user__" disabled>
+                          Sem usuários
+                        </SelectItem>
+                      ) : null}
                       {usersLoading ? (
                         <SelectItem value="__loading_user__" disabled>
                           Carregando...
                         </SelectItem>
-                      ) : userChoices.length === 0 ? (
-                        <SelectItem value="__empty_user__" disabled>
-                          Sem usuários
-                        </SelectItem>
-                      ) : (
-                        userChoices.map((name) => (
-                          <SelectItem key={name} value={name}>
-                            <span className="inline-flex items-center gap-2">
-                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
-                                {name.slice(0, 2).toUpperCase()}
-                              </span>
-                              {name}
-                            </span>
-                          </SelectItem>
-                        ))
-                      )}
+                      ) : null}
                     </SelectContent>
                   </Select>
                 </div>
@@ -621,21 +621,21 @@ export function DemandModal({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={EMPTY_SELECT_VALUE}>Selecione...</SelectItem>
+                      {categoryChoices.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                      {categoryChoices.length === 0 ? (
+                        <SelectItem value="__empty_category__" disabled>
+                          Sem categorias
+                        </SelectItem>
+                      ) : null}
                       {domainsLoading ? (
                         <SelectItem value="__loading_category__" disabled>
                           Carregando...
                         </SelectItem>
-                      ) : categoryChoices.length === 0 ? (
-                        <SelectItem value="__empty_category__" disabled>
-                          Sem categorias
-                        </SelectItem>
-                      ) : (
-                        categoryChoices.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {item}
-                          </SelectItem>
-                        ))
-                      )}
+                      ) : null}
                     </SelectContent>
                   </Select>
                 </div>
@@ -655,21 +655,21 @@ export function DemandModal({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={EMPTY_SELECT_VALUE}>Selecione...</SelectItem>
+                      {epicChoices.map((item) => (
+                        <SelectItem key={item} value={item}>
+                          {item}
+                        </SelectItem>
+                      ))}
+                      {epicChoices.length === 0 ? (
+                        <SelectItem value="__empty_epic__" disabled>
+                          Sem épicos
+                        </SelectItem>
+                      ) : null}
                       {domainsLoading ? (
                         <SelectItem value="__loading_epic__" disabled>
                           Carregando...
                         </SelectItem>
-                      ) : epicChoices.length === 0 ? (
-                        <SelectItem value="__empty_epic__" disabled>
-                          Sem épicos
-                        </SelectItem>
-                      ) : (
-                        epicChoices.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {item}
-                          </SelectItem>
-                        ))
-                      )}
+                      ) : null}
                     </SelectContent>
                   </Select>
                 </div>
