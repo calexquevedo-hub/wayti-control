@@ -44,6 +44,29 @@ function parseDemand(raw: Demand) {
   };
 }
 
+export async function moveDemand(
+  token: string,
+  id: string,
+  payload: { status: Demand["status"]; index?: number }
+) {
+  const response = await fetch(`${API_URL}/api/demands/${id}/move`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao mover demanda.");
+  }
+
+  const data = (await response.json()) as Demand;
+  return parseDemand(data);
+}
+
 // Lightweight API client for the demo.
 export async function fetchDemands(token: string) {
   const response = await fetch(`${API_URL}/api/demands`, {
@@ -116,21 +139,7 @@ export async function updateDemand(token: string, id: string, payload: Partial<D
 }
 
 export async function updateDemandStatus(token: string, id: string, status: Demand["status"]) {
-  const response = await fetch(`${API_URL}/api/demands/${id}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ status }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Falha ao mover demanda.");
-  }
-
-  const data = (await response.json()) as Demand;
-  return parseDemand(data);
+  return moveDemand(token, id, { status });
 }
 
 export async function addDemandComment(token: string, demandId: string, message: string) {

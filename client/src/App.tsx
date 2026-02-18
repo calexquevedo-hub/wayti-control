@@ -177,6 +177,7 @@ export default function App() {
       case "Demandas":
         return (
           <DemandBoard
+            token={user?.token}
             demands={demands}
             onCreate={actions.create}
             onUpdate={actions.update}

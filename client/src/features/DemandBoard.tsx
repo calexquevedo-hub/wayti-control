@@ -40,6 +40,7 @@ import type {
   DemandType,
 } from "@/types";
 import { DemandDetail } from "@/features/DemandDetail";
+import { fetchDemands, moveDemand } from "@/lib/api";
 
 const statusMap: Record<
   Demand["status"],
@@ -92,6 +93,7 @@ const PRIORITY_META: Record<
 };
 
 interface DemandBoardProps {
+  token?: string;
   demands: Demand[];
   onCreate: (payload: Omit<Demand, "id">) => Promise<{ ok: boolean; message?: string }>;
   onUpdate: (id: string, payload: Partial<Demand>) => Promise<{ ok: boolean; message?: string }>;
@@ -160,6 +162,7 @@ function parseStages(value: string, fallbackOwner: string) {
 }
 
 export function DemandBoard({
+  token,
   demands,
   onCreate,
   onUpdate,
@@ -207,8 +210,28 @@ export function DemandBoard({
   });
 
   useEffect(() => {
-    setBoardDemands(demands);
-  }, [demands]);
+    let active = true;
+
+    async function loadBoardDemands() {
+      if (!token) {
+        setBoardDemands(demands);
+        return;
+      }
+      try {
+        const data = await fetchDemands(token);
+        if (!active) return;
+        setBoardDemands(data);
+      } catch {
+        if (!active) return;
+        setBoardDemands(demands);
+      }
+    }
+
+    void loadBoardDemands();
+    return () => {
+      active = false;
+    };
+  }, [token, demands]);
 
   const sorted = useMemo(() => {
     return [...boardDemands]
@@ -239,13 +262,25 @@ export function DemandBoard({
       prev.map((item) => (item.id === draggableId ? { ...item, status: nextStatus } : item))
     );
     setDetailDemand((prev) => (prev && prev.id === draggableId ? { ...prev, status: nextStatus } : prev));
-    const res = await onUpdate(draggableId, { status: nextStatus, lastUpdate: todayDate() });
-    if (!res.ok) {
+
+    try {
+      if (token) {
+        await moveDemand(token, draggableId, {
+          status: nextStatus,
+          index: destination.index,
+        });
+      } else {
+        const res = await onUpdate(draggableId, { status: nextStatus, lastUpdate: todayDate() });
+        if (!res.ok) {
+          throw new Error(res.message ?? "Falha ao atualizar status.");
+        }
+      }
+    } catch (error: any) {
       setBoardDemands(previous);
       setDetailDemand((prev) =>
         prev && prev.id === draggableId ? { ...prev, status: previous.find((d) => d.id === draggableId)?.status ?? prev.status } : prev
       );
-      setError(res.message ?? "Falha ao atualizar status.");
+      setError(error?.message ?? "Falha ao atualizar status.");
     }
   }
 

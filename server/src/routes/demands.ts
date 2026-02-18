@@ -6,6 +6,14 @@ import { requireAuth } from "../middleware/auth";
 import { checkPermission } from "../middleware/permissionMiddleware";
 
 const router = Router();
+const ALLOWED_DEMAND_STATUSES = new Set([
+  "Backlog",
+  "Esta semana",
+  "Em execução",
+  "Aguardando terceiros",
+  "Concluído",
+  "Cancelado",
+]);
 
 router.get("/", requireAuth, checkPermission("demands", "view"), async (req, res) => {
   const { status, priority, epic, responsible, externalOwnerId, overdue, nextFrom, nextTo } =
@@ -138,6 +146,46 @@ router.patch("/:id", requireAuth, checkPermission("demands", "edit"), async (req
     { new: true }
   );
   return res.json(demand);
+});
+
+router.patch("/:id/move", requireAuth, checkPermission("demands", "edit"), async (req, res) => {
+  const actor = res.locals.user?.email ?? "system";
+  const { status, index } = req.body as { status?: string; index?: number };
+
+  if (!status || !ALLOWED_DEMAND_STATUSES.has(status)) {
+    return res.status(400).json({ message: "Status inválido para movimentação." });
+  }
+
+  const current = await DemandModel.findById(req.params.id);
+  if (!current) {
+    return res.status(404).json({ message: "Demanda nao encontrada" });
+  }
+
+  const updatePayload: Record<string, unknown> = {
+    status,
+    lastUpdate: new Date(),
+    audits: [
+      ...(current.audits ?? []),
+      {
+        at: new Date(),
+        action: "moved",
+        actor,
+        field: "status",
+        before: String(current.status),
+        after: status,
+        notes: "Movimentação de card no Kanban.",
+      },
+    ],
+  };
+
+  if (typeof index === "number" && Number.isFinite(index)) {
+    updatePayload.posicao = index;
+  }
+
+  const moved = await DemandModel.findByIdAndUpdate(req.params.id, updatePayload, {
+    new: true,
+  });
+  return res.json(moved);
 });
 
 router.post("/:id/contact", requireAuth, checkPermission("demands", "edit"), async (req, res) => {
