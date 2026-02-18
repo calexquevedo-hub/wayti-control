@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { CounterModel } from "./Counter";
 
 const FollowUpSchema = new Schema(
   {
@@ -61,6 +62,7 @@ const DEMAND_STATUS_VALUES = [
 
 const DemandSchema = new Schema(
   {
+    sequentialId: { type: Number, index: true },
     name: { type: String, required: true },
     titulo: { type: String, trim: true },
     type: { type: String, required: true },
@@ -199,6 +201,26 @@ DemandSchema.pre("validate", function (next) {
   }
 
   next();
+});
+
+DemandSchema.pre("save", async function (next) {
+  try {
+    const doc = this as any;
+    if (!doc.isNew || typeof doc.sequentialId === "number") {
+      next();
+      return;
+    }
+
+    const counter = await CounterModel.findOneAndUpdate(
+      { name: "demands" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+    doc.sequentialId = counter.seq;
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
 });
 
 DemandSchema.virtual("isOverdue").get(function (this: any) {

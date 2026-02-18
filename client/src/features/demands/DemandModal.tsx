@@ -17,7 +17,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Demand } from "@/types";
+import { CATEGORIES, EPICS } from "./constants";
 import {
   demandSchema,
   type DemandFormInput,
@@ -52,6 +60,12 @@ const defaults: DemandFormInput = {
   financeiro_one_off: 0,
   checklist: [],
 };
+
+function toDateInput(value: string | Date | null | undefined): string | null {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return String(value).slice(0, 10);
+}
 
 export function DemandModal({
   isOpen,
@@ -94,10 +108,10 @@ export function DemandModal({
       categoria: raw.categoria ?? demandToEdit.category ?? "",
       epico: raw.epico ?? demandToEdit.epic ?? "",
       responsavel: raw.responsavel ?? demandToEdit.responsible ?? "",
-      prazo: raw.prazo ?? null,
-      proximo_follow_up: raw.proximo_follow_up ?? (demandToEdit.nextFollowUpAt ? new Date(demandToEdit.nextFollowUpAt).toISOString().slice(0, 10) : null),
-      ultimo_contato: raw.ultimo_contato ?? (demandToEdit.lastContactAt ? new Date(demandToEdit.lastContactAt).toISOString().slice(0, 10) : null),
-      escalonar_em: raw.escalonar_em ?? null,
+      prazo: toDateInput(raw.prazo) ?? null,
+      proximo_follow_up: toDateInput(raw.proximo_follow_up ?? demandToEdit.nextFollowUpAt) ?? null,
+      ultimo_contato: toDateInput(raw.ultimo_contato ?? demandToEdit.lastContactAt) ?? null,
+      escalonar_em: toDateInput(raw.escalonar_em) ?? null,
       dono_externo: raw.dono_externo ?? "",
       impacto: (raw.impacto ?? demandToEdit.impact ?? "Médio") as DemandFormValues["impacto"],
       dependencia: raw.dependencia ?? "",
@@ -131,7 +145,14 @@ export function DemandModal({
           <DialogHeader className="m-0">
             <div className="flex items-center justify-between">
               <DialogTitle>{isEdit ? "Editar Demanda" : "Nova Demanda"}</DialogTitle>
-              <Badge variant="outline">{form.watch("status")}</Badge>
+              <div className="flex items-center gap-2">
+                {isEdit ? (
+                  <Badge variant="secondary">
+                    #{(demandToEdit as Demand & { sequentialId?: number })?.sequentialId ?? demandToEdit?.id}
+                  </Badge>
+                ) : null}
+                <Badge variant="outline">{form.watch("status")}</Badge>
+              </div>
             </div>
           </DialogHeader>
         </div>
@@ -175,11 +196,39 @@ export function DemandModal({
                 </div>
                 <div className="grid gap-2">
                   <Label>Categoria</Label>
-                  <Input {...form.register("categoria")} />
+                  <Select
+                    value={form.watch("categoria") || undefined}
+                    onValueChange={(value) => form.setValue("categoria", value, { shouldValidate: true })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label>Épico</Label>
-                  <Input {...form.register("epico")} />
+                  <Select
+                    value={form.watch("epico") || undefined}
+                    onValueChange={(value) => form.setValue("epico", value, { shouldValidate: true })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o épico" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EPICS.map((epic) => (
+                        <SelectItem key={epic} value={epic}>
+                          {epic}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2 md:col-span-2">
                   <Label>Responsável</Label>

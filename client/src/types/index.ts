@@ -232,15 +232,22 @@ export interface TicketEmailItem {
 
 export interface Demand {
   id: string;
+  sequentialId?: number;
   name: string;
+  titulo?: string;
   type: DemandType;
   category: DemandCategory;
+  categoria?: string;
   status: DemandStatus;
   priority: DemandPriority;
+  prioridade?: DemandPriority;
   impact: DemandImpact;
+  impacto?: DemandImpact;
   epic: string;
+  epico?: string;
   sponsor: string;
   responsible: string;
+  responsavel?: string;
   externalOwnerId?: string;
   approver?: string;
   approvalStatus?: ApprovalStatus;
@@ -267,6 +274,11 @@ export interface Demand {
   escalateTo?: DemandEscalateTo;
   nextFollowUpAt?: Date;
   lastContactAt?: Date;
+  prazo?: Date | string;
+  proximo_follow_up?: Date | string;
+  ultimo_contato?: Date | string;
+  escalonar_em?: Date | string;
+  checklist?: Array<{ texto: string; checado: boolean }>;
   lastUpdate: Date;
   followUps: FollowUp[];
   audits?: AuditEntry[];

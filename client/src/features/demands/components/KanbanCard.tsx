@@ -28,6 +28,40 @@ function getTitle(demand: Demand): string {
   return ((demand as unknown as { titulo?: string }).titulo ?? demand.name ?? "").trim();
 }
 
+function getCategory(demand: Demand): string {
+  return ((demand as unknown as { categoria?: string }).categoria ?? demand.category ?? "-").toString();
+}
+
+function getEpic(demand: Demand): string {
+  return ((demand as unknown as { epico?: string }).epico ?? demand.epic ?? "-").toString();
+}
+
+function getSequentialId(demand: Demand): string {
+  const sequentialId = (demand as unknown as { sequentialId?: number }).sequentialId;
+  if (typeof sequentialId === "number" && Number.isFinite(sequentialId)) return String(sequentialId);
+  return demand.id;
+}
+
+function getDeadline(demand: Demand): Date | null {
+  const prazo = (demand as unknown as { prazo?: string | Date | null }).prazo;
+  if (!prazo) return null;
+  const parsed = prazo instanceof Date ? prazo : new Date(prazo);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function getDeadlineTone(deadline: Date | null): string {
+  if (!deadline) return "text-muted-foreground";
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const due = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
+
+  if (due < today) return "text-red-600";
+  if (due.getTime() === today.getTime() || due.getTime() === tomorrow.getTime()) return "text-orange-600";
+  return "text-muted-foreground";
+}
+
 function getChecklistMeta(demand: Demand): { total: number; done: number; progress: number } {
   const explicit = (demand as unknown as { checklist?: Array<{ texto: string; checado: boolean }> }).checklist;
   if (Array.isArray(explicit)) {
@@ -51,6 +85,8 @@ function getResponsibleInitials(name?: string): string {
 
 function KanbanCardComponent({ demand, onClick }: KanbanCardProps) {
   const checklist = getChecklistMeta(demand);
+  const deadline = getDeadline(demand);
+  const deadlineTone = getDeadlineTone(deadline);
 
   return (
     <Card
@@ -62,9 +98,12 @@ function KanbanCardComponent({ demand, onClick }: KanbanCardProps) {
           <Badge variant="outline" className={priorityBadgeTone[demand.priority]}>
             {demand.priority}
           </Badge>
-          <span className="text-[11px] text-muted-foreground">#{demand.id}</span>
+          <span className="text-[11px] text-muted-foreground">#{getSequentialId(demand)}</span>
         </div>
         <p className="text-sm font-medium text-foreground line-clamp-2">{getTitle(demand)}</p>
+        <p className="text-[11px] text-muted-foreground">
+          {getCategory(demand)} • {getEpic(demand)}
+        </p>
       </CardHeader>
       <CardContent className="p-3 pt-1">
         {checklist.total > 0 ? (
@@ -87,7 +126,9 @@ function KanbanCardComponent({ demand, onClick }: KanbanCardProps) {
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{demand.category}</span>
           <div className="flex items-center gap-2">
-            <span>{demand.lastUpdate.toLocaleDateString("pt-BR")}</span>
+            <span className={deadlineTone}>
+              {deadline ? deadline.toLocaleDateString("pt-BR") : "Sem prazo"}
+            </span>
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-foreground">
               {getResponsibleInitials(demand.responsible)}
             </div>
