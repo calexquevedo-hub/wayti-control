@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Archive,
   CalendarDays,
+  CalendarClock,
   CheckSquare,
   Copy,
   DollarSign,
@@ -34,8 +35,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { fetchDomainItems } from "@/lib/api";
-import type { Demand } from "@/types";
+import { fetchDomainItems, fetchUsers } from "@/lib/api";
+import type { Demand, User } from "@/types";
 import {
   demandSchema,
   type DemandFormInput,
@@ -104,6 +105,11 @@ export function DemandModal({
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [epicOptions, setEpicOptions] = useState<string[]>([]);
   const [domainsLoading, setDomainsLoading] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [activityItems, setActivityItems] = useState<
+    Array<{ at: Date; author: string; text: string; type: "comment" | "audit" }>
+  >([]);
 
   const form = useForm<DemandFormInput, unknown, DemandFormValues>({
     resolver: zodResolver(demandSchema),
@@ -177,6 +183,27 @@ export function DemandModal({
     };
   }, [isOpen, token]);
 
+  useEffect(() => {
+    if (!isOpen || !token) return;
+    let mounted = true;
+    setUsersLoading(true);
+    fetchUsers(token)
+      .then((data) => {
+        if (!mounted) return;
+        setUsers(data.filter((item) => item.isActive));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setUsers([]);
+      })
+      .finally(() => {
+        if (mounted) setUsersLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [isOpen, token]);
+
   const checklist = form.watch("checklist") ?? [];
   const doneChecklist = checklist.filter((item) => item.checado).length;
   const checklistProgress = checklist.length ? Math.round((doneChecklist / checklist.length) * 100) : 0;
@@ -190,17 +217,34 @@ export function DemandModal({
       type: "comment" as const,
     }));
 
-    const audits = (demandToEdit.audits ?? []).map((audit) => ({
-      at: toDate(audit.at) ?? new Date(),
-      author: audit.actor,
-      text: audit.notes ?? `${audit.action}${audit.field ? ` (${audit.field})` : ""}`,
-      type: "audit" as const,
-    }));
+    const audits = (demandToEdit.audits ?? [])
+      .filter((audit) => {
+        const field = String(audit.field ?? "").toLowerCase();
+        const action = String(audit.action ?? "").toLowerCase();
+        if (action === "moved") return true;
+        return ["status", "responsible", "responsavel", "prazo", "nextfollowupat", "proximo_follow_up"].includes(
+          field
+        );
+      })
+      .map((audit) => ({
+        at: toDate(audit.at) ?? new Date(),
+        author: audit.actor,
+        text:
+          audit.notes ??
+          (audit.field
+            ? `${audit.field}: ${audit.before ?? "-"} → ${audit.after ?? "-"}`
+            : String(audit.action)),
+        type: "audit" as const,
+      }));
 
     return [...comments, ...audits]
       .sort((a, b) => b.at.getTime() - a.at.getTime())
       .slice(0, 25);
   }, [demandToEdit]);
+
+  useEffect(() => {
+    setActivityItems(activity);
+  }, [activity]);
 
   async function handleSubmit(values: DemandFormValues) {
     setSaving(true);
@@ -228,8 +272,15 @@ export function DemandModal({
       setStatusMsg(result.message ?? "Falha ao comentar.");
       return;
     }
+    const optimisticComment = {
+      at: new Date(),
+      author: "Você",
+      text: commentDraft.trim(),
+      type: "comment" as const,
+    };
+    setActivityItems((prev) => [optimisticComment, ...prev].slice(0, 25));
     setCommentDraft("");
-    setStatusMsg("Comentário registrado. Reabra o card para atualizar a atividade.");
+    setStatusMsg(null);
   }
 
   const categoryChoices = useMemo(() => {
@@ -245,6 +296,13 @@ export function DemandModal({
     if (current && !values.includes(current)) values.push(current);
     return values;
   }, [epicOptions, form]);
+
+  const userChoices = useMemo(() => {
+    const current = form.watch("responsavel");
+    const base = users.map((item) => item.name);
+    if (current && !base.includes(current)) base.unshift(current);
+    return Array.from(new Set(base));
+  }, [form, users]);
 
   return (
     <Dialog open={isOpen} onOpenChange={(next) => !next && onClose()}>
@@ -330,10 +388,10 @@ export function DemandModal({
                 <MessageSquare className="h-4 w-4" /> Atividade
               </div>
               <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
-                {activity.length === 0 ? (
+                {activityItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sem histórico ainda.</p>
                 ) : (
-                  activity.map((item, index) => (
+                  activityItems.map((item, index) => (
                     <div key={`${item.at.toISOString()}-${index}`} className="rounded-md border border-border/50 p-2">
                       <p className="text-xs text-muted-foreground">
                         {item.author} • {item.at.toLocaleString("pt-BR")}
@@ -366,7 +424,41 @@ export function DemandModal({
                   <Label className="inline-flex items-center gap-1">
                     <UserCircle2 className="h-3.5 w-3.5" /> Membro
                   </Label>
-                  <Input {...form.register("responsavel")} />
+                  <Select
+                    value={form.watch("responsavel") || EMPTY_SELECT_VALUE}
+                    onValueChange={(value) =>
+                      form.setValue("responsavel", value === EMPTY_SELECT_VALUE ? "" : value, {
+                        shouldValidate: true,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o responsável" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={EMPTY_SELECT_VALUE}>Selecione...</SelectItem>
+                      {usersLoading ? (
+                        <SelectItem value="__loading_user__" disabled>
+                          Carregando...
+                        </SelectItem>
+                      ) : userChoices.length === 0 ? (
+                        <SelectItem value="__empty_user__" disabled>
+                          Sem usuários
+                        </SelectItem>
+                      ) : (
+                        userChoices.map((name) => (
+                          <SelectItem key={name} value={name}>
+                            <span className="inline-flex items-center gap-2">
+                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
+                                {name.slice(0, 2).toUpperCase()}
+                              </span>
+                              {name}
+                            </span>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-1">
@@ -496,11 +588,40 @@ export function DemandModal({
 
                 <div className="space-y-1">
                   <Label className="inline-flex items-center gap-1">
-                    <DollarSign className="h-3.5 w-3.5" /> Financeiro (R$)
+                    <CalendarClock className="h-3.5 w-3.5" /> Próximo Follow-up
                   </Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input type="number" step="0.01" {...form.register("financeiro_mensal")} />
-                    <Input type="number" step="0.01" {...form.register("financeiro_one_off")} />
+                  <Input
+                    type="date"
+                    value={form.watch("proximo_follow_up") || ""}
+                    onChange={(event) =>
+                      form.setValue("proximo_follow_up", event.target.value || "")
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="inline-flex items-center gap-1">
+                    <DollarSign className="h-3.5 w-3.5" /> Financeiro
+                  </Label>
+                  <div className="space-y-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Valor Mensal (Recorrente)</Label>
+                      <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          R$
+                        </span>
+                        <Input className="pl-9" type="number" step="0.01" {...form.register("financeiro_mensal")} />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Valor One-off (Setup/Único)</Label>
+                      <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          R$
+                        </span>
+                        <Input className="pl-9" type="number" step="0.01" {...form.register("financeiro_one_off")} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
