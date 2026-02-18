@@ -30,8 +30,18 @@ function normalizeStatus(status: Demand["status"]) {
 }
 
 function parseDemand(raw: Demand) {
+  const categoria = String(raw.categoria ?? raw.category ?? "");
+  const epico = String(raw.epico ?? raw.epic ?? "");
+  const responsavel = String(raw.responsavel ?? raw.responsible ?? "");
+
   return {
     ...raw,
+    category: (raw.category ?? (categoria as Demand["category"])) as Demand["category"],
+    categoria,
+    epic: raw.epic ?? epico,
+    epico,
+    responsible: raw.responsible ?? responsavel,
+    responsavel,
     status: normalizeStatus(raw.status),
     lastUpdate: new Date(raw.lastUpdate),
     nextFollowUpAt: raw.nextFollowUpAt ? new Date(raw.nextFollowUpAt) : undefined,
