@@ -22,8 +22,10 @@ import vaultRoutes from "./routes/vault";
 import userRoutes from "./routes/users";
 import systemParamsRoutes from "./routes/systemParams";
 import profileRoutes from "./routes/profiles";
+import domainRoutes from "./routes/domains";
 import { UserModel } from "./models/User";
 import { ProfileModel } from "./models/Profile";
+import { DomainItemModel } from "./models/DomainItem";
 import { startEmailPolling } from "./config/emailPoller";
 
 const app = express();
@@ -77,6 +79,7 @@ app.use("/api/vault", vaultRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/system-params", systemParamsRoutes);
+app.use("/api/domains", domainRoutes);
 
 // --- CONFIGURAÇÃO DE PRODUÇÃO ---
 const clientDistPath =
@@ -185,6 +188,24 @@ async function ensureAdminUser() {
   }
 }
 
+async function ensureDomainItems() {
+  const count = await DomainItemModel.countDocuments();
+  if (count > 0) return;
+
+  await DomainItemModel.insertMany([
+    { type: "CATEGORY", label: "Projeto", value: "projeto", active: true },
+    { type: "CATEGORY", label: "Sustentação", value: "sustentacao", active: true },
+    { type: "CATEGORY", label: "Melhoria", value: "melhoria", active: true },
+    { type: "CATEGORY", label: "Bug", value: "bug", active: true },
+    { type: "CATEGORY", label: "Infraestrutura", value: "infraestrutura", active: true },
+    { type: "CATEGORY", label: "Segurança", value: "seguranca", active: true },
+    { type: "EPIC", label: "Q1-2026", value: "q1-2026", active: true },
+    { type: "EPIC", label: "Migração Cloud", value: "migracao-cloud", active: true },
+    { type: "EPIC", label: "Gestão de Acessos", value: "gestao-de-acessos", active: true },
+    { type: "EPIC", label: "Outros", value: "outros", active: true },
+  ]);
+}
+
 async function migrateUsersToProfiles() {
   const adminProfile = await ProfileModel.findOne({ name: "Administrador" });
   const techProfile = await ProfileModel.findOne({ name: "Técnico" });
@@ -209,6 +230,7 @@ async function migrateUsersToProfiles() {
 async function start() {
   await mongoose.connect(env.mongoUri);
   await ensureSystemProfiles();
+  await ensureDomainItems();
   await migrateUsersToProfiles();
   await ensureAdminUser();
   await startEmailPolling();

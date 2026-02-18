@@ -352,6 +352,17 @@ export interface Profile {
   permissions: ProfilePermissions;
 }
 
+export type DomainType = "CATEGORY" | "EPIC";
+
+export interface DomainItem {
+  id: string;
+  type: DomainType;
+  label: string;
+  value: string;
+  color?: string;
+  active: boolean;
+}
+
 export interface User {
   id: string;
   email: string;

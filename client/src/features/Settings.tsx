@@ -16,6 +16,7 @@ import {
   updateSystemParams,
 } from "@/lib/api";
 import { AccessControl } from "@/features/settings/AccessControl";
+import { DomainSettings } from "@/features/settings/DomainSettings";
 
 interface SettingsProps {
   notifications?: NotificationItem[];
@@ -653,6 +654,7 @@ export function Settings({ notifications = [], token, externalParties = [] }: Se
       </div>
 
       <AccessControl token={token} />
+      <DomainSettings token={token} />
 
       <Card className="bg-card/70 lg:col-span-12">
         <CardHeader>

@@ -13,6 +13,8 @@ import type {
   VaultItemDetail,
   User,
   Profile,
+  DomainItem,
+  DomainType,
   SystemParams,
 } from "@/types";
 
@@ -986,6 +988,42 @@ export async function deleteProfile(token: string, id: string) {
     throw new Error(data?.message ?? "Erro desconhecido ao excluir perfil.");
   }
   return (await response.json()) as { ok: boolean; message?: string };
+}
+
+export async function fetchDomainItems(token: string, type: DomainType) {
+  const response = await fetch(`${API_URL}/api/domains/${type}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Falha ao carregar domínio.");
+  return (await response.json()) as DomainItem[];
+}
+
+export async function createDomainItem(
+  token: string,
+  payload: { type: DomainType; label: string; color?: string }
+) {
+  const response = await fetch(`${API_URL}/api/domains`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao criar item.");
+  }
+  return (await response.json()) as DomainItem;
+}
+
+export async function deleteDomainItem(token: string, id: string) {
+  const response = await fetch(`${API_URL}/api/domains/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao remover item.");
+  }
+  return (await response.json()) as { ok: boolean };
 }
 
 export async function createUser(token: string, payload: { name: string; email: string; profileId: string }) {
