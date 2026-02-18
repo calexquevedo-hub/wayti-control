@@ -1,6 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
-import { Edit2, Filter, Plus } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  type DragUpdate,
+  type DropResult,
+} from "@hello-pangea/dnd";
+import { Filter, Plus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +16,7 @@ import { fetchDemands, moveDemand } from "@/lib/api";
 import type { Demand, DemandPriority, DemandStatus } from "@/types";
 import { DemandModal } from "@/features/demands/DemandModal";
 import type { DemandFormValues } from "@/features/demands/demand.schema";
+import { KanbanCard } from "@/features/demands/components/KanbanCard";
 
 const COLUMNS: DemandStatus[] = [
   "Backlog",
@@ -20,13 +27,6 @@ const COLUMNS: DemandStatus[] = [
   "Cancelado",
 ];
 
-const priorityTone: Record<DemandPriority, string> = {
-  P0: "bg-red-50 text-red-800 border-red-200",
-  P1: "bg-orange-50 text-orange-800 border-orange-200",
-  P2: "bg-blue-50 text-blue-800 border-blue-200",
-  P3: "bg-emerald-50 text-emerald-800 border-emerald-200",
-};
-
 interface DemandBoardProps {
   token?: string;
   demands: Demand[];
@@ -34,6 +34,45 @@ interface DemandBoardProps {
   onUpdate: (id: string, payload: Partial<Demand>) => Promise<{ ok: boolean; message?: string }>;
   onDelete: (id: string, reason: string) => Promise<{ ok: boolean; message?: string }>;
   onAddComment: (id: string, message: string) => Promise<{ ok: boolean; message?: string }>;
+}
+
+function createOptimisticDemand(values: DemandFormValues): Demand {
+  const now = new Date();
+  const progress = values.checklist.length
+    ? Math.round((values.checklist.filter((item) => item.checado).length / values.checklist.length) * 100)
+    : 0;
+
+  return {
+    id: `temp-${Date.now()}`,
+    name: values.titulo,
+    type: "projeto",
+    category: (values.categoria as Demand["category"]) ?? "outros",
+    status: values.status,
+    priority: values.prioridade,
+    impact: values.impacto,
+    epic: values.epico ?? "",
+    sponsor: "Não definido",
+    responsible: values.responsavel,
+    budget: 0,
+    spent: 0,
+    progress,
+    financialMonthly: values.financeiro_mensal,
+    financialOneOff: values.financeiro_one_off,
+    executiveSummary: values.resumo_executivo ?? "",
+    notes: "",
+    comments: [],
+    tasks: values.checklist.map((item) => ({
+      title: item.texto,
+      isCompleted: item.checado,
+    })),
+    evidenceLinks: [],
+    dependencies: [],
+    followUps: [],
+    audits: [],
+    lastUpdate: now,
+    nextFollowUpAt: values.proximo_follow_up ? new Date(values.proximo_follow_up) : undefined,
+    lastContactAt: values.ultimo_contato ? new Date(values.ultimo_contato) : undefined,
+  };
 }
 
 function toDemandPayload(values: DemandFormValues, current?: Demand): Partial<Demand> & Record<string, unknown> {
@@ -134,13 +173,22 @@ export function DemandBoard({
     });
   }, [boardDemands, search, priorityFilter]);
 
-  async function reloadDemands() {
+  const reloadDemands = useCallback(async () => {
     if (!token) return;
     const data = await fetchDemands(token);
     setBoardDemands(data);
-  }
+  }, [token]);
 
-  async function handleDragEnd(result: any) {
+  const handleDragOver = useCallback((_update: DragUpdate) => {
+    // Intencionalmente vazio: callback estável evita rebind em DragDropContext.
+  }, []);
+
+  const handleCardClick = useCallback((demand: Demand) => {
+    setEditingDemand(demand);
+    setModalOpen(true);
+  }, []);
+
+  const handleDragEnd = useCallback(async (result: DropResult) => {
     if (!result.destination) return;
     const { destination, source, draggableId } = result;
     if (destination.droppableId === source.droppableId && destination.index === source.index) return;
@@ -161,7 +209,7 @@ export function DemandBoard({
       setBoardDemands(previous);
       setError(e?.message ?? "Falha ao mover demanda.");
     }
-  }
+  }, [boardDemands, onUpdate, token]);
 
   async function saveDemand(values: DemandFormValues, demandId?: string) {
     setError(null);
@@ -169,13 +217,31 @@ export function DemandBoard({
       const current = boardDemands.find((d) => d.id === demandId);
       const result = await onUpdate(demandId, toDemandPayload(values, current) as Partial<Demand>);
       if (!result.ok) throw new Error(result.message ?? "Falha ao atualizar demanda.");
+      setBoardDemands((prev) =>
+        prev.map((demand) =>
+          demand.id === demandId
+            ? {
+                ...demand,
+                ...(toDemandPayload(values, demand) as Partial<Demand>),
+                lastUpdate: new Date(),
+              }
+            : demand,
+        ),
+      );
     } else {
+      const optimisticDemand = createOptimisticDemand(values);
+      setBoardDemands((prev) => [optimisticDemand, ...prev]);
       const payload = toDemandPayload(values) as Omit<Demand, "id">;
-      const result = await onCreate(payload);
-      if (!result.ok) throw new Error(result.message ?? "Falha ao criar demanda.");
+      try {
+        const result = await onCreate(payload);
+        if (!result.ok) throw new Error(result.message ?? "Falha ao criar demanda.");
+      } catch (error) {
+        setBoardDemands((prev) => prev.filter((demand) => demand.id !== optimisticDemand.id));
+        throw error;
+      }
     }
 
-    if (token) await reloadDemands();
+    if (token) void reloadDemands();
   }
 
   async function deleteFromModal(demandId: string | number) {
@@ -229,7 +295,7 @@ export function DemandBoard({
       </CardHeader>
 
       <CardContent>
-        <DragDropContext onDragEnd={handleDragEnd}>
+        <DragDropContext onDragUpdate={handleDragOver} onDragEnd={handleDragEnd}>
           <div className="flex gap-4 overflow-x-auto pb-4">
             {COLUMNS.map((status) => {
               const items = filtered.filter((d) => d.status === status);
@@ -250,39 +316,14 @@ export function DemandBoard({
                         {items.map((demand, index) => (
                           <Draggable key={demand.id} draggableId={demand.id} index={index}>
                             {(drag) => (
-                              <Card
+                              <div
                                 ref={drag.innerRef}
                                 {...drag.draggableProps}
                                 {...drag.dragHandleProps}
-                                className="cursor-grab border-border/60 bg-card/80 hover:shadow-md"
+                                className="cursor-grab"
                               >
-                                <CardHeader className="p-3 pb-1">
-                                  <div className="flex items-center justify-between gap-2">
-                                    <Badge variant="outline" className={priorityTone[demand.priority]}>
-                                      {demand.priority}
-                                    </Badge>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-7 w-7"
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        setEditingDemand(demand);
-                                        setModalOpen(true);
-                                      }}
-                                    >
-                                      <Edit2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                  <p className="text-sm font-medium text-foreground">{(demand as any).titulo ?? demand.name}</p>
-                                </CardHeader>
-                                <CardContent className="p-3 pt-0 text-xs text-muted-foreground">
-                                  <div className="flex items-center justify-between">
-                                    <span>{demand.category}</span>
-                                    <span>{demand.lastUpdate.toLocaleDateString("pt-BR")}</span>
-                                  </div>
-                                </CardContent>
-                              </Card>
+                                <KanbanCard demand={demand} onClick={handleCardClick} />
+                              </div>
                             )}
                           </Draggable>
                         ))}
