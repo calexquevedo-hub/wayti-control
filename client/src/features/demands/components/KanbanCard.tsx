@@ -126,9 +126,7 @@ function KanbanCardComponent({ demand, onClick }: KanbanCardProps) {
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{demand.category}</span>
           <div className="flex items-center gap-2">
-            <span className={deadlineTone}>
-              {deadline ? deadline.toLocaleDateString("pt-BR") : "Sem prazo"}
-            </span>
+            {deadline ? <span className={deadlineTone}>{deadline.toLocaleDateString("pt-BR")}</span> : null}
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-[10px] font-semibold text-foreground">
               {getResponsibleInitials(demand.responsible)}
             </div>
