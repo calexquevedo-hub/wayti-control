@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import PDFDocument from "pdfkit";
+import path from "path";
 
 import { AssetModel, ASSET_STATUSES } from "../models/Asset";
 import { AssetAssignmentModel } from "../models/AssetAssignment";
@@ -409,5 +410,34 @@ export const generateTermPdf = async (req: Request, res: Response) => {
     return undefined;
   } catch {
     return res.status(500).json({ message: "Erro ao gerar termo em PDF." });
+  }
+};
+
+export const uploadSignedTerm = async (req: Request, res: Response) => {
+  try {
+    const { assignmentId } = req.params;
+    if (!isValidObjectId(assignmentId)) {
+      return res.status(400).json({ message: "assignmentId inválido." });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "Arquivo não enviado." });
+    }
+
+    const assignment = await AssetAssignmentModel.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ message: "Registro de custódia não encontrado." });
+    }
+
+    const normalized = req.file.path.split(path.sep).join("/");
+    const uploadsIndex = normalized.lastIndexOf("/uploads/");
+    const publicPath = uploadsIndex >= 0 ? normalized.slice(uploadsIndex) : `/uploads/terms/${req.file.filename}`;
+
+    assignment.signedTermUrl = publicPath;
+    await assignment.save();
+
+    return res.json(assignment);
+  } catch {
+    return res.status(500).json({ message: "Erro ao anexar termo assinado." });
   }
 };

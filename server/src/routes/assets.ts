@@ -13,7 +13,9 @@ import {
   retireAsset,
   updateAsset,
   generateTermPdf,
+  uploadSignedTerm,
 } from "../controllers/asset.controller";
+import { uploadSignedTermMiddleware } from "../middleware/upload";
 
 const router = Router();
 
@@ -23,6 +25,13 @@ router.get(
   requireAuth,
   checkPermission("assets", "view"),
   generateTermPdf
+);
+router.post(
+  "/assignments/:assignmentId/upload",
+  requireAuth,
+  checkPermission("assets", "edit"),
+  uploadSignedTermMiddleware.single("file"),
+  uploadSignedTerm
 );
 router.get("/:id", requireAuth, checkPermission("assets", "view"), getAssetById);
 router.get("/:id/history", requireAuth, checkPermission("assets", "view"), getAssetHistory);

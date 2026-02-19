@@ -18,6 +18,7 @@ export interface IAssetAssignment extends Document {
   checkinCondition?: string;
   status: (typeof ASSET_ASSIGNMENT_STATUSES)[number];
   notes?: string;
+  signedTermUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +43,7 @@ const AssetAssignmentSchema = new Schema<IAssetAssignment>(
     checkinCondition: { type: String, trim: true },
     status: { type: String, enum: ASSET_ASSIGNMENT_STATUSES, default: "Active", index: true },
     notes: { type: String, trim: true },
+    signedTermUrl: { type: String, trim: true },
   },
   {
     timestamps: true,

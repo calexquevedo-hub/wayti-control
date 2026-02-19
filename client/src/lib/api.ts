@@ -525,6 +525,7 @@ export interface InventoryAssignment {
   checkinDate?: string | null;
   status?: "Active" | "Returned";
   notes?: string;
+  signedTermUrl?: string;
 }
 
 export interface InventoryAsset {
@@ -672,6 +673,24 @@ export async function downloadAssetTerm(token: string, assignmentId: string) {
   link.click();
   link.remove();
   window.URL.revokeObjectURL(url);
+}
+
+export async function uploadAssetTerm(token: string, assignmentId: string, file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(`${API_URL}/api/assets/assignments/${assignmentId}/upload`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro ao anexar termo assinado");
+  }
+
+  return (await response.json()) as InventoryAssignment;
 }
 
 export async function fetchContracts(token: string) {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRightLeft, Download, History, Laptop, Trash2, UserCheck } from "lucide-react";
+import { ArrowRightLeft, CheckCircle2, Download, History, Laptop, Paperclip, Trash2, UserCheck } from "lucide-react";
 
 import {
   checkinAsset,
@@ -9,6 +9,7 @@ import {
   fetchUsers,
   getAssetHistory,
   retireAsset,
+  uploadAssetTerm,
   updateAsset,
   type InventoryAsset,
   type InventoryAssignment,
@@ -69,6 +70,8 @@ function getAssetId(asset: InventoryAsset | null) {
   return asset.id ?? asset._id ?? "";
 }
 
+const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+
 function initFormData(asset: InventoryAsset | null): AssetFormData {
   if (!asset) {
     return {
@@ -118,6 +121,16 @@ export function AssetModal({ isOpen, onClose, token, asset, onSaved }: AssetModa
 
   const assetId = useMemo(() => getAssetId(asset), [asset]);
 
+  const reloadHistory = async () => {
+    if (!token || !assetId) return;
+    try {
+      const data = await getAssetHistory(token, assetId);
+      setHistory(data);
+    } catch {
+      setHistory([]);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen || !token) return;
 
@@ -149,10 +162,7 @@ export function AssetModal({ isOpen, onClose, token, asset, onSaved }: AssetModa
       setHistory([]);
       return;
     }
-
-    void getAssetHistory(token, assetId)
-      .then((data) => setHistory(data))
-      .catch(() => setHistory([]));
+    void reloadHistory();
   }, [asset, assetId, isOpen, token]);
 
   const assetStatus = asset?.status || "Available";
@@ -647,6 +657,55 @@ export function AssetModal({ isOpen, onClose, token, asset, onSaved }: AssetModa
                               >
                                 <Download className="h-4 w-4" />
                               </Button>
+                              {entry.signedTermUrl ? (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-emerald-600"
+                                  title="Ver termo assinado"
+                                  onClick={() => {
+                                    const fileUrl = entry.signedTermUrl?.startsWith("http")
+                                      ? entry.signedTermUrl
+                                      : `${API_URL}${entry.signedTermUrl}`;
+                                    window.open(fileUrl, "_blank", "noopener,noreferrer");
+                                  }}
+                                >
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </Button>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  title="Anexar termo assinado"
+                                  onClick={() => {
+                                    const assignmentId = entry.id || entry._id;
+                                    if (!assignmentId || !token) return;
+                                    const input = document.createElement("input");
+                                    input.type = "file";
+                                    input.accept = ".pdf,.jpg,.jpeg,.png";
+                                    input.onchange = async () => {
+                                      const file = input.files?.[0];
+                                      if (!file) return;
+                                      try {
+                                        await uploadAssetTerm(token, assignmentId, file);
+                                        await reloadHistory();
+                                      } catch (error) {
+                                        const message =
+                                          error instanceof Error
+                                            ? error.message
+                                            : "Erro ao anexar termo assinado";
+                                        alert(message);
+                                      }
+                                    };
+                                    input.click();
+                                  }}
+                                >
+                                  <Paperclip className="h-4 w-4" />
+                                </Button>
+                              )}
                             </div>
                           </div>
                         );
