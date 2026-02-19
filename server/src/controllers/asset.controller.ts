@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
+import PDFDocument from "pdfkit";
 
 import { AssetModel, ASSET_STATUSES } from "../models/Asset";
 import { AssetAssignmentModel } from "../models/AssetAssignment";
@@ -13,6 +14,13 @@ function parseDate(value?: string) {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return undefined;
   return parsed;
+}
+
+function formatDate(value?: Date | string | null) {
+  if (!value) return "-";
+  const parsed = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "-";
+  return parsed.toLocaleDateString("pt-BR");
 }
 
 export const getAssetById = async (req: Request, res: Response) => {
@@ -327,5 +335,79 @@ export const retireAsset = async (req: Request, res: Response) => {
     return res.json(asset);
   } catch {
     return res.status(500).json({ message: "Erro ao dar baixa no ativo." });
+  }
+};
+
+export const generateTermPdf = async (req: Request, res: Response) => {
+  try {
+    const { assignmentId } = req.params;
+    if (!isValidObjectId(assignmentId)) {
+      return res.status(400).json({ message: "assignmentId inválido." });
+    }
+
+    const assignment = await AssetAssignmentModel.findById(assignmentId).populate("asset");
+    if (!assignment) {
+      return res.status(404).json({ message: "Termo não encontrado." });
+    }
+
+    const assetDoc = assignment.asset as any;
+    if (!assetDoc) {
+      return res.status(404).json({ message: "Ativo vinculado não encontrado." });
+    }
+
+    const employeeName = assignment.snapshot?.name ?? "N/A";
+    const employeeCpf = assignment.snapshot?.cpf ?? "N/A";
+    const assetName = assetDoc.name ?? "Ativo";
+    const assetTag = assetDoc.assetTag ?? "Sem patrimônio";
+    const serial = assetDoc.serialNumber ?? "Sem serial";
+    const checkoutCondition = assignment.checkoutCondition ?? "Não informada";
+    const checkoutDate = formatDate(assignment.checkoutDate);
+
+    const filenameSafeTag = String(assetTag).replace(/[^a-zA-Z0-9-_]/g, "_");
+    const filename = `termo-responsabilidade-${filenameSafeTag}.pdf`;
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+    const doc = new PDFDocument({ size: "A4", margin: 48 });
+    doc.pipe(res);
+
+    doc.fontSize(14).font("Helvetica-Bold").text("TERMO DE RESPONSABILIDADE DE EQUIPAMENTO", {
+      align: "center",
+    });
+
+    doc.moveDown(2);
+    doc.font("Helvetica").fontSize(11).text(
+      `Pelo presente termo, o colaborador ${employeeName}, CPF ${employeeCpf}, declara o recebimento do equipamento ${assetName}, patrimônio ${assetTag}, serial ${serial}, em ${checkoutDate}, em condição "${checkoutCondition}", comprometendo-se com o uso adequado, guarda, conservação e devolução quando solicitado pela empresa.`,
+      {
+        align: "justify",
+        lineGap: 4,
+      }
+    );
+
+    doc.moveDown(1.5);
+    doc.text(
+      "Declaro estar ciente de que o equipamento é de propriedade da empresa e que qualquer dano, perda ou uso indevido poderá gerar responsabilização conforme as políticas internas aplicáveis.",
+      {
+        align: "justify",
+        lineGap: 4,
+      }
+    );
+
+    doc.moveDown(2.5);
+    doc.text(`Data da entrega: ${checkoutDate}`);
+    doc.moveDown(3);
+
+    doc.text("________________________________________", { align: "left" });
+    doc.text("Assinatura do Colaborador", { align: "left" });
+
+    doc.moveDown(2.5);
+    doc.text("________________________________________", { align: "left" });
+    doc.text("Assinatura da Empresa", { align: "left" });
+
+    doc.end();
+    return undefined;
+  } catch {
+    return res.status(500).json({ message: "Erro ao gerar termo em PDF." });
   }
 };

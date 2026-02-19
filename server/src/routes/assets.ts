@@ -12,11 +12,18 @@ import {
   getAssets,
   retireAsset,
   updateAsset,
+  generateTermPdf,
 } from "../controllers/asset.controller";
 
 const router = Router();
 
 router.get("/", requireAuth, checkPermission("assets", "view"), getAssets);
+router.get(
+  "/assignments/:assignmentId/term",
+  requireAuth,
+  checkPermission("assets", "view"),
+  generateTermPdf
+);
 router.get("/:id", requireAuth, checkPermission("assets", "view"), getAssetById);
 router.get("/:id/history", requireAuth, checkPermission("assets", "view"), getAssetHistory);
 

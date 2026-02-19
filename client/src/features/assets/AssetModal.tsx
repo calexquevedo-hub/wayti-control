@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRightLeft, History, Laptop, Trash2, UserCheck } from "lucide-react";
+import { ArrowRightLeft, Download, History, Laptop, Trash2, UserCheck } from "lucide-react";
 
 import {
   checkinAsset,
   checkoutAsset,
   createAsset,
+  downloadAssetTerm,
   fetchUsers,
   getAssetHistory,
   retireAsset,
@@ -605,20 +606,48 @@ export function AssetModal({ isOpen, onClose, token, asset, onSaved }: AssetModa
                         const key = entry.id || entry._id || `${entry.snapshot?.cpf}-${entry.checkoutDate}`;
                         return (
                           <div key={key} className="border-l-2 border-slate-200 py-1 pl-3 text-sm">
-                            <p className="font-medium text-slate-800 dark:text-slate-200">
-                              {entry.snapshot?.name || "Sem nome"}{" "}
-                              <span className="text-xs font-normal text-slate-400">({entry.snapshot?.cpf || "-"})</span>
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              Retirou: {entry.checkoutDate ? new Date(entry.checkoutDate).toLocaleDateString("pt-BR") : "-"}
-                            </p>
-                            {entry.checkinDate ? (
-                              <p className="text-xs text-emerald-600">
-                                Devolveu: {new Date(entry.checkinDate).toLocaleDateString("pt-BR")}
-                              </p>
-                            ) : (
-                              <p className="text-xs font-semibold text-blue-600">Em posse atual</p>
-                            )}
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="font-medium text-slate-800 dark:text-slate-200">
+                                  {entry.snapshot?.name || "Sem nome"}{" "}
+                                  <span className="text-xs font-normal text-slate-400">({entry.snapshot?.cpf || "-"})</span>
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  Retirou:{" "}
+                                  {entry.checkoutDate
+                                    ? new Date(entry.checkoutDate).toLocaleDateString("pt-BR")
+                                    : "-"}
+                                </p>
+                                {entry.checkinDate ? (
+                                  <p className="text-xs text-emerald-600">
+                                    Devolveu: {new Date(entry.checkinDate).toLocaleDateString("pt-BR")}
+                                  </p>
+                                ) : (
+                                  <p className="text-xs font-semibold text-blue-600">Em posse atual</p>
+                                )}
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                title="Baixar termo em PDF"
+                                onClick={async () => {
+                                  if (!token) return;
+                                  const assignmentId = entry.id || entry._id;
+                                  if (!assignmentId) return;
+                                  try {
+                                    await downloadAssetTerm(token, assignmentId);
+                                  } catch (error) {
+                                    const message =
+                                      error instanceof Error ? error.message : "Erro ao baixar termo";
+                                    alert(message);
+                                  }
+                                }}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         );
                       })}

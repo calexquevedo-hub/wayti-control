@@ -650,6 +650,30 @@ export async function retireAsset(token: string, payload: { assetId: string; rea
   return (await response.json()) as InventoryAsset;
 }
 
+export async function downloadAssetTerm(token: string, assignmentId: string) {
+  const response = await fetch(`${API_URL}/api/assets/assignments/${assignmentId}/term`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro ao baixar termo");
+  }
+
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get("content-disposition") ?? "";
+  const match = /filename=\"?([^\";]+)\"?/i.exec(contentDisposition);
+  const filename = match?.[1] ?? `termo-${assignmentId}.pdf`;
+
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 export async function fetchContracts(token: string) {
   const response = await fetch(`${API_URL}/api/contracts`, {
     headers: { Authorization: `Bearer ${token}` },
