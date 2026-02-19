@@ -13,10 +13,13 @@ function isDomainType(value: string): value is DomainType {
 export const getDomainItems = async (req: Request, res: Response) => {
   try {
     const { type } = req.params;
+    const includeInactive = req.query.includeInactive === "true";
     if (!isDomainType(type)) {
       return res.status(400).json({ message: "Tipo de domínio inválido." });
     }
-    const items = await DomainItemModel.find({ type, active: true }).sort({ label: 1 });
+    const filter: Record<string, unknown> = { type };
+    if (!includeInactive) filter.active = true;
+    const items = await DomainItemModel.find(filter).sort({ active: -1, label: 1 });
     return res.json(items);
   } catch {
     return res.status(500).json({ message: "Erro ao buscar itens de domínio." });
@@ -107,5 +110,34 @@ export const deleteDomainItem = async (req: Request, res: Response) => {
     return res.json({ ok: true, message: "Item removido." });
   } catch {
     return res.status(500).json({ message: "Erro ao remover item de domínio." });
+  }
+};
+
+export const updateDomainItem = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { label, color } = req.body as { label?: string; color?: string };
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID inválido." });
+    }
+    if (!label || !label.trim()) {
+      return res.status(400).json({ message: "Informe o nome do item." });
+    }
+
+    const item = await DomainItemModel.findById(id);
+    if (!item) {
+      return res.status(404).json({ message: "Item não encontrado." });
+    }
+
+    item.label = label.trim();
+    item.color = color?.trim() || undefined;
+    await item.save();
+    return res.json(item);
+  } catch (error: any) {
+    if (error?.code === 11000) {
+      return res.status(409).json({ message: "Já existe item com este nome neste domínio." });
+    }
+    return res.status(500).json({ message: "Erro ao atualizar item de domínio." });
   }
 };

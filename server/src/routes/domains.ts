@@ -6,12 +6,14 @@ import {
   createDomainItem,
   deleteDomainItem,
   getDomainItems,
+  updateDomainItem,
 } from "../controllers/domainController";
 
 const router = Router();
 
 router.get("/:type", requireAuth, checkPermission("demands", "view"), getDomainItems);
 router.post("/", requireAuth, checkPermission("settings", "manage"), createDomainItem);
+router.patch("/:id", requireAuth, checkPermission("settings", "manage"), updateDomainItem);
 router.delete("/:id", requireAuth, checkPermission("settings", "manage"), deleteDomainItem);
 
 export default router;

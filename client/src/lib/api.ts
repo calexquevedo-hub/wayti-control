@@ -1058,8 +1058,16 @@ export async function deleteProfile(token: string, id: string) {
   return (await response.json()) as { ok: boolean; message?: string };
 }
 
-export async function fetchDomainItems(token: string, type: DomainType) {
-  const response = await fetch(`${API_URL}/api/domains/${type}`, {
+export async function fetchDomainItems(
+  token: string,
+  type: DomainType,
+  options?: { includeInactive?: boolean }
+) {
+  const params = new URLSearchParams();
+  if (options?.includeInactive) params.set("includeInactive", "true");
+  const query = params.toString() ? `?${params.toString()}` : "";
+
+  const response = await fetch(`${API_URL}/api/domains/${type}${query}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) throw new Error("Falha ao carregar domínio.");
@@ -1092,6 +1100,23 @@ export async function deleteDomainItem(token: string, id: string) {
     throw new Error(data?.message ?? "Falha ao remover item.");
   }
   return (await response.json()) as { ok: boolean };
+}
+
+export async function updateDomainItem(
+  token: string,
+  id: string,
+  payload: { label: string; color?: string }
+) {
+  const response = await fetch(`${API_URL}/api/domains/${id}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao atualizar item.");
+  }
+  return (await response.json()) as DomainItem;
 }
 
 export async function createUser(token: string, payload: { name: string; email: string; profileId: string }) {
