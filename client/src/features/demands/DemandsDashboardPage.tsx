@@ -67,6 +67,52 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
     return data.currentSprint.carryover + data.currentSprint.newScope;
   }, [data]);
 
+  const detailing = useMemo(() => {
+    if (!data) return null;
+    if (data.detailing) return data.detailing;
+    if (!data.currentSprint) return null;
+
+    const tasks = data.currentSprint.activeTasks.map((task) => ({
+      id: task.id,
+      sequentialId: null,
+      name: task.name,
+      categoria: "Sem categoria",
+      epico: task.epico || "Sem épico",
+      isDone: false,
+    }));
+
+    const tasksByEpicMap = new Map<string, number>();
+    for (const task of tasks) {
+      tasksByEpicMap.set(task.epico, (tasksByEpicMap.get(task.epico) ?? 0) + 1);
+    }
+
+    const tasksByEpic = Array.from(tasksByEpicMap.entries())
+      .map(([epicName, total]) => ({ epicName, total }))
+      .sort((a, b) => b.total - a.total);
+
+    const topEpic = tasksByEpic[0];
+    const concentration =
+      topEpic && tasks.length > 0
+        ? {
+            epicName: topEpic.epicName,
+            total: topEpic.total,
+            percent: Math.round((topEpic.total / tasks.length) * 100),
+          }
+        : null;
+
+    return {
+      sprint: {
+        id: data.currentSprint.id,
+        name: data.currentSprint.name,
+        startDate: data.currentSprint.startDate,
+        endDate: data.currentSprint.endDate,
+      },
+      tasksByEpic,
+      tasks,
+      concentration,
+    };
+  }, [data]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -271,7 +317,7 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
           </TabsContent>
 
           <TabsContent value="detailing" className="space-y-4 pt-3">
-            {!data.detailing ? (
+            {!detailing ? (
               <Card>
                 <CardContent className="pt-6">
                   <p className="text-sm text-muted-foreground">
@@ -282,12 +328,12 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
             ) : (
               <>
                 <Card className="overflow-hidden border-0 shadow-none">
-                  <CardHeader className="rounded-md bg-[#1f2a6e] py-4 text-white">
-                    <CardTitle className="text-xl font-bold uppercase tracking-wide">
-                      {data.detailing.sprint.name} | {formatDate(data.detailing.sprint.startDate)} a{" "}
-                      {formatDate(data.detailing.sprint.endDate)} - Detalhamento
-                    </CardTitle>
-                  </CardHeader>
+                    <CardHeader className="rounded-md bg-[#1f2a6e] py-4 text-white">
+                      <CardTitle className="text-xl font-bold uppercase tracking-wide">
+                        {detailing.sprint.name} | {formatDate(detailing.sprint.startDate)} a{" "}
+                        {formatDate(detailing.sprint.endDate)} - Detalhamento
+                      </CardTitle>
+                    </CardHeader>
                 </Card>
 
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -301,7 +347,7 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
                       <div className="h-[320px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart
-                            data={data.detailing.tasksByEpic}
+                            data={detailing.tasksByEpic}
                             layout="vertical"
                             margin={{ left: 24, right: 16, top: 8, bottom: 8 }}
                           >
@@ -317,11 +363,11 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
-                      {data.detailing.concentration ? (
+                      {detailing.concentration ? (
                         <p className="mt-2 text-sm italic text-slate-600">
-                          {data.detailing.concentration.epicName} concentra{" "}
-                          {data.detailing.concentration.total} de {data.detailing.tasks.length} tarefas (
-                          {data.detailing.concentration.percent}%).
+                          {detailing.concentration.epicName} concentra{" "}
+                          {detailing.concentration.total} de {detailing.tasks.length} tarefas (
+                          {detailing.concentration.percent}%).
                         </p>
                       ) : null}
                     </CardContent>
@@ -346,7 +392,7 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
                             </tr>
                           </thead>
                           <tbody>
-                            {data.detailing.tasks.map((task) => (
+                            {detailing.tasks.map((task) => (
                               <tr key={task.id} className="border-b">
                                 <td className="p-2 font-medium">
                                   {task.sequentialId ? `#${task.sequentialId}` : `#${task.id.slice(-4)}`}
