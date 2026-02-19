@@ -49,7 +49,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 const AuditLog = lazy(() => import("@/features/AuditLog").then((m) => ({ default: m.AuditLog })));
 const DemandBoard = lazy(() => import("@/features/DemandBoard").then((m) => ({ default: m.DemandBoard })));
-const SprintBoard = lazy(() => import("@/features/SprintBoard").then((m) => ({ default: m.SprintBoard })));
+const SprintBoard = lazy(() =>
+  import("@/features/demands/SprintBoard").then((m) => ({ default: m.SprintBoard }))
+);
 const DemandsDashboardPage = lazy(() =>
   import("@/features/demands/DemandsDashboardPage").then((m) => ({ default: m.DemandsDashboardPage }))
 );
