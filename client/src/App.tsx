@@ -50,7 +50,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 const AuditLog = lazy(() => import("@/features/AuditLog").then((m) => ({ default: m.AuditLog })));
 const DemandBoard = lazy(() => import("@/features/DemandBoard").then((m) => ({ default: m.DemandBoard })));
 const SprintBoard = lazy(() => import("@/features/SprintBoard").then((m) => ({ default: m.SprintBoard })));
-const Dashboard = lazy(() => import("@/features/Dashboard").then((m) => ({ default: m.Dashboard })));
+const DemandsDashboardPage = lazy(() =>
+  import("@/features/demands/DemandsDashboardPage").then((m) => ({ default: m.DemandsDashboardPage }))
+);
 const FollowUps = lazy(() => import("@/features/FollowUps").then((m) => ({ default: m.FollowUps })));
 const Inbox = lazy(() => import("@/features/Inbox").then((m) => ({ default: m.Inbox })));
 const Portal = lazy(() => import("@/features/Portal").then((m) => ({ default: m.Portal })));
@@ -312,7 +314,7 @@ export default function App() {
         );
       default:
         return canAccessPage(permissions, "Visão Geral") ? (
-          <Dashboard demands={demands} tickets={tickets} />
+          <DemandsDashboardPage token={user?.token} />
         ) : (
           <div className="rounded-lg border border-border/60 bg-background/40 p-6 text-sm text-muted-foreground">
             Acesso restrito.

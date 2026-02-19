@@ -24,6 +24,7 @@ import systemParamsRoutes from "./routes/systemParams";
 import profileRoutes from "./routes/profiles";
 import domainRoutes from "./routes/domains";
 import sprintRoutes from "./routes/sprints";
+import dashboardRoutes from "./routes/dashboard";
 import { UserModel } from "./models/User";
 import { ProfileModel } from "./models/Profile";
 import { DomainItemModel } from "./models/DomainItem";
@@ -85,6 +86,7 @@ app.use("/api/profiles", profileRoutes);
 app.use("/api/system-params", systemParamsRoutes);
 app.use("/api/domains", domainRoutes);
 app.use("/api/sprints", sprintRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // --- CONFIGURAÇÃO DE PRODUÇÃO ---
 const clientDistPath =

@@ -149,6 +149,54 @@ export async function fetchCurrentSprint(token: string) {
   } as Sprint;
 }
 
+export async function fetchDashboardData(token: string) {
+  const response = await fetch(`${API_URL}/api/dashboard`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro ao buscar dados do dashboard");
+  }
+  return (await response.json()) as {
+    executive: {
+      totalEpicsActive: number;
+      totalOpenTasks: number;
+      totalDeliveredTasks: number;
+      epicsHealth: Array<{
+        epicName: string;
+        activeDeliverables: string[];
+        healthStatus: "Crítico" | "Em andamento";
+      }>;
+    };
+    currentSprint:
+      | {
+          id: string;
+          name: string;
+          startDate: string;
+          endDate: string;
+          daysLeft: number;
+          carryover: number;
+          newScope: number;
+          activeTasks: Array<{
+            id: string;
+            name: string;
+            epico: string;
+            responsible: string;
+            dependencia: string;
+          }>;
+        }
+      | null;
+    sprintHistory: Array<{
+      id: string;
+      name: string;
+      startDate: string;
+      endDate: string;
+      taskCount: number;
+      statusColor: "green" | "yellow" | "purple" | "gray";
+    }>;
+  };
+}
+
 export async function createSprint(
   token: string,
   payload: {
