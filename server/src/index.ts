@@ -27,6 +27,7 @@ import { UserModel } from "./models/User";
 import { ProfileModel } from "./models/Profile";
 import { DomainItemModel } from "./models/DomainItem";
 import { startEmailPolling } from "./config/emailPoller";
+import { startWarrantyJobs } from "./jobs/warrantyAlert";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -234,6 +235,7 @@ async function start() {
   await migrateUsersToProfiles();
   await ensureAdminUser();
   await startEmailPolling();
+  startWarrantyJobs();
   app.listen(env.port, () => {
     console.log(`API on http://localhost:${env.port}`);
   });
