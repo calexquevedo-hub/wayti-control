@@ -13,9 +13,7 @@ import {
   createTicket,
   createContact,
   deleteTicket,
-  createAsset,
   escalateDemand,
-  updateAsset,
   fetchExternalParties,
   fetchUsers,
   fetchAssets,
@@ -58,7 +56,9 @@ const Portal = lazy(() => import("@/features/Portal").then((m) => ({ default: m.
 const Reports = lazy(() => import("@/features/Reports").then((m) => ({ default: m.Reports })));
 const Settings = lazy(() => import("@/features/Settings").then((m) => ({ default: m.Settings })));
 const Tickets = lazy(() => import("@/features/Tickets").then((m) => ({ default: m.Tickets })));
-const Assets = lazy(() => import("@/features/Assets").then((m) => ({ default: m.Assets })));
+const AssetsPage = lazy(() =>
+  import("@/features/assets/AssetsPage").then((m) => ({ default: m.AssetsPage }))
+);
 const Contracts = lazy(() => import("@/features/Contracts").then((m) => ({ default: m.Contracts })));
 const Vault = lazy(() => import("@/features/Vault").then((m) => ({ default: m.Vault })));
 const Automations = lazy(() => import("@/features/Automations/Automations").then((m) => ({ default: m.Automations })));
@@ -256,24 +256,7 @@ export default function App() {
           />
         );
       case "Ativos":
-        return (
-          <Assets
-            token={user?.token}
-            assets={assets}
-            tickets={tickets}
-            users={usersList}
-            onCreate={async (payload) => {
-              if (!user?.token) return;
-              const created = await createAsset(user.token, payload);
-              setAssets((prev) => [created, ...prev]);
-            }}
-            onUpdate={async (id, payload) => {
-              if (!user?.token) return;
-              const updated = await updateAsset(user.token, id, payload);
-              setAssets((prev) => prev.map((asset) => (asset.id === id ? updated : asset)));
-            }}
-          />
-        );
+        return <AssetsPage token={user?.token} />;
       case "Contratos":
         return (
           <Contracts

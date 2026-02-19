@@ -506,6 +506,150 @@ export async function updateAsset(token: string, id: string, payload: Partial<As
   };
 }
 
+export interface InventoryAssetUserRef {
+  id?: string;
+  _id?: string;
+  name?: string;
+  email?: string;
+}
+
+export interface InventoryAssignment {
+  _id?: string;
+  id?: string;
+  user?: InventoryAssetUserRef | null;
+  snapshot?: {
+    name?: string;
+    cpf?: string;
+  };
+  checkoutDate?: string;
+  checkinDate?: string | null;
+  status?: "Active" | "Returned";
+  notes?: string;
+}
+
+export interface InventoryAsset {
+  _id?: string;
+  id?: string;
+  name: string;
+  assetTag?: string;
+  serialNumber?: string;
+  type:
+    | "Computer"
+    | "Mobile"
+    | "Peripheral"
+    | "Infrastructure"
+    | "Software"
+    | "Furniture"
+    | "Other";
+  status: "Available" | "In Use" | "Maintenance" | "Lost" | "Retired";
+  condition?: "New" | "Good" | "Fair" | "Poor" | "Broken";
+  manufacturer?: string;
+  modelName?: string;
+  purchaseDate?: string;
+  warrantyEnd?: string;
+  value?: number;
+  notes?: string;
+  currentAssignment?: InventoryAssignment | null;
+  retireDate?: string;
+  retireReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export async function getAssets(
+  token: string,
+  search?: string,
+  status?: string,
+  type?: string
+) {
+  const params = new URLSearchParams();
+  if (search) params.append("search", search);
+  if (status && status !== "All") params.append("status", status);
+  if (type && type !== "All") params.append("type", type);
+
+  const response = await fetch(`${API_URL}/api/assets?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro ao buscar ativos");
+  }
+  return (await response.json()) as InventoryAsset[];
+}
+
+export async function getAssetHistory(token: string, assetId: string) {
+  const response = await fetch(`${API_URL}/api/assets/${assetId}/history`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro ao buscar histórico do ativo");
+  }
+  return (await response.json()) as InventoryAssignment[];
+}
+
+export async function checkoutAsset(
+  token: string,
+  payload: {
+    assetId: string;
+    userId: string;
+    name: string;
+    cpf: string;
+    condition: string;
+    expectedReturnDate?: string;
+    notes?: string;
+  }
+) {
+  const response = await fetch(`${API_URL}/api/assets/checkout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro no checkout");
+  }
+  return (await response.json()) as { asset: InventoryAsset; assignment: InventoryAssignment };
+}
+
+export async function checkinAsset(
+  token: string,
+  payload: { assetId: string; returnCondition: string; notes?: string }
+) {
+  const response = await fetch(`${API_URL}/api/assets/checkin`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro no checkin");
+  }
+  return (await response.json()) as { asset: InventoryAsset; assignment: InventoryAssignment };
+}
+
+export async function retireAsset(token: string, payload: { assetId: string; reason: string }) {
+  const response = await fetch(`${API_URL}/api/assets/retire`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro ao baixar ativo");
+  }
+  return (await response.json()) as InventoryAsset;
+}
+
 export async function fetchContracts(token: string) {
   const response = await fetch(`${API_URL}/api/contracts`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -1012,6 +1156,10 @@ export async function fetchUsers(token: string) {
   });
   if (!response.ok) throw new Error("Falha ao carregar usuários.");
   return (await response.json()) as User[];
+}
+
+export async function getUsers(token: string) {
+  return fetchUsers(token);
 }
 
 export async function fetchProfiles(token: string) {
