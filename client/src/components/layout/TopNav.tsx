@@ -17,6 +17,7 @@ const navItems = [
   "Portal",
   "Visão Geral",
   "Demandas",
+  "Sprint",
   "Follow-ups",
   "Chamados",
   "Ativos",

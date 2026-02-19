@@ -21,6 +21,7 @@ const navItems = [
   { label: "Portal", icon: HelpCircle },
   { label: "Visão Geral", icon: LayoutGrid },
   { label: "Demandas", icon: ClipboardList },
+  { label: "Sprint", icon: ClipboardList },
   { label: "Follow-ups", icon: BarChart3 },
   { label: "Chamados", icon: ClipboardList },
   { label: "Ativos", icon: Monitor },
