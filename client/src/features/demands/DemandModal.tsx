@@ -11,6 +11,7 @@ import {
   ListTodo,
   MessageSquare,
   Plus,
+  RotateCcw,
   Trash2,
   UserCircle2,
 } from "lucide-react";
@@ -39,7 +40,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { fetchDomainItems, fetchUsers } from "@/lib/api";
+import { archiveDemand, duplicateDemand, fetchDomainItems, fetchUsers, unarchiveDemand } from "@/lib/api";
 import type { Demand, User } from "@/types";
 import {
   demandSchema,
@@ -55,6 +56,8 @@ interface DemandModalProps {
   onSave: (values: DemandFormValues, demandId?: string) => Promise<void>;
   onDelete?: (demandId: string) => Promise<void>;
   onAddComment?: (demandId: string, message: string) => Promise<{ ok: boolean; message?: string }>;
+  onRefresh?: () => Promise<void>;
+  canDelete?: boolean;
 }
 
 const EMPTY_SELECT_VALUE = "__none__";
@@ -180,8 +183,11 @@ export function DemandModal({
   onSave,
   onDelete,
   onAddComment,
+  onRefresh,
+  canDelete = false,
 }: DemandModalProps) {
   const isEdit = Boolean(demandToEdit?.id);
+  const isArchived = Boolean(demandToEdit?.isArchived);
   const [saving, setSaving] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
@@ -365,6 +371,58 @@ export function DemandModal({
     onClose();
   }
 
+  async function handleArchiveToggle() {
+    if (!token || !demandToEdit?.id) return;
+    setSaving(true);
+    setStatusMsg(null);
+    try {
+      if (isArchived) {
+        await unarchiveDemand(token, demandToEdit.id);
+        setActivityItems((prev) => [
+          {
+            at: new Date(),
+            author: "Você",
+            text: "Enviou este cartão para o quadro.",
+            type: "audit",
+          },
+          ...prev,
+        ]);
+      } else {
+        await archiveDemand(token, demandToEdit.id);
+        setActivityItems((prev) => [
+          {
+            at: new Date(),
+            author: "Você",
+            text: "Arquivou este cartão.",
+            type: "audit",
+          },
+          ...prev,
+        ]);
+      }
+      await onRefresh?.();
+      onClose();
+    } catch (error: any) {
+      setStatusMsg(error?.message ?? "Falha ao atualizar arquivamento.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDuplicate() {
+    if (!token || !demandToEdit?.id) return;
+    setSaving(true);
+    setStatusMsg(null);
+    try {
+      await duplicateDemand(token, demandToEdit.id);
+      await onRefresh?.();
+      onClose();
+    } catch (error: any) {
+      setStatusMsg(error?.message ?? "Falha ao copiar demanda.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleAddComment() {
     if (!demandToEdit?.id || !onAddComment || !commentDraft.trim()) return;
     const result = await onAddComment(demandToEdit.id, commentDraft.trim());
@@ -406,6 +464,11 @@ export function DemandModal({
   return (
     <Dialog open={isOpen} onOpenChange={(next) => !next && onClose()}>
       <DialogContent className="max-h-[92vh] max-w-6xl overflow-y-auto p-0">
+        {isArchived ? (
+          <div className="border-b border-amber-300 bg-amber-50 px-6 py-2 text-sm text-amber-900">
+            Este cartão está arquivado.
+          </div>
+        ) : null}
         <DialogHeader className="border-b px-6 py-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -736,14 +799,36 @@ export function DemandModal({
                 <Button type="submit" className="w-full" disabled={saving}>
                   {saving ? "Salvando..." : "Salvar"}
                 </Button>
-                <Button type="button" variant="outline" className="w-full" disabled>
+                <Button type="button" variant="outline" className="w-full" disabled={saving || !isEdit} onClick={handleDuplicate}>
                   <Copy className="mr-2 h-4 w-4" /> Copiar
                 </Button>
-                <Button type="button" variant="outline" className="w-full" disabled>
-                  <Archive className="mr-2 h-4 w-4" /> Arquivar
-                </Button>
                 {isEdit ? (
-                  <Button type="button" variant="destructive" className="w-full" onClick={handleDelete}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleArchiveToggle}
+                    disabled={saving}
+                  >
+                    {isArchived ? (
+                      <>
+                        <RotateCcw className="mr-2 h-4 w-4" /> Enviar para o quadro
+                      </>
+                    ) : (
+                      <>
+                        <Archive className="mr-2 h-4 w-4" /> Arquivar
+                      </>
+                    )}
+                  </Button>
+                ) : null}
+                {isEdit && isArchived ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="w-full"
+                    onClick={handleDelete}
+                    disabled={!canDelete || saving}
+                  >
                     <Trash2 className="mr-2 h-4 w-4" /> Excluir
                   </Button>
                 ) : null}

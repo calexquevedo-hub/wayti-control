@@ -183,6 +183,8 @@ export default function App() {
             onUpdate={actions.update}
             onDelete={actions.remove}
             onAddComment={actions.addComment}
+            onRefresh={actions.refresh}
+            canDelete={Boolean(user?.profile && typeof user.profile !== "string" && user.profile.name === "Administrador")}
           />
         );
       case "Portal":

@@ -146,6 +146,7 @@ const DemandSchema = new Schema(
     proximo_follow_up: { type: Date },
     escalonar_em: { type: Date },
     posicao: { type: Number, default: 0 },
+    isArchived: { type: Boolean, default: false, index: true },
   },
   {
     timestamps: true,

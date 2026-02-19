@@ -42,6 +42,7 @@ function parseDemand(raw: Demand) {
     epico,
     responsible: raw.responsible ?? responsavel,
     responsavel,
+    isArchived: Boolean(raw.isArchived),
     status: normalizeStatus(raw.status),
     lastUpdate: new Date(raw.lastUpdate),
     nextFollowUpAt: raw.nextFollowUpAt ? new Date(raw.nextFollowUpAt) : undefined,
@@ -189,6 +190,54 @@ export async function deleteDemand(token: string, id: string, reason: string) {
   }
 
   return (await response.json()) as { ok: true };
+}
+
+export async function archiveDemand(token: string, id: string) {
+  const response = await fetch(`${API_URL}/api/demands/${id}/archive`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao arquivar demanda.");
+  }
+  return parseDemand((await response.json()) as Demand);
+}
+
+export async function unarchiveDemand(token: string, id: string) {
+  const response = await fetch(`${API_URL}/api/demands/${id}/unarchive`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao restaurar demanda.");
+  }
+  return parseDemand((await response.json()) as Demand);
+}
+
+export async function duplicateDemand(token: string, id: string) {
+  const response = await fetch(`${API_URL}/api/demands/${id}/duplicate`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao duplicar demanda.");
+  }
+  return parseDemand((await response.json()) as Demand);
 }
 
 export async function createContact(

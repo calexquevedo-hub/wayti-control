@@ -16,10 +16,11 @@ const ALLOWED_DEMAND_STATUSES = new Set([
 ]);
 
 router.get("/", requireAuth, checkPermission("demands", "view"), async (req, res) => {
-  const { status, priority, epic, responsible, externalOwnerId, overdue, nextFrom, nextTo } =
+  const { status, priority, epic, responsible, externalOwnerId, overdue, nextFrom, nextTo, archived } =
     req.query as Record<string, string | undefined>;
 
   const filter: Record<string, unknown> = { deletedAt: { $exists: false } };
+  filter.isArchived = archived === "true";
   if (status) filter.status = status;
   if (priority) filter.priority = priority;
   if (epic) filter.epic = epic;
@@ -39,6 +40,91 @@ router.get("/", requireAuth, checkPermission("demands", "view"), async (req, res
 
   const demands = await DemandModel.find(filter).sort({ updatedAt: -1 });
   return res.json(demands);
+});
+
+router.put("/:id/archive", requireAuth, checkPermission("demands", "edit"), async (req, res) => {
+  const actor = res.locals.user?.email ?? "system";
+  const demand = await DemandModel.findById(req.params.id);
+  if (!demand) return res.status(404).json({ message: "Demanda não encontrada." });
+
+  const updated = await DemandModel.findByIdAndUpdate(
+    req.params.id,
+    {
+      isArchived: true,
+      lastUpdate: new Date(),
+      $push: {
+        audits: {
+          at: new Date(),
+          action: "archived",
+          actor,
+          notes: "Arquivou este cartão.",
+        },
+      },
+    },
+    { new: true }
+  );
+
+  return res.json(updated);
+});
+
+router.put("/:id/unarchive", requireAuth, checkPermission("demands", "edit"), async (req, res) => {
+  const actor = res.locals.user?.email ?? "system";
+  const demand = await DemandModel.findById(req.params.id);
+  if (!demand) return res.status(404).json({ message: "Demanda não encontrada." });
+
+  const updated = await DemandModel.findByIdAndUpdate(
+    req.params.id,
+    {
+      isArchived: false,
+      lastUpdate: new Date(),
+      $push: {
+        audits: {
+          at: new Date(),
+          action: "unarchived",
+          actor,
+          notes: "Enviou este cartão para o quadro.",
+        },
+      },
+    },
+    { new: true }
+  );
+
+  return res.json(updated);
+});
+
+router.post("/:id/duplicate", requireAuth, checkPermission("demands", "create"), async (req, res) => {
+  const actor = res.locals.user?.email ?? "system";
+  const source = await DemandModel.findById(req.params.id);
+  if (!source) return res.status(404).json({ message: "Demanda não encontrada." });
+
+  const sourceObject = source.toObject();
+  const baseName = String(sourceObject.name ?? sourceObject.titulo ?? "Demanda");
+  const duplicatePayload: Record<string, unknown> = {
+    ...sourceObject,
+    _id: undefined,
+    id: undefined,
+    createdAt: undefined,
+    updatedAt: undefined,
+    deletedAt: undefined,
+    sequentialId: undefined,
+    __v: undefined,
+    name: `${baseName} (Cópia)`,
+    titulo: `${baseName} (Cópia)`,
+    status: "Backlog",
+    isArchived: false,
+    lastUpdate: new Date(),
+    audits: [
+      {
+        at: new Date(),
+        action: "duplicated",
+        actor,
+        notes: `Copiado de #${sourceObject.sequentialId ?? source.id}.`,
+      },
+    ],
+  };
+
+  const created = await DemandModel.create(duplicatePayload);
+  return res.status(201).json(created);
 });
 
 router.post("/", requireAuth, checkPermission("demands", "create"), async (req, res) => {
@@ -293,9 +379,18 @@ router.delete("/:id", requireAuth, checkPermission("demands", "delete"), async (
     return res.status(400).json({ message: "Motivo da exclusão é obrigatório." });
   }
   const actor = res.locals.user?.email ?? "system";
+  const isAdmin =
+    res.locals.user?.role === "Admin" ||
+    res.locals.user?.profile?.name === "Administrador";
+  if (!isAdmin) {
+    return res.status(403).json({ message: "Somente ADMIN pode excluir demandas." });
+  }
   const demand = await DemandModel.findById(req.params.id);
   if (!demand) {
     return res.status(404).json({ message: "Demanda não encontrada." });
+  }
+  if (!demand.isArchived) {
+    return res.status(400).json({ message: "Card deve ser arquivado antes de excluir." });
   }
   const audits = [
     ...(demand.audits ?? []),

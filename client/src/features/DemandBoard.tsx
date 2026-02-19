@@ -35,6 +35,8 @@ interface DemandBoardProps {
   onUpdate: (id: string, payload: Partial<Demand>) => Promise<{ ok: boolean; message?: string }>;
   onDelete: (id: string, reason: string) => Promise<{ ok: boolean; message?: string }>;
   onAddComment: (id: string, message: string) => Promise<{ ok: boolean; message?: string }>;
+  onRefresh?: () => Promise<void>;
+  canDelete?: boolean;
 }
 
 function isBlank(value: unknown) {
@@ -175,6 +177,8 @@ export function DemandBoard({
   onUpdate,
   onDelete,
   onAddComment,
+  onRefresh,
+  canDelete = false,
 }: DemandBoardProps) {
   const [boardDemands, setBoardDemands] = useState<Demand[]>([]);
   const [search, setSearch] = useState("");
@@ -373,6 +377,8 @@ export function DemandBoard({
         }
         onDelete={deleteFromModal}
         onAddComment={onAddComment}
+        onRefresh={onRefresh}
+        canDelete={canDelete}
       />
     </Card>
   );

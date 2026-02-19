@@ -233,6 +233,7 @@ export interface TicketEmailItem {
 export interface Demand {
   id: string;
   sequentialId?: number;
+  isArchived?: boolean;
   name: string;
   titulo?: string;
   type: DemandType;
