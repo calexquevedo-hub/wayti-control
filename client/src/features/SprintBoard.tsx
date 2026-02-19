@@ -90,7 +90,7 @@ export function SprintBoard({ token, demands, onUpdate, onAddComment, onRefresh 
   const [boardDemands, setBoardDemands] = useState<Demand[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDemand, setEditingDemand] = useState<Demand | null>(null);
-  const [managerOpen, setManagerOpen] = useState(false);
+  const [isManagerOpen, setIsManagerOpen] = useState(false);
 
   const loadSprint = useCallback(async () => {
     if (!token) return;
@@ -185,7 +185,7 @@ export function SprintBoard({ token, demands, onUpdate, onAddComment, onRefresh 
             <Target className="h-5 w-5" /> Visão de Sprint
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => setManagerOpen(true)}>
+            <Button type="button" variant="outline" size="sm" onClick={() => setIsManagerOpen(true)}>
               <Settings className="mr-2 h-4 w-4" /> Gerenciar Sprints
             </Button>
             {currentSprint ? <Badge variant="outline">{currentSprint.status}</Badge> : null}
@@ -280,9 +280,9 @@ export function SprintBoard({ token, demands, onUpdate, onAddComment, onRefresh 
       />
 
       <SprintManagerModal
-        isOpen={managerOpen}
-        onClose={() => setManagerOpen(false)}
-        token={token}
+        isOpen={isManagerOpen}
+        onClose={() => setIsManagerOpen(false)}
+        token={token!}
         onSaved={reloadBoardData}
       />
     </Card>
