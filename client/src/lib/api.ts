@@ -194,6 +194,33 @@ export async function fetchDashboardData(token: string) {
       taskCount: number;
       statusColor: "green" | "yellow" | "purple" | "gray";
     }>;
+    detailing:
+      | {
+          sprint: {
+            id: string;
+            name: string;
+            startDate: string;
+            endDate: string;
+          };
+          tasksByEpic: Array<{
+            epicName: string;
+            total: number;
+          }>;
+          tasks: Array<{
+            id: string;
+            sequentialId: number | null;
+            name: string;
+            categoria: string;
+            epico: string;
+            isDone: boolean;
+          }>;
+          concentration: {
+            epicName: string;
+            total: number;
+            percent: number;
+          } | null;
+        }
+      | null;
   };
 }
 

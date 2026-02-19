@@ -110,6 +110,31 @@ export const getDashboardData = async (_req: Request, res: Response) => {
         dependencia: string;
       }>;
     } | null = null;
+    let detailingData: {
+      sprint: {
+        id: string;
+        name: string;
+        startDate: Date;
+        endDate: Date;
+      };
+      tasksByEpic: Array<{
+        epicName: string;
+        total: number;
+      }>;
+      tasks: Array<{
+        id: string;
+        sequentialId: number | null;
+        name: string;
+        categoria: string;
+        epico: string;
+        isDone: boolean;
+      }>;
+      concentration: {
+        epicName: string;
+        total: number;
+        percent: number;
+      } | null;
+    } | null = null;
 
     if (activeSprint) {
       const sprintId = String(activeSprint._id);
@@ -149,6 +174,49 @@ export const getDashboardData = async (_req: Request, res: Response) => {
         newScope,
         activeTasks,
       };
+
+      const detailingTasks = sprintDemands
+        .filter((item: any) => !item.deletedAt && !item.isArchived)
+        .filter((item: any) => normalizeText(item.status) !== "Cancelado")
+        .map((item: any) => ({
+          id: String(item._id),
+          sequentialId: typeof item.sequentialId === "number" ? item.sequentialId : null,
+          name: demandTitle(item),
+          categoria: normalizeText(item.categoria) || normalizeText(item.category) || "Sem categoria",
+          epico: demandEpic(item) || "Sem épico",
+          isDone: normalizeText(item.status) === "Concluído",
+        }));
+
+      const tasksByEpicMap = new Map<string, number>();
+      for (const task of detailingTasks) {
+        const key = task.epico || "Sem épico";
+        tasksByEpicMap.set(key, (tasksByEpicMap.get(key) ?? 0) + 1);
+      }
+      const tasksByEpic = Array.from(tasksByEpicMap.entries())
+        .map(([epicName, total]) => ({ epicName, total }))
+        .sort((a, b) => b.total - a.total);
+
+      const topEpic = tasksByEpic[0];
+      const concentration =
+        topEpic && detailingTasks.length > 0
+          ? {
+              epicName: topEpic.epicName,
+              total: topEpic.total,
+              percent: Math.round((topEpic.total / detailingTasks.length) * 100),
+            }
+          : null;
+
+      detailingData = {
+        sprint: {
+          id: sprintId,
+          name: normalizeText(activeSprint.name),
+          startDate: sprintStart,
+          endDate: sprintEnd,
+        },
+        tasksByEpic,
+        tasks: detailingTasks,
+        concentration,
+      };
     }
 
     const sprintTaskMap = new Map<string, any[]>();
@@ -184,6 +252,7 @@ export const getDashboardData = async (_req: Request, res: Response) => {
       },
       currentSprint: currentSprintData,
       sprintHistory,
+      detailing: detailingData,
     });
   } catch {
     return res.status(500).json({ message: "Erro ao carregar dashboard." });

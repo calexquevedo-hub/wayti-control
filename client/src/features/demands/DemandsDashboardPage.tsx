@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,10 +81,11 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
 
       {!loading && data ? (
         <Tabs defaultValue="executive" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="executive">Visão Executiva</TabsTrigger>
             <TabsTrigger value="warroom">War Room (Sprint)</TabsTrigger>
             <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+            <TabsTrigger value="detailing">Detalhamento</TabsTrigger>
           </TabsList>
 
           <TabsContent value="executive" className="space-y-4 pt-3">
@@ -266,6 +268,109 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="detailing" className="space-y-4 pt-3">
+            {!data.detailing ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground">
+                    Nenhuma sprint ativa para exibir detalhamento.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <Card className="overflow-hidden border-0 shadow-none">
+                  <CardHeader className="rounded-md bg-[#1f2a6e] py-4 text-white">
+                    <CardTitle className="text-xl font-bold uppercase tracking-wide">
+                      {data.detailing.sprint.name} | {formatDate(data.detailing.sprint.startDate)} a{" "}
+                      {formatDate(data.detailing.sprint.endDate)} - Detalhamento
+                    </CardTitle>
+                  </CardHeader>
+                </Card>
+
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm uppercase tracking-wider text-[#1f2a6e]">
+                        Tarefas por Épico
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[320px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={data.detailing.tasksByEpic}
+                            layout="vertical"
+                            margin={{ left: 24, right: 16, top: 8, bottom: 8 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                            <XAxis type="number" allowDecimals={false} />
+                            <YAxis
+                              type="category"
+                              dataKey="epicName"
+                              width={170}
+                              tick={{ fill: "#334155", fontSize: 12 }}
+                            />
+                            <Bar dataKey="total" fill="#2563eb" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                      {data.detailing.concentration ? (
+                        <p className="mt-2 text-sm italic text-slate-600">
+                          {data.detailing.concentration.epicName} concentra{" "}
+                          {data.detailing.concentration.total} de {data.detailing.tasks.length} tarefas (
+                          {data.detailing.concentration.percent}%).
+                        </p>
+                      ) : null}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm uppercase tracking-wider text-[#1f2a6e]">
+                        Todas as Tarefas da Sprint
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="max-h-[420px] overflow-auto">
+                        <table className="w-full border-collapse text-sm">
+                          <thead>
+                            <tr className="sticky top-0 border-b bg-[#1f2a6e] text-left text-xs uppercase tracking-wide text-white">
+                              <th className="p-2">ID</th>
+                              <th className="p-2">Tarefa</th>
+                              <th className="p-2">Categoria</th>
+                              <th className="p-2">Épico</th>
+                              <th className="p-2">Concl.</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {data.detailing.tasks.map((task) => (
+                              <tr key={task.id} className="border-b">
+                                <td className="p-2 font-medium">
+                                  {task.sequentialId ? `#${task.sequentialId}` : `#${task.id.slice(-4)}`}
+                                </td>
+                                <td className="p-2">{task.name}</td>
+                                <td className="p-2 text-muted-foreground">{task.categoria}</td>
+                                <td className="p-2 text-muted-foreground">{task.epico}</td>
+                                <td className="p-2">
+                                  {task.isDone ? (
+                                    <span className="font-bold text-emerald-600">✓</span>
+                                  ) : (
+                                    <span className="font-bold text-red-600">✕</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            )}
           </TabsContent>
         </Tabs>
       ) : null}
