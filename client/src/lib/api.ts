@@ -81,8 +81,17 @@ export async function moveDemand(
 }
 
 // Lightweight API client for the demo.
-export async function fetchDemands(token: string) {
-  const response = await fetch(`${API_URL}/api/demands`, {
+export async function fetchDemands(
+  token: string,
+  options?: {
+    archived?: boolean;
+  }
+) {
+  const params = new URLSearchParams();
+  if (options?.archived) params.set("archived", "true");
+  const query = params.toString() ? `?${params.toString()}` : "";
+
+  const response = await fetch(`${API_URL}/api/demands${query}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 

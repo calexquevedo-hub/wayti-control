@@ -6,7 +6,7 @@ import {
   type DragUpdate,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { Filter, Plus } from "lucide-react";
+import { Archive, Filter, List, Plus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { DemandModal } from "@/features/demands/DemandModal";
 import { KanbanCard } from "@/features/demands/components/KanbanCard";
 import { KanbanColumn } from "@/features/demands/components/KanbanColumn";
 import type { DemandFormValues } from "@/features/demands/demand.schema";
-import { moveDemand } from "@/lib/api";
+import { fetchDemands, moveDemand } from "@/lib/api";
 import type { Demand, DemandStatus } from "@/types";
 
 const COLUMNS: DemandStatus[] = [
@@ -188,6 +188,9 @@ export function DemandBoard({
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDemand, setEditingDemand] = useState<Demand | null>(null);
   const [createStatus, setCreateStatus] = useState<DemandStatus>("Backlog");
+  const [boardMode, setBoardMode] = useState<"active" | "archived">("active");
+  const [archivedDemands, setArchivedDemands] = useState<Demand[]>([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
 
   useEffect(() => {
     setBoardDemands((prev) => {
@@ -196,14 +199,36 @@ export function DemandBoard({
     });
   }, [demands]);
 
+  const loadArchivedDemands = useCallback(async () => {
+    if (!token) return;
+    setArchivedLoading(true);
+    try {
+      const data = await fetchDemands(token, { archived: true });
+      setArchivedDemands((prev) => {
+        const prevById = new Map(prev.map((item) => [item.id, item]));
+        return data.map((item: Demand) => mergeDemandIdentity(item, prevById.get(item.id)));
+      });
+    } catch (e: any) {
+      setError(e?.message ?? "Falha ao carregar arquivados.");
+    } finally {
+      setArchivedLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (boardMode !== "archived") return;
+    void loadArchivedDemands();
+  }, [boardMode, loadArchivedDemands]);
+
   const filtered = useMemo(() => {
-    return boardDemands.filter((d) => {
+    const source = boardMode === "archived" ? archivedDemands : boardDemands;
+    return source.filter((d) => {
       const text = `${d.name} ${d.id}`.toLowerCase();
       const okSearch = !search || text.includes(search.toLowerCase());
       const okPriority = priorityFilter === "all" || d.priority === priorityFilter;
       return okSearch && okPriority;
     });
-  }, [boardDemands, search, priorityFilter]);
+  }, [boardDemands, archivedDemands, boardMode, search, priorityFilter]);
 
   const handleDragOver = useCallback((_update: DragUpdate) => {
     // callback estável
@@ -252,7 +277,7 @@ export function DemandBoard({
       const current = boardDemands.find((d) => d.id === demandId);
       const result = await onUpdate(demandId, toDemandPayload(values, current) as Partial<Demand>);
       if (!result.ok) throw new Error(result.message ?? "Falha ao atualizar demanda.");
-      setBoardDemands((prev) =>
+      const updater = (prev: Demand[]) =>
         prev.map((demand) =>
           demand.id === demandId
             ? {
@@ -261,8 +286,9 @@ export function DemandBoard({
                 lastUpdate: new Date(),
               }
             : demand
-        )
-      );
+        );
+      if (boardMode === "archived") setArchivedDemands(updater);
+      else setBoardDemands(updater);
     } else {
       const optimisticDemand = createOptimisticDemand({ ...values, status: values.status || createStatus });
       setBoardDemands((prev) => [optimisticDemand, ...prev]);
@@ -281,6 +307,7 @@ export function DemandBoard({
     const result = await onDelete(String(demandId), "Excluída via modal");
     if (!result.ok) throw new Error(result.message ?? "Falha ao excluir demanda.");
     setBoardDemands((prev) => prev.filter((d) => d.id !== String(demandId)));
+    setArchivedDemands((prev) => prev.filter((d) => d.id !== String(demandId)));
   }
 
   return (
@@ -288,16 +315,36 @@ export function DemandBoard({
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle>Gestão de Demandas</CardTitle>
-          <Button
-            onClick={() => {
-              setEditingDemand(null);
-              setCreateStatus("Backlog");
-              setModalOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Demanda
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={boardMode === "active" ? "default" : "outline"}
+              onClick={() => setBoardMode("active")}
+            >
+              <List className="mr-2 h-4 w-4" />
+              Quadro
+            </Button>
+            <Button
+              size="sm"
+              variant={boardMode === "archived" ? "default" : "outline"}
+              onClick={() => setBoardMode("archived")}
+            >
+              <Archive className="mr-2 h-4 w-4" />
+              Arquivados
+            </Button>
+            {boardMode === "active" ? (
+              <Button
+                onClick={() => {
+                  setEditingDemand(null);
+                  setCreateStatus("Backlog");
+                  setModalOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Demanda
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         <div className="mt-3 grid gap-3 lg:grid-cols-3">
@@ -325,6 +372,9 @@ export function DemandBoard({
       </CardHeader>
 
       <CardContent>
+        {boardMode === "archived" && archivedLoading ? (
+          <p className="px-1 pb-3 text-sm text-muted-foreground">Carregando arquivados...</p>
+        ) : null}
         <DragDropContext onDragUpdate={handleDragOver} onDragEnd={handleDragEnd}>
           <div className="flex gap-4 overflow-x-auto pb-4">
             {COLUMNS.map((status) => {
@@ -377,7 +427,14 @@ export function DemandBoard({
         }
         onDelete={deleteFromModal}
         onAddComment={onAddComment}
-        onRefresh={onRefresh}
+        onRefresh={async () => {
+          if (boardMode === "archived") {
+            await loadArchivedDemands();
+            await onRefresh?.();
+            return;
+          }
+          await onRefresh?.();
+        }}
         canDelete={canDelete}
       />
     </Card>
