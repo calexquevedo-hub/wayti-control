@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 
 import { DOMAIN_TYPES, DomainItemModel } from "../models/DomainItem";
+import { DemandModel } from "../models/Demand";
 
 type DomainType = (typeof DOMAIN_TYPES)[number];
 
@@ -37,9 +38,28 @@ export const createDomainItem = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Informe o nome do item." });
     }
 
+    const normalizedLabel = label.trim();
+
+    const existingByLabel = await DomainItemModel.findOne({
+      type,
+      label: new RegExp(`^${normalizedLabel.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+    });
+
+    if (existingByLabel) {
+      if (existingByLabel.active) {
+        return res.status(409).json({ message: "Item já existe neste domínio." });
+      }
+
+      existingByLabel.active = true;
+      existingByLabel.label = normalizedLabel;
+      existingByLabel.color = color?.trim() || undefined;
+      await existingByLabel.save();
+      return res.json(existingByLabel);
+    }
+
     const created = await DomainItemModel.create({
       type,
-      label: label.trim(),
+      label: normalizedLabel,
       color: color?.trim() || undefined,
       active: true,
     });
@@ -59,15 +79,32 @@ export const deleteDomainItem = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "ID inválido." });
     }
 
-    const updated = await DomainItemModel.findByIdAndUpdate(
-      id,
-      { active: false },
-      { new: true }
-    );
-    if (!updated) {
+    const item = await DomainItemModel.findById(id);
+    if (!item) {
       return res.status(404).json({ message: "Item não encontrado." });
     }
-    return res.json({ ok: true });
+
+    const usageQuery =
+      item.type === "CATEGORY"
+        ? {
+            deletedAt: { $exists: false },
+            $or: [{ category: item.label }, { categoria: item.label }, { category: item.value }, { categoria: item.value }],
+          }
+        : {
+            deletedAt: { $exists: false },
+            $or: [{ epic: item.label }, { epico: item.label }, { epic: item.value }, { epico: item.value }],
+          };
+
+    const linkedDemands = await DemandModel.countDocuments(usageQuery);
+    if (linkedDemands > 0) {
+      return res.status(409).json({
+        message: `Não é possível excluir. Existem ${linkedDemands} demanda(s) usando este item.`,
+      });
+    }
+
+    item.active = false;
+    await item.save();
+    return res.json({ ok: true, message: "Item removido." });
   } catch {
     return res.status(500).json({ message: "Erro ao remover item de domínio." });
   }
