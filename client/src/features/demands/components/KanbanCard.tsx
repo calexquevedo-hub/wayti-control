@@ -25,6 +25,15 @@ const categoryTone = [
   "bg-cyan-500",
 ];
 
+const epicTone = [
+  "bg-indigo-500",
+  "bg-fuchsia-500",
+  "bg-teal-500",
+  "bg-lime-500",
+  "bg-red-500",
+  "bg-blue-500",
+];
+
 function getTitle(demand: Demand) {
   return ((demand as Demand & { titulo?: string }).titulo ?? demand.name ?? "").trim();
 }
@@ -89,6 +98,20 @@ function hashIndex(value: string, size: number) {
   return Math.abs(hash) % size;
 }
 
+function getAcronym(text?: string) {
+  const cleaned = (text ?? "").trim();
+  if (!cleaned) return "";
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length === 1) {
+    return words[0].replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 3);
+  }
+  return words
+    .slice(0, 3)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
 function KanbanCardBase({ demand, onClick }: KanbanCardProps) {
   const checklist = getChecklistMeta(demand);
   const deadline = getDeadline(demand);
@@ -99,7 +122,8 @@ function KanbanCardBase({ demand, onClick }: KanbanCardProps) {
   const isChecklistDone = checklist.total > 0 && checklist.done === checklist.total;
   const category = ((demand as Demand & { categoria?: string }).categoria ?? demand.category ?? "").toString();
   const epic = ((demand as Demand & { epico?: string }).epico ?? demand.epic ?? "").toString();
-  const categoryBarTone = categoryTone[hashIndex(category || epic || demand.id, categoryTone.length)];
+  const categoryBadgeTone = categoryTone[hashIndex(category || demand.id, categoryTone.length)];
+  const epicBadgeTone = epicTone[hashIndex(epic || demand.id, epicTone.length)];
 
   return (
     <Card
@@ -109,9 +133,27 @@ function KanbanCardBase({ demand, onClick }: KanbanCardProps) {
       <CardContent className="p-3">
         <div className="mb-2 flex items-start justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1">
-            <span className={`inline-block h-2 w-12 rounded-full ${priorityTone[demand.priority]}`} title={`Prioridade ${demand.priority}`} />
-            {(category || epic) ? (
-              <span className={`inline-block h-2 w-12 rounded-full ${categoryBarTone}`} title={category || epic} />
+            <span
+              className={`inline-flex h-4 items-center justify-center rounded px-1.5 text-[9px] font-bold uppercase tracking-wider text-white ${priorityTone[demand.priority]}`}
+              title={`Prioridade ${demand.priority}`}
+            >
+              {demand.priority}
+            </span>
+            {category ? (
+              <span
+                className={`inline-flex h-4 items-center justify-center rounded px-1.5 text-[9px] font-bold uppercase tracking-wider text-white ${categoryBadgeTone}`}
+                title={category}
+              >
+                {getAcronym(category)}
+              </span>
+            ) : null}
+            {epic ? (
+              <span
+                className={`inline-flex h-4 items-center justify-center rounded px-1.5 text-[9px] font-bold uppercase tracking-wider text-white ${epicBadgeTone}`}
+                title={epic}
+              >
+                {getAcronym(epic)}
+              </span>
             ) : null}
           </div>
           <span className="font-mono text-[10px] text-slate-400">{getSequentialId(demand)}</span>
