@@ -120,6 +120,7 @@ const DemandSchema = new Schema(
     evidenceLinks: [EvidenceSchema],
     dependencies: [DependencySchema],
     escalateTo: { type: String, default: "N/A" },
+    sprintId: { type: Schema.Types.ObjectId, ref: "Sprint", default: null, index: true },
     nextFollowUpAt: { type: Date },
     lastContactAt: { type: Date },
     lastUpdate: { type: Date, required: true },

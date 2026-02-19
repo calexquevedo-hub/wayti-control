@@ -10,6 +10,7 @@ interface KanbanColumnProps {
   children: ReactNode;
   placeholder?: ReactNode;
   onAddCard: () => void;
+  showAddButton?: boolean;
   isDraggingOver?: boolean;
 }
 
@@ -19,6 +20,7 @@ export function KanbanColumn({
   children,
   placeholder,
   onAddCard,
+  showAddButton = true,
   isDraggingOver = false,
 }: KanbanColumnProps) {
   return (
@@ -38,15 +40,17 @@ export function KanbanColumn({
 
       <div className="min-h-[40px] flex-1 space-y-2 overflow-y-auto px-1 pb-2">{children}{placeholder}</div>
 
-      <Button
-        type="button"
-        variant="ghost"
-        className="mt-1 justify-start text-slate-600 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
-        onClick={onAddCard}
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        Adicionar um cartão
-      </Button>
+      {showAddButton ? (
+        <Button
+          type="button"
+          variant="ghost"
+          className="mt-1 justify-start text-slate-600 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+          onClick={onAddCard}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Adicionar um cartão
+        </Button>
+      ) : null}
     </div>
   );
 }

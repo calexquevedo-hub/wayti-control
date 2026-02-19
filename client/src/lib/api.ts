@@ -16,6 +16,7 @@ import type {
   DomainItem,
   DomainType,
   SystemParams,
+  Sprint,
 } from "@/types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
@@ -42,6 +43,11 @@ function parseDemand(raw: Demand) {
     epico,
     responsible: raw.responsible ?? responsavel,
     responsavel,
+    sprintId:
+      typeof (raw as any).sprintId === "object"
+        ? ((raw as any).sprintId?.id ?? (raw as any).sprintId?._id ?? "")
+        : (raw as any).sprintId,
+    sprint: (raw as any).sprintId ?? (raw as any).sprint,
     isArchived: Boolean(raw.isArchived),
     status: normalizeStatus(raw.status),
     lastUpdate: new Date(raw.lastUpdate),
@@ -85,10 +91,12 @@ export async function fetchDemands(
   token: string,
   options?: {
     archived?: boolean;
+    sprint?: "current" | "none" | string;
   }
 ) {
   const params = new URLSearchParams();
   if (options?.archived) params.set("archived", "true");
+  if (options?.sprint) params.set("sprint", options.sprint);
   const query = params.toString() ? `?${params.toString()}` : "";
 
   const response = await fetch(`${API_URL}/api/demands${query}`, {
@@ -103,6 +111,42 @@ export async function fetchDemands(
 
   const data = (await response.json()) as Demand[];
   return data.map(parseDemand);
+}
+
+export async function fetchSprints(token: string, status?: "Planned" | "Active" | "Closed") {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  const query = params.toString() ? `?${params.toString()}` : "";
+
+  const response = await fetch(`${API_URL}/api/sprints${query}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao carregar sprints.");
+  }
+  const data = (await response.json()) as Sprint[];
+  return data.map((item: any) => ({
+    ...item,
+    startDate: new Date(item.startDate),
+    endDate: new Date(item.endDate),
+  }));
+}
+
+export async function fetchCurrentSprint(token: string) {
+  const response = await fetch(`${API_URL}/api/sprints/current`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao carregar sprint atual.");
+  }
+  const item = (await response.json()) as Sprint;
+  return {
+    ...item,
+    startDate: new Date((item as any).startDate),
+    endDate: new Date((item as any).endDate),
+  } as Sprint;
 }
 
 export async function fetchReportSummary(token: string) {

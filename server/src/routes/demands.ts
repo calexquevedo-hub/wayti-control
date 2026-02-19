@@ -1,7 +1,9 @@
 import { Router } from "express";
+import mongoose from "mongoose";
 
 import { DemandModel } from "../models/Demand";
 import { ContactLogModel } from "../models/ContactLog";
+import { SprintModel } from "../models/Sprint";
 import { requireAuth } from "../middleware/auth";
 import { checkPermission } from "../middleware/permissionMiddleware";
 
@@ -16,7 +18,7 @@ const ALLOWED_DEMAND_STATUSES = new Set([
 ]);
 
 router.get("/", requireAuth, checkPermission("demands", "view"), async (req, res) => {
-  const { status, priority, epic, responsible, externalOwnerId, overdue, nextFrom, nextTo, archived } =
+  const { status, priority, epic, responsible, externalOwnerId, overdue, nextFrom, nextTo, archived, sprint } =
     req.query as Record<string, string | undefined>;
 
   const filter: Record<string, unknown> = { deletedAt: { $exists: false } };
@@ -26,6 +28,23 @@ router.get("/", requireAuth, checkPermission("demands", "view"), async (req, res
   if (epic) filter.epic = epic;
   if (responsible) filter.responsible = responsible;
   if (externalOwnerId) filter.externalOwnerId = externalOwnerId;
+
+  if (sprint === "none") {
+    filter.$or = [{ sprintId: { $exists: false } }, { sprintId: null }];
+  } else if (sprint === "current") {
+    const now = new Date();
+    const currentSprint =
+      (await SprintModel.findOne({ status: "Active" }).sort({ startDate: -1 })) ??
+      (await SprintModel.findOne({ startDate: { $lte: now }, endDate: { $gte: now } }).sort({
+        startDate: -1,
+      }));
+    if (!currentSprint) {
+      return res.json([]);
+    }
+    filter.sprintId = currentSprint._id;
+  } else if (sprint && mongoose.Types.ObjectId.isValid(sprint)) {
+    filter.sprintId = sprint;
+  }
 
   if (nextFrom || nextTo) {
     filter.nextFollowUpAt = {};
@@ -38,7 +57,9 @@ router.get("/", requireAuth, checkPermission("demands", "view"), async (req, res
     filter.nextFollowUpAt = { $lte: new Date() };
   }
 
-  const demands = await DemandModel.find(filter).sort({ updatedAt: -1 });
+  const demands = await DemandModel.find(filter)
+    .populate("sprintId", "name startDate endDate status")
+    .sort({ updatedAt: -1 });
   return res.json(demands);
 });
 
@@ -130,12 +151,17 @@ router.post("/:id/duplicate", requireAuth, checkPermission("demands", "create"),
 router.post("/", requireAuth, checkPermission("demands", "create"), async (req, res) => {
   const actor = res.locals.user?.email ?? "system";
   const now = new Date();
+  const sprintId =
+    typeof req.body.sprintId === "string" && req.body.sprintId.trim().length === 0
+      ? null
+      : req.body.sprintId;
   const sponsor =
     typeof req.body.sponsor === "string" && req.body.sponsor.trim()
       ? req.body.sponsor.trim()
       : "Não definido";
   const demand = await DemandModel.create({
     ...req.body,
+    sprintId,
     sponsor,
     lastUpdate: req.body.lastUpdate ? new Date(req.body.lastUpdate) : new Date(),
     audits: [
@@ -162,6 +188,16 @@ router.patch("/:id", requireAuth, checkPermission("demands", "edit"), async (req
   if (payload.nextFollowUpAt) payload.nextFollowUpAt = new Date(payload.nextFollowUpAt as string);
   if (payload.lastContactAt) payload.lastContactAt = new Date(payload.lastContactAt as string);
   if (payload.lastUpdate) payload.lastUpdate = new Date(payload.lastUpdate as string);
+  if ("sprintId" in payload) {
+    if (!payload.sprintId || payload.sprintId === "") {
+      payload.sprintId = null;
+    } else if (
+      typeof payload.sprintId === "string" &&
+      !mongoose.Types.ObjectId.isValid(payload.sprintId)
+    ) {
+      return res.status(400).json({ message: "sprintId inválido." });
+    }
+  }
   if (Array.isArray(payload.tasks)) {
     const total = payload.tasks.length;
     const completed = payload.tasks.filter((task: any) => task?.isCompleted).length;
@@ -195,6 +231,7 @@ router.patch("/:id", requireAuth, checkPermission("demands", "edit"), async (req
     "tasks",
     "escalateTo",
     "nextFollowUpAt",
+    "sprintId",
   ];
   trackFields.forEach((field) => {
     if (field in payload && String(current.get(field)) !== String(payload[field])) {

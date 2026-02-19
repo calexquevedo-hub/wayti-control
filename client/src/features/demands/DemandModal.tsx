@@ -40,8 +40,15 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { archiveDemand, duplicateDemand, fetchDomainItems, fetchUsers, unarchiveDemand } from "@/lib/api";
-import type { Demand, User } from "@/types";
+import {
+  archiveDemand,
+  duplicateDemand,
+  fetchDomainItems,
+  fetchSprints,
+  fetchUsers,
+  unarchiveDemand,
+} from "@/lib/api";
+import type { Demand, Sprint, User } from "@/types";
 import {
   demandSchema,
   type DemandFormInput,
@@ -68,6 +75,7 @@ const defaults: DemandFormInput = {
   prioridade: "P2",
   categoria: "",
   epico: "",
+  sprintId: "",
   responsavel: "",
   prazo: "",
   proximo_follow_up: "",
@@ -198,6 +206,8 @@ export function DemandModal({
   const [domainsLoading, setDomainsLoading] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [sprintsLoading, setSprintsLoading] = useState(false);
+  const [sprints, setSprints] = useState<Sprint[]>([]);
   const [followUpPickerOpen, setFollowUpPickerOpen] = useState(false);
   const [activityItems, setActivityItems] = useState<
     Array<{ at: Date; author: string; text: string; type: "comment" | "audit" }>
@@ -222,6 +232,7 @@ export function DemandModal({
     }
 
     const raw = demandToEdit as Demand & Record<string, any>;
+    const rawAny = raw as any;
     const safeDate = (value?: string | null) => (value ? String(value).slice(0, 10) : "");
     const safeISO = (value?: string | null) => (value ? new Date(value).toISOString() : "");
     const pick = (...keys: string[]) => {
@@ -247,6 +258,12 @@ export function DemandModal({
       prioridade: (pick("prioridade", "priority") || "P2") as DemandFormValues["prioridade"],
       categoria: String(pick("categoria", "category")),
       epico: String(pick("epico", "epic")),
+      sprintId:
+        String(
+          typeof rawAny.sprintId === "object"
+            ? rawAny.sprintId?.id ?? rawAny.sprintId?._id ?? ""
+            : pick("sprintId")
+        ) || "",
       responsavel: String(pick("responsavel", "responsible")),
       prazo: safeDate(pick("prazo", "deadline")),
       proximo_follow_up: safeISO(pick("proximo_follow_up", "nextFollowUpAt")),
@@ -291,6 +308,27 @@ export function DemandModal({
   useEffect(() => {
     if (!isOpen || !token) return;
     let mounted = true;
+    setSprintsLoading(true);
+    fetchSprints(token)
+      .then((data) => {
+        if (!mounted) return;
+        setSprints(data);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setSprints([]);
+      })
+      .finally(() => {
+        if (mounted) setSprintsLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [isOpen, token]);
+
+  useEffect(() => {
+    if (!isOpen || !token) return;
+    let mounted = true;
     setUsersLoading(true);
     fetchUsers(token)
       .then((data) => {
@@ -314,6 +352,7 @@ export function DemandModal({
   const checklistProgress = checklist.length ? Math.round((doneChecklist / checklist.length) * 100) : 0;
   const currentCategoria = form.watch("categoria");
   const currentEpico = form.watch("epico");
+  const currentSprintId = form.watch("sprintId");
   const currentResponsavel = form.watch("responsavel");
 
   const activity = useMemo(() => {
@@ -460,6 +499,20 @@ export function DemandModal({
     if (currentResponsavel && !base.includes(currentResponsavel)) base.unshift(currentResponsavel);
     return Array.from(new Set(base));
   }, [users, currentResponsavel]);
+
+  const sprintChoices = useMemo(() => {
+    const values = [...sprints];
+    if (currentSprintId && !values.some((item) => item.id === currentSprintId)) {
+      values.unshift({
+        id: currentSprintId,
+        name: "Sprint vinculada",
+        startDate: new Date(),
+        endDate: new Date(),
+        status: "Active",
+      });
+    }
+    return values;
+  }, [currentSprintId, sprints]);
 
   const followUpValue = form.watch("proximo_follow_up");
 
@@ -652,6 +705,45 @@ export function DemandModal({
                       <SelectItem value="Aguardando terceiros">Aguardando terceiros</SelectItem>
                       <SelectItem value="Concluído">Concluído</SelectItem>
                       <SelectItem value="Cancelado">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label id={fieldId("sprintId-label")} htmlFor={fieldId("sprintId-trigger")}>
+                    Sprint
+                  </Label>
+                  <Select
+                    value={form.watch("sprintId") || EMPTY_SELECT_VALUE}
+                    onValueChange={(value) =>
+                      form.setValue("sprintId", value === EMPTY_SELECT_VALUE ? "" : value, {
+                        shouldValidate: true,
+                      })
+                    }
+                  >
+                    <SelectTrigger
+                      id={fieldId("sprintId-trigger")}
+                      aria-labelledby={fieldId("sprintId-label")}
+                    >
+                      <SelectValue placeholder="Backlog (sem sprint)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={EMPTY_SELECT_VALUE}>Backlog</SelectItem>
+                      {sprintChoices.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name}
+                        </SelectItem>
+                      ))}
+                      {sprintChoices.length === 0 ? (
+                        <SelectItem value="__empty_sprint__" disabled>
+                          Sem sprints
+                        </SelectItem>
+                      ) : null}
+                      {sprintsLoading ? (
+                        <SelectItem value="__loading_sprint__" disabled>
+                          Carregando...
+                        </SelectItem>
+                      ) : null}
                     </SelectContent>
                   </Select>
                 </div>

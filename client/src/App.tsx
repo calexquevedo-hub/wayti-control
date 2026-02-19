@@ -49,6 +49,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 const AuditLog = lazy(() => import("@/features/AuditLog").then((m) => ({ default: m.AuditLog })));
 const DemandBoard = lazy(() => import("@/features/DemandBoard").then((m) => ({ default: m.DemandBoard })));
+const SprintBoard = lazy(() => import("@/features/SprintBoard").then((m) => ({ default: m.SprintBoard })));
 const Dashboard = lazy(() => import("@/features/Dashboard").then((m) => ({ default: m.Dashboard })));
 const FollowUps = lazy(() => import("@/features/FollowUps").then((m) => ({ default: m.FollowUps })));
 const Inbox = lazy(() => import("@/features/Inbox").then((m) => ({ default: m.Inbox })));
@@ -68,6 +69,7 @@ const pages = [
   "Portal",
   "Visão Geral",
   "Demandas",
+  "Sprint",
   "Follow-ups",
   "Chamados",
   "Ativos",
@@ -185,6 +187,16 @@ export default function App() {
             onAddComment={actions.addComment}
             onRefresh={actions.refresh}
             canDelete={Boolean(user?.profile && typeof user.profile !== "string" && user.profile.name === "Administrador")}
+          />
+        );
+      case "Sprint":
+        return (
+          <SprintBoard
+            token={user?.token}
+            demands={demands}
+            onUpdate={actions.update}
+            onAddComment={actions.addComment}
+            onRefresh={actions.refresh}
           />
         );
       case "Portal":

@@ -273,6 +273,8 @@ export interface Demand {
   evidenceLinks?: EvidenceLink[];
   dependencies?: Dependency[];
   escalateTo?: DemandEscalateTo;
+  sprintId?: string;
+  sprint?: Sprint | string;
   nextFollowUpAt?: Date;
   lastContactAt?: Date;
   prazo?: Date | string;
@@ -285,6 +287,14 @@ export interface Demand {
   audits?: AuditEntry[];
   isOverdue?: boolean;
   agingDays?: number;
+}
+
+export interface Sprint {
+  id: string;
+  name: string;
+  startDate: Date;
+  endDate: Date;
+  status: "Planned" | "Active" | "Closed";
 }
 
 export interface ReportSnapshot {

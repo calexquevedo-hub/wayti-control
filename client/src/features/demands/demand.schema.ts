@@ -18,6 +18,7 @@ export const demandSchema = z.object({
   prioridade: z.enum(["P0", "P1", "P2", "P3"]),
   categoria: z.string().min(1, "Informe a categoria"),
   epico: z.string().optional().default(""),
+  sprintId: z.string().optional().default(""),
   responsavel: z.string().min(1, "Informe o responsável"),
 
   prazo: z.string().optional().nullable(),

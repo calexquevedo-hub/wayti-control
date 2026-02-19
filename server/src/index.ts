@@ -23,9 +23,11 @@ import userRoutes from "./routes/users";
 import systemParamsRoutes from "./routes/systemParams";
 import profileRoutes from "./routes/profiles";
 import domainRoutes from "./routes/domains";
+import sprintRoutes from "./routes/sprints";
 import { UserModel } from "./models/User";
 import { ProfileModel } from "./models/Profile";
 import { DomainItemModel } from "./models/DomainItem";
+import { SprintModel } from "./models/Sprint";
 import { startEmailPolling } from "./config/emailPoller";
 import { startWarrantyJobs } from "./jobs/warrantyAlert";
 
@@ -82,6 +84,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/profiles", profileRoutes);
 app.use("/api/system-params", systemParamsRoutes);
 app.use("/api/domains", domainRoutes);
+app.use("/api/sprints", sprintRoutes);
 
 // --- CONFIGURAÇÃO DE PRODUÇÃO ---
 const clientDistPath =
@@ -208,6 +211,24 @@ async function ensureDomainItems() {
   ]);
 }
 
+async function ensureDefaultSprint() {
+  const hasSprint = await SprintModel.exists({});
+  if (hasSprint) return;
+
+  const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 13);
+  endDate.setHours(23, 59, 59, 999);
+
+  await SprintModel.create({
+    name: `Sprint ${startDate.toLocaleDateString("pt-BR")}`,
+    startDate,
+    endDate,
+    status: "Active",
+  });
+}
+
 async function migrateUsersToProfiles() {
   const adminProfile = await ProfileModel.findOne({ name: "Administrador" });
   const techProfile = await ProfileModel.findOne({ name: "Técnico" });
@@ -233,6 +254,7 @@ async function start() {
   await mongoose.connect(env.mongoUri);
   await ensureSystemProfiles();
   await ensureDomainItems();
+  await ensureDefaultSprint();
   await migrateUsersToProfiles();
   await ensureAdminUser();
   await startEmailPolling();

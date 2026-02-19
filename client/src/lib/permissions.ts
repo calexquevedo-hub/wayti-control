@@ -5,6 +5,7 @@ export const PAGE_PERMISSIONS: Record<string, (permissions: ProfilePermissions) 
   Portal: (p) => !!p.tickets.view && !!p.tickets.create,
   "Visão Geral": (p) => !!p.reports.view,
   Demandas: (p) => !!p.demands.view,
+  Sprint: (p) => !!p.demands.view,
   "Follow-ups": (p) => !!p.demands.view,
   Chamados: (p) => !!p.tickets.view,
   Ativos: (p) => !!p.assets.view,
