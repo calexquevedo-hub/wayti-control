@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -186,6 +186,8 @@ export function DemandModal({
   onRefresh,
   canDelete = false,
 }: DemandModalProps) {
+  const uid = useId();
+  const fieldId = (name: string) => `${uid}-${name}`;
   const isEdit = Boolean(demandToEdit?.id);
   const isArchived = Boolean(demandToEdit?.isArchived);
   const [saving, setSaving] = useState(false);
@@ -488,16 +490,16 @@ export function DemandModal({
         <form onSubmit={form.handleSubmit(handleSubmit)} className="grid grid-cols-12 gap-6 px-6 py-5">
           <section className="col-span-12 space-y-6 lg:col-span-8">
             <div className="space-y-2">
-              <Label htmlFor="titulo">Título</Label>
-              <Input id="titulo" {...form.register("titulo")} />
+              <Label htmlFor={fieldId("titulo")}>Título</Label>
+              <Input id={fieldId("titulo")} {...form.register("titulo")} />
               {form.formState.errors.titulo ? (
                 <p className="text-xs text-destructive">{form.formState.errors.titulo.message}</p>
               ) : null}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="resumo_executivo">Descrição</Label>
-              <Textarea id="resumo_executivo" rows={7} {...form.register("resumo_executivo")} />
+              <Label htmlFor={fieldId("resumo_executivo")}>Descrição</Label>
+              <Textarea id={fieldId("resumo_executivo")} rows={7} {...form.register("resumo_executivo")} />
             </div>
 
             <div className="rounded-lg border border-border/60 bg-background/60 p-4">
@@ -515,6 +517,8 @@ export function DemandModal({
                 {checklistArray.fields.map((item, index) => (
                   <div key={item.id} className="flex items-center gap-2">
                     <input
+                      id={fieldId(`checklist-${index}-checado`)}
+                      name={`checklist.${index}.checado`}
                       type="checkbox"
                       checked={Boolean(form.watch(`checklist.${index}.checado`))}
                       onChange={(event) =>
@@ -522,7 +526,7 @@ export function DemandModal({
                       }
                       className="h-4 w-4"
                     />
-                    <Input {...form.register(`checklist.${index}.texto`)} />
+                    <Input id={fieldId(`checklist-${index}-texto`)} {...form.register(`checklist.${index}.texto`)} />
                     <Button
                       type="button"
                       size="icon"
@@ -566,7 +570,12 @@ export function DemandModal({
 
               {isEdit ? (
                 <div className="mt-3 flex gap-2">
+                  <Label htmlFor={fieldId("comment")} className="sr-only">
+                    Escrever comentário
+                  </Label>
                   <Input
+                    id={fieldId("comment")}
+                    name="commentDraft"
                     value={commentDraft}
                     onChange={(event) => setCommentDraft(event.target.value)}
                     placeholder="Escrever um comentário..."
@@ -583,7 +592,7 @@ export function DemandModal({
 
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <Label className="inline-flex items-center gap-1">
+                  <Label id={fieldId("responsavel-label")} htmlFor={fieldId("responsavel-trigger")} className="inline-flex items-center gap-1">
                     <UserCircle2 className="h-3.5 w-3.5" /> Membro
                   </Label>
                   <Select
@@ -594,7 +603,7 @@ export function DemandModal({
                       })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id={fieldId("responsavel-trigger")} aria-labelledby={fieldId("responsavel-label")}>
                       <SelectValue placeholder="Selecione o responsável" />
                     </SelectTrigger>
                     <SelectContent>
@@ -624,7 +633,7 @@ export function DemandModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label>Status</Label>
+                  <Label id={fieldId("status-label")} htmlFor={fieldId("status-trigger")}>Status</Label>
                   <Select
                     value={form.watch("status") || "Backlog"}
                     onValueChange={(value) =>
@@ -633,7 +642,7 @@ export function DemandModal({
                       })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id={fieldId("status-trigger")} aria-labelledby={fieldId("status-label")}>
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -648,7 +657,7 @@ export function DemandModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label>Prioridade</Label>
+                  <Label id={fieldId("prioridade-label")} htmlFor={fieldId("prioridade-trigger")}>Prioridade</Label>
                   <Select
                     value={form.watch("prioridade") || "P2"}
                     onValueChange={(value) =>
@@ -657,7 +666,7 @@ export function DemandModal({
                       })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id={fieldId("prioridade-trigger")} aria-labelledby={fieldId("prioridade-label")}>
                       <SelectValue placeholder="Prioridade" />
                     </SelectTrigger>
                     <SelectContent>
@@ -670,7 +679,7 @@ export function DemandModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label>Categoria</Label>
+                  <Label id={fieldId("categoria-label")} htmlFor={fieldId("categoria-trigger")}>Categoria</Label>
                   <Select
                     value={form.watch("categoria") || EMPTY_SELECT_VALUE}
                     onValueChange={(value) =>
@@ -679,7 +688,7 @@ export function DemandModal({
                       })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id={fieldId("categoria-trigger")} aria-labelledby={fieldId("categoria-label")}>
                       <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
@@ -704,7 +713,7 @@ export function DemandModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label>Épico</Label>
+                  <Label id={fieldId("epico-label")} htmlFor={fieldId("epico-trigger")}>Épico</Label>
                   <Select
                     value={form.watch("epico") || EMPTY_SELECT_VALUE}
                     onValueChange={(value) =>
@@ -713,7 +722,7 @@ export function DemandModal({
                       })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id={fieldId("epico-trigger")} aria-labelledby={fieldId("epico-label")}>
                       <SelectValue placeholder="Épico" />
                     </SelectTrigger>
                     <SelectContent>
@@ -738,10 +747,12 @@ export function DemandModal({
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="inline-flex items-center gap-1">
+                  <Label htmlFor={fieldId("prazo")} className="inline-flex items-center gap-1">
                     <CalendarDays className="h-3.5 w-3.5" /> Prazo
                   </Label>
                   <Input
+                    id={fieldId("prazo")}
+                    name="prazo"
                     type="date"
                     value={form.watch("prazo") || ""}
                     onChange={(event) => form.setValue("prazo", event.target.value || "")}
@@ -776,16 +787,16 @@ export function DemandModal({
                         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                           R$
                         </span>
-                        <Input className="pl-9" type="number" step="0.01" {...form.register("financeiro_mensal")} />
+                        <Input id={fieldId("financeiro_mensal")} className="pl-9" type="number" step="0.01" {...form.register("financeiro_mensal")} />
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Valor One-off (Setup/Único)</Label>
+                      <Label htmlFor={fieldId("financeiro_one_off")} className="text-xs text-muted-foreground">Valor One-off (Setup/Único)</Label>
                       <div className="relative">
                         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                           R$
                         </span>
-                        <Input className="pl-9" type="number" step="0.01" {...form.register("financeiro_one_off")} />
+                        <Input id={fieldId("financeiro_one_off")} className="pl-9" type="number" step="0.01" {...form.register("financeiro_one_off")} />
                       </div>
                     </div>
                   </div>
