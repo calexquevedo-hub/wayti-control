@@ -6,14 +6,16 @@ import {
   type DragUpdate,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { CalendarDays, Target } from "lucide-react";
+import { CalendarDays, Settings, Target } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { DemandModal } from "@/features/demands/DemandModal";
 import { KanbanCard } from "@/features/demands/components/KanbanCard";
 import { KanbanColumn } from "@/features/demands/components/KanbanColumn";
+import { SprintManagerModal } from "@/features/demands/SprintManagerModal";
 import type { DemandFormValues } from "@/features/demands/demand.schema";
 import { fetchCurrentSprint, moveDemand } from "@/lib/api";
 import type { Demand, DemandStatus, Sprint } from "@/types";
@@ -88,6 +90,7 @@ export function SprintBoard({ token, demands, onUpdate, onAddComment, onRefresh 
   const [boardDemands, setBoardDemands] = useState<Demand[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDemand, setEditingDemand] = useState<Demand | null>(null);
+  const [managerOpen, setManagerOpen] = useState(false);
 
   const loadSprint = useCallback(async () => {
     if (!token) return;
@@ -169,6 +172,11 @@ export function SprintBoard({ token, demands, onUpdate, onAddComment, onRefresh 
     if (!response.ok) throw new Error(response.message ?? "Falha ao atualizar demanda.");
   }
 
+  const reloadBoardData = useCallback(async () => {
+    await onRefresh?.();
+    await loadSprint();
+  }, [loadSprint, onRefresh]);
+
   return (
     <Card className="bg-card/70">
       <CardHeader className="space-y-4">
@@ -176,7 +184,12 @@ export function SprintBoard({ token, demands, onUpdate, onAddComment, onRefresh 
           <CardTitle className="inline-flex items-center gap-2">
             <Target className="h-5 w-5" /> Visão de Sprint
           </CardTitle>
-          {currentSprint ? <Badge variant="outline">{currentSprint.status}</Badge> : null}
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setManagerOpen(true)}>
+              <Settings className="mr-2 h-4 w-4" /> Gerenciar Sprints
+            </Button>
+            {currentSprint ? <Badge variant="outline">{currentSprint.status}</Badge> : null}
+          </div>
         </div>
 
         {loadingSprint ? (
@@ -263,9 +276,14 @@ export function SprintBoard({ token, demands, onUpdate, onAddComment, onRefresh 
         demandToEdit={editingDemand}
         onSave={saveDemand}
         onAddComment={onAddComment}
-        onRefresh={async () => {
-          await onRefresh?.();
-        }}
+        onRefresh={reloadBoardData}
+      />
+
+      <SprintManagerModal
+        isOpen={managerOpen}
+        onClose={() => setManagerOpen(false)}
+        token={token}
+        onSaved={reloadBoardData}
       />
     </Card>
   );

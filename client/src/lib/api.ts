@@ -149,6 +149,71 @@ export async function fetchCurrentSprint(token: string) {
   } as Sprint;
 }
 
+export async function createSprint(
+  token: string,
+  payload: {
+    name: string;
+    startDate: string;
+    endDate: string;
+    status: "Planned" | "Active" | "Closed";
+  }
+) {
+  const response = await fetch(`${API_URL}/api/sprints`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro ao criar sprint");
+  }
+  const sprint = (await response.json()) as Sprint;
+  return {
+    ...sprint,
+    startDate: new Date((sprint as any).startDate),
+    endDate: new Date((sprint as any).endDate),
+  } as Sprint;
+}
+
+export async function updateSprint(
+  token: string,
+  id: string,
+  payload: {
+    name?: string;
+    startDate?: string;
+    endDate?: string;
+    status?: "Planned" | "Active" | "Closed";
+  }
+) {
+  const response = await fetch(`${API_URL}/api/sprints/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro ao atualizar sprint");
+  }
+  const sprint = (await response.json()) as Sprint;
+  return {
+    ...sprint,
+    startDate: new Date((sprint as any).startDate),
+    endDate: new Date((sprint as any).endDate),
+  } as Sprint;
+}
+
+export async function deleteSprint(token: string, id: string) {
+  const response = await fetch(`${API_URL}/api/sprints/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Erro ao deletar sprint");
+  }
+  return (await response.json()) as { message: string };
+}
+
 export async function fetchReportSummary(token: string) {
   const response = await fetch(`${API_URL}/api/reports/summary`, {
     headers: { Authorization: `Bearer ${token}` },
