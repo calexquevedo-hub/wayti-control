@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Plus, Trash2, X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -225,13 +225,8 @@ export function DomainSettings({ token }: DomainSettingsProps) {
                   {item.color ? (
                     <span className="h-3 w-3 rounded-full border" style={{ backgroundColor: item.color }} />
                   ) : null}
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8"
-                    onClick={() => startEdit(item)}
-                  >
-                    <Pencil className="h-4 w-4" />
+                  <Button size="sm" variant="outline" onClick={() => startEdit(item)}>
+                    Editar
                   </Button>
                   <Button
                     size="icon"
