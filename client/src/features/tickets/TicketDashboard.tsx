@@ -98,8 +98,21 @@ export function TicketDashboard({ initialView = "list", onOpenTicket }: TicketDa
   );
 
   return (
-    <div className="flex h-full flex-col gap-4 p-6">
-      <div className="sticky top-0 z-10 space-y-3 rounded-lg border bg-white p-4 shadow-sm">
+    <div className="p-6 flex flex-col gap-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Chamados</h1>
+          <p className="text-sm text-gray-500">Gestão da fila de atendimento</p>
+        </div>
+        <button
+          type="button"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+        >
+          + Novo Chamado
+        </button>
+      </div>
+
+      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full lg:max-w-md">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, Cpu, Menu } from "lucide-react";
+import { Bell, ChevronDown, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -83,7 +83,7 @@ export function TopNav({
 
   return (
     <header className="flex items-center justify-between gap-4 border-b border-border bg-card/70 px-6 py-4 backdrop-blur">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu">
@@ -108,13 +108,6 @@ export function TopNav({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-          <Cpu className="h-5 w-5" />
-        </div>
-        <div className="hidden sm:block">
-          <p className="text-sm text-muted-foreground">Gestão de Demanda TI</p>
-          <h2 className="text-lg font-semibold">Centro de Follow-ups</h2>
-        </div>
       </div>
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" aria-label="Notificações">
