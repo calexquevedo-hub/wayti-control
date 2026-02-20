@@ -1,17 +1,17 @@
 import {
+  BellRing,
   BarChart3,
-  Clock3,
   ExternalLink,
-  FileText,
-  Inbox,
-  KanbanSquare,
-  KeyRound,
+  FileSignature,
+  Headset,
+  Kanban,
+  Key,
   Laptop,
   LayoutDashboard,
   Rocket,
   Settings,
+  Settings2,
   ShieldCheck,
-  Ticket,
   Zap,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -36,24 +36,23 @@ const navGroups: NavGroup[] = [
     title: "Meu Espaço",
     items: [
       { value: "Visão Geral", label: "Visão Geral", icon: LayoutDashboard },
-      { value: "Inbox", label: "Inbox", icon: Inbox },
-      { value: "Follow-ups", label: "Follow-ups", icon: Clock3 },
+      { value: "Inbox", label: "Follow-up", icon: BellRing },
     ],
   },
   {
     title: "Operação",
     items: [
       { value: "Sprint", label: "War Room", icon: Rocket },
-      { value: "Demandas", label: "Demandas", icon: KanbanSquare },
-      { value: "Chamados", label: "Chamados", icon: Ticket },
+      { value: "Demandas", label: "Demandas", icon: Kanban },
+      { value: "Chamados", label: "Chamados", icon: Headset },
     ],
   },
   {
     title: "Gestão de TI",
     items: [
       { value: "Ativos", label: "Ativos", icon: Laptop },
-      { value: "Contratos", label: "Contratos", icon: FileText },
-      { value: "Cofre de Senhas", label: "Cofre de Senhas", icon: KeyRound },
+      { value: "Contratos", label: "Contratos", icon: FileSignature },
+      { value: "Cofre de Senhas", label: "Cofre de Senhas", icon: Key },
     ],
   },
   {
@@ -62,6 +61,7 @@ const navGroups: NavGroup[] = [
       { value: "Relatórios", label: "Relatórios", icon: BarChart3 },
       { value: "Automações", label: "Automações", icon: Zap },
       { value: "Auditoria", label: "Auditoria", icon: ShieldCheck },
+      { value: "Follow-ups", label: "Configuração de Follow-ups", icon: Settings2 },
       { value: "Configurações", label: "Configurações", icon: Settings },
     ],
   },
@@ -88,7 +88,7 @@ export function Sidebar({ active, onSelect, permissions }: SidebarProps) {
   const visibleFooterItems = footerItems.filter((item) => canAccessPage(permissions, item.value));
 
   return (
-    <aside className="hidden h-full w-72 flex-col border-r border-border bg-card/70 p-6 backdrop-blur lg:flex">
+    <aside className="hidden h-screen w-72 flex-col border-r border-border bg-card/70 p-6 backdrop-blur lg:flex">
       <div>
         <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">WayTI Control</p>
         <h1 className="text-2xl font-semibold">Alta Performance</h1>
@@ -97,7 +97,7 @@ export function Sidebar({ active, onSelect, permissions }: SidebarProps) {
       <nav className="mt-6 flex flex-1 flex-col gap-4 overflow-y-auto pr-1">
         {visibleGroups.map((group) => (
           <div key={group.title}>
-            <span className="mb-2 block px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 md:text-xs">
+            <span className="mt-6 mb-2 block px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 md:text-xs">
               {group.title}
             </span>
             <div className="flex flex-col gap-1">
