@@ -47,7 +47,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const AuditLog = lazy(() => import("@/features/AuditLog").then((m) => ({ default: m.AuditLog })));
 const DemandBoard = lazy(() => import("@/features/DemandBoard").then((m) => ({ default: m.DemandBoard })));
 const SprintBoard = lazy(() =>
   import("@/features/demands/SprintBoard").then((m) => ({ default: m.SprintBoard }))
@@ -55,7 +54,6 @@ const SprintBoard = lazy(() =>
 const DemandsDashboardPage = lazy(() =>
   import("@/features/demands/DemandsDashboardPage").then((m) => ({ default: m.DemandsDashboardPage }))
 );
-const FollowUps = lazy(() => import("@/features/FollowUps").then((m) => ({ default: m.FollowUps })));
 const Inbox = lazy(() => import("@/features/Inbox").then((m) => ({ default: m.Inbox })));
 const Portal = lazy(() => import("@/features/Portal").then((m) => ({ default: m.Portal })));
 const Reports = lazy(() => import("@/features/Reports").then((m) => ({ default: m.Reports })));
@@ -66,7 +64,6 @@ const AssetsPage = lazy(() =>
 );
 const Contracts = lazy(() => import("@/features/Contracts").then((m) => ({ default: m.Contracts })));
 const Vault = lazy(() => import("@/features/Vault").then((m) => ({ default: m.Vault })));
-const Automations = lazy(() => import("@/features/Automations/Automations").then((m) => ({ default: m.Automations })));
 
 const pages = [
   "Inbox",
@@ -91,14 +88,14 @@ const PAGE_PATHS: Record<string, string> = {
   "Visão Geral": "/",
   Demandas: "/demandas",
   Sprint: "/sprints",
-  "Follow-ups": "/follow-ups",
+  "Follow-ups": "/configuracoes",
   Chamados: "/chamados",
   Ativos: "/ativos",
   Contratos: "/contratos",
   "Cofre de Senhas": "/senhas",
-  Automações: "/automacoes",
+  Automações: "/configuracoes",
   Relatórios: "/relatorios",
-  Auditoria: "/auditoria",
+  Auditoria: "/configuracoes",
   Configurações: "/configuracoes",
 };
 
@@ -108,16 +105,47 @@ const PATH_PAGE_MATCHERS: Array<{ regex: RegExp; page: string }> = [
   { regex: /^\/portal\/?$/, page: "Portal" },
   { regex: /^\/demandas\/?$/, page: "Demandas" },
   { regex: /^\/sprints\/?$/, page: "Sprint" },
-  { regex: /^\/follow-ups\/?$/, page: "Follow-ups" },
+  { regex: /^\/follow-ups\/?$/, page: "Configurações" },
   { regex: /^\/chamados\/?$/, page: "Chamados" },
   { regex: /^\/ativos\/?$/, page: "Ativos" },
   { regex: /^\/contratos\/?$/, page: "Contratos" },
   { regex: /^\/senhas\/?$/, page: "Cofre de Senhas" },
-  { regex: /^\/automacoes\/?$/, page: "Automações" },
-  { regex: /^\/auditoria\/?$/, page: "Auditoria" },
+  { regex: /^\/automacoes\/?$/, page: "Configurações" },
+  { regex: /^\/auditoria\/?$/, page: "Configurações" },
   { regex: /^\/relatorios\/?$/, page: "Relatórios" },
   { regex: /^\/configuracoes\/?$/, page: "Configurações" },
 ];
+
+const LEGACY_SETTINGS_REDIRECTS: Array<{ regex: RegExp; secao: string; sub: string }> = [
+  { regex: /^\/auditoria\/?$/, secao: "configuracoes-demandas", sub: "auditoria" },
+  { regex: /^\/automacoes\/?$/, secao: "configuracoes-demandas", sub: "automacoes" },
+  {
+    regex: /^\/follow-ups\/?$/,
+    secao: "configuracoes-demandas",
+    sub: "configuracoes-de-follow-up",
+  },
+  {
+    regex: /^\/dados-de-sistema\/auditoria\/?$/,
+    secao: "configuracoes-demandas",
+    sub: "auditoria",
+  },
+  {
+    regex: /^\/dados-de-sistema\/automacoes\/?$/,
+    secao: "configuracoes-demandas",
+    sub: "automacoes",
+  },
+  {
+    regex: /^\/dados-de-sistema\/follow-ups\/?$/,
+    secao: "configuracoes-demandas",
+    sub: "configuracoes-de-follow-up",
+  },
+];
+
+function mapLegacySettingsPath(pathname: string) {
+  const match = LEGACY_SETTINGS_REDIRECTS.find((item) => item.regex.test(pathname));
+  if (!match) return null;
+  return `/configuracoes?secao=${match.secao}&sub=${match.sub}`;
+}
 
 function resolvePageFromPath(pathname: string) {
   const match = PATH_PAGE_MATCHERS.find((item) => item.regex.test(pathname));
@@ -259,8 +287,6 @@ export default function App() {
             }}
           />
         );
-      case "Follow-ups":
-        return <FollowUps demands={demands} onUpdate={actions.update} />;
       case "Chamados":
         return (
           <Tickets
@@ -338,24 +364,17 @@ export default function App() {
         );
       case "Cofre de Senhas":
         return <Vault token={user?.token} externalParties={externalParties} />;
-      case "Automações":
-        return <Automations token={user?.token} />;
       case "Relatórios":
         return <Reports reportSnapshots={reportSnapshots} demands={demands} token={user?.token} />;
-      case "Auditoria":
-        return canAccessPage(permissions, "Auditoria") ? (
-          <AuditLog demands={demands} />
-        ) : (
-          <div className="rounded-lg border border-border/60 bg-background/40 p-6 text-sm text-muted-foreground">
-            Acesso restrito.
-          </div>
-        );
       case "Configurações":
         return (
           <Settings
             notifications={notifications.items}
             token={user?.token}
             externalParties={externalParties}
+            demands={demands}
+            onUpdateDemand={actions.update}
+            permissions={permissions}
           />
         );
       default:
@@ -432,7 +451,19 @@ export default function App() {
   }, [user?.token, permissions?.demands?.view]);
 
   useEffect(() => {
+    const redirectUrl = mapLegacySettingsPath(window.location.pathname);
+    if (redirectUrl) {
+      window.history.replaceState({}, "", redirectUrl);
+      setActive("Configurações");
+    }
+  }, []);
+
+  useEffect(() => {
     const onPopState = () => {
+      const redirectUrl = mapLegacySettingsPath(window.location.pathname);
+      if (redirectUrl) {
+        window.history.replaceState({}, "", redirectUrl);
+      }
       const byPath = resolvePageFromPath(window.location.pathname);
       if (byPath && canAccessPage(permissions, byPath)) {
         setActive(byPath);
