@@ -12,21 +12,54 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { canAccessPage } from "@/lib/permissions";
 import type { ProfilePermissions } from "@/types";
 
-const navItems = [
-  "Inbox",
-  "Portal",
-  "Visão Geral",
-  "Demandas",
-  "Sprint",
-  "Follow-ups",
-  "Chamados",
-  "Ativos",
-  "Contratos",
-  "Cofre de Senhas",
-  "Automações",
-  "Relatórios",
-  "Auditoria",
-  "Configurações",
+type TopNavItem = {
+  value: string;
+  label: string;
+};
+
+type TopNavGroup = {
+  title: string;
+  items: TopNavItem[];
+};
+
+const navGroups: TopNavGroup[] = [
+  {
+    title: "Meu Espaço",
+    items: [
+      { value: "Visão Geral", label: "Visão Geral" },
+      { value: "Inbox", label: "Inbox" },
+      { value: "Follow-ups", label: "Follow-ups" },
+    ],
+  },
+  {
+    title: "Operação",
+    items: [
+      { value: "Sprint", label: "War Room" },
+      { value: "Demandas", label: "Demandas" },
+      { value: "Chamados", label: "Chamados" },
+    ],
+  },
+  {
+    title: "Gestão de TI",
+    items: [
+      { value: "Ativos", label: "Ativos" },
+      { value: "Contratos", label: "Contratos" },
+      { value: "Cofre de Senhas", label: "Cofre de Senhas" },
+    ],
+  },
+  {
+    title: "Dados e Sistema",
+    items: [
+      { value: "Relatórios", label: "Relatórios" },
+      { value: "Automações", label: "Automações" },
+      { value: "Auditoria", label: "Auditoria" },
+      { value: "Configurações", label: "Configurações" },
+    ],
+  },
+  {
+    title: "Portal",
+    items: [{ value: "Portal", label: "Portal do Cliente" }],
+  },
 ];
 
 interface TopNavProps {
@@ -46,7 +79,13 @@ export function TopNav({
   onLogout,
   onOpenPreferences,
 }: TopNavProps) {
-  const allowedNav = navItems.filter((label) => canAccessPage(permissions, label));
+  const allowedGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => canAccessPage(permissions, item.value)),
+    }))
+    .filter((group) => group.items.length > 0);
+
   return (
     <header className="flex items-center justify-between gap-4 border-b border-border bg-card/70 px-6 py-4 backdrop-blur">
       <div className="flex items-center gap-3">
@@ -56,11 +95,21 @@ export function TopNav({
               <Menu className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            {allowedNav.map((label) => (
-              <DropdownMenuItem key={label} onClick={() => onSelect(label)}>
-                <span className={label === active ? "font-semibold text-primary" : ""}>{label}</span>
-              </DropdownMenuItem>
+          <DropdownMenuContent align="start" className="w-64">
+            {allowedGroups.map((group, index) => (
+              <div key={group.title}>
+                {index > 0 ? <DropdownMenuSeparator /> : null}
+                <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {group.title}
+                </div>
+                {group.items.map((item) => (
+                  <DropdownMenuItem key={item.value} onClick={() => onSelect(item.value)}>
+                    <span className={item.value === active ? "font-semibold text-primary" : ""}>
+                      {item.label}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </div>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>

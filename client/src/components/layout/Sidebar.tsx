@@ -1,45 +1,73 @@
 import {
   BarChart3,
-  ClipboardList,
+  Clock3,
+  ExternalLink,
   FileText,
   Inbox,
+  KanbanSquare,
   KeyRound,
-  LayoutGrid,
-  Monitor,
-  Brain,
+  Laptop,
+  LayoutDashboard,
+  Rocket,
   Settings,
   ShieldCheck,
-  HelpCircle,
+  Ticket,
+  Zap,
 } from "lucide-react";
+import type { ComponentType } from "react";
 
-import { cn } from "@/lib/utils";
 import { canAccessPage } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
 import type { ProfilePermissions } from "@/types";
 
-const navItems = [
-  { label: "Inbox", icon: Inbox },
-  { label: "Portal", icon: HelpCircle },
-  { label: "Visão Geral", icon: LayoutGrid },
-  { label: "Demandas", icon: ClipboardList },
-  { label: "Sprint", icon: ClipboardList },
-  { label: "Follow-ups", icon: BarChart3 },
-  { label: "Chamados", icon: ClipboardList },
-  { label: "Ativos", icon: Monitor },
-  { label: "Contratos", icon: FileText },
-  { label: "Cofre de Senhas", icon: KeyRound },
-  { label: "Automações", icon: Brain },
-  { label: "Relatórios", icon: FileText },
-  { label: "Auditoria", icon: ShieldCheck },
-  { label: "Configurações", icon: Settings },
+type NavItem = {
+  value: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+};
+
+type NavGroup = {
+  title: string;
+  items: NavItem[];
+};
+
+const navGroups: NavGroup[] = [
+  {
+    title: "Meu Espaço",
+    items: [
+      { value: "Visão Geral", label: "Visão Geral", icon: LayoutDashboard },
+      { value: "Inbox", label: "Inbox", icon: Inbox },
+      { value: "Follow-ups", label: "Follow-ups", icon: Clock3 },
+    ],
+  },
+  {
+    title: "Operação",
+    items: [
+      { value: "Sprint", label: "War Room", icon: Rocket },
+      { value: "Demandas", label: "Demandas", icon: KanbanSquare },
+      { value: "Chamados", label: "Chamados", icon: Ticket },
+    ],
+  },
+  {
+    title: "Gestão de TI",
+    items: [
+      { value: "Ativos", label: "Ativos", icon: Laptop },
+      { value: "Contratos", label: "Contratos", icon: FileText },
+      { value: "Cofre de Senhas", label: "Cofre de Senhas", icon: KeyRound },
+    ],
+  },
+  {
+    title: "Dados e Sistema",
+    items: [
+      { value: "Relatórios", label: "Relatórios", icon: BarChart3 },
+      { value: "Automações", label: "Automações", icon: Zap },
+      { value: "Auditoria", label: "Auditoria", icon: ShieldCheck },
+      { value: "Configurações", label: "Configurações", icon: Settings },
+    ],
+  },
 ];
 
-const inboxViewShortcuts = [
-  { label: "Overdue", viewId: "v_overdue" },
-  { label: "Hoje", viewId: "v_today" },
-  { label: "Sem próximo", viewId: "v_no_next" },
-  { label: "Aguardando", viewId: "v_waiting" },
-  { label: "P0", viewId: "v_p0" },
-];
+const footerItems: NavItem[] = [{ value: "Portal", label: "Portal do Cliente", icon: ExternalLink }];
 
 interface SidebarProps {
   active: string;
@@ -49,43 +77,75 @@ interface SidebarProps {
   permissions?: ProfilePermissions;
 }
 
-export function Sidebar({
-  active,
-  onSelect,
-  onSelectDemandView,
-  onSelectTicketView,
-  permissions,
-}: SidebarProps) {
-  const allowedNav = navItems.filter((item) => canAccessPage(permissions, item.label));
+export function Sidebar({ active, onSelect, permissions }: SidebarProps) {
+  const visibleGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => canAccessPage(permissions, item.value)),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  const visibleFooterItems = footerItems.filter((item) => canAccessPage(permissions, item.value));
+
   return (
-    <aside className="hidden h-full w-64 flex-col gap-6 border-r border-border bg-card/70 p-6 backdrop-blur lg:flex">
+    <aside className="hidden h-full w-72 flex-col border-r border-border bg-card/70 p-6 backdrop-blur lg:flex">
       <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-          WayTI Control
-        </p>
+        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">WayTI Control</p>
         <h1 className="text-2xl font-semibold">Alta Performance</h1>
       </div>
-      <nav className="flex flex-col gap-2">
-        {allowedNav.map((item) => {
-          const Icon = item.icon;
-          const isActive = active === item.label;
-          return (
-            <button
-              key={item.label}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
-                isActive
-                  ? "bg-primary/15 text-primary shadow-glow"
-                  : "text-muted-foreground hover:bg-muted"
-              )}
-              onClick={() => onSelect(item.label)}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </button>
-          );
-        })}
+
+      <nav className="mt-6 flex flex-1 flex-col gap-4 overflow-y-auto pr-1">
+        {visibleGroups.map((group) => (
+          <div key={group.title}>
+            <span className="mb-2 block px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 md:text-xs">
+              {group.title}
+            </span>
+            <div className="flex flex-col gap-1">
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = active === item.value;
+                return (
+                  <button
+                    key={item.value}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
+                      isActive
+                        ? "bg-primary/15 text-primary shadow-glow"
+                        : "text-muted-foreground hover:bg-muted"
+                    )}
+                    onClick={() => onSelect(item.value)}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
+
+      {visibleFooterItems.length > 0 ? (
+        <div className="mt-auto border-t border-border/70 pt-4">
+          {visibleFooterItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = active === item.value;
+            return (
+              <button
+                key={item.value}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
+                  isActive ? "bg-primary/15 text-primary shadow-glow" : "text-muted-foreground hover:bg-muted"
+                )}
+                onClick={() => onSelect(item.value)}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
     </aside>
   );
 }
