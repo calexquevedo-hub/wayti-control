@@ -19,6 +19,7 @@ import type { DomainItem, DomainType } from "@/types";
 interface DomainSettingsProps {
   token?: string;
   initialType?: DomainType;
+  hideTypeTabs?: boolean;
 }
 
 const COLORS = [
@@ -30,7 +31,11 @@ const COLORS = [
   "#0891B2",
 ] as const;
 
-export function DomainSettings({ token, initialType = "CATEGORY" }: DomainSettingsProps) {
+export function DomainSettings({
+  token,
+  initialType = "CATEGORY",
+  hideTypeTabs = false,
+}: DomainSettingsProps) {
   const [activeType, setActiveType] = useState<DomainType>(initialType);
   const [categories, setCategories] = useState<DomainItem[]>([]);
   const [epics, setEpics] = useState<DomainItem[]>([]);
@@ -159,7 +164,7 @@ export function DomainSettings({ token, initialType = "CATEGORY" }: DomainSettin
   return (
     <Card className="bg-card/70 lg:col-span-12">
       <CardHeader>
-        <CardTitle>Configurações de Domínio</CardTitle>
+        <CardTitle>Configurações de Demandas</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Tabs
@@ -169,10 +174,12 @@ export function DomainSettings({ token, initialType = "CATEGORY" }: DomainSettin
             setStatus(null);
           }}
         >
-          <TabsList>
-            <TabsTrigger value="CATEGORY">Categorias</TabsTrigger>
-            <TabsTrigger value="EPIC">Épicos</TabsTrigger>
-          </TabsList>
+          {!hideTypeTabs ? (
+            <TabsList>
+              <TabsTrigger value="CATEGORY">Categorias</TabsTrigger>
+              <TabsTrigger value="EPIC">Épicos</TabsTrigger>
+            </TabsList>
+          ) : null}
           <TabsContent value="CATEGORY" />
           <TabsContent value="EPIC" />
         </Tabs>

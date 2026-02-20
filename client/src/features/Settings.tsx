@@ -522,8 +522,10 @@ export function Settings({
     }
 
     if (activeSection === "configuracoes-demandas") {
-      if (activeSub === "categorias") return <DomainSettings token={token} initialType="CATEGORY" />;
-      if (activeSub === "epicos") return <DomainSettings token={token} initialType="EPIC" />;
+      if (activeSub === "categorias") {
+        return <DomainSettings token={token} initialType="CATEGORY" hideTypeTabs />;
+      }
+      if (activeSub === "epicos") return <DomainSettings token={token} initialType="EPIC" hideTypeTabs />;
       if (activeSub === "automacoes") return <Automations token={token} />;
       if (activeSub === "configuracoes-de-follow-up") {
         if (!onUpdateDemand) {
@@ -555,21 +557,31 @@ export function Settings({
     }
 
     if (activeSection === "controle-de-acesso") {
-      return <AccessControl token={token} initialTab={activeSub === "perfis" ? "profiles" : "users"} />;
+      return (
+        <AccessControl
+          token={token}
+          initialTab={activeSub === "perfis" ? "profiles" : "users"}
+          hideTabSelector
+        />
+      );
     }
     if (activeSection === "configuracoes-chamado") return renderConfigChamado();
     return renderCanaisEmail();
   };
 
   return (
-    <div className="grid gap-6">
-      <div>
+    <div className="flex w-full flex-col gap-6">
+      <div className="w-full">
         <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
         <p className="text-sm text-muted-foreground">Administração central de regras e integrações.</p>
       </div>
 
-      <div className="hidden md:block">
-        <div role="tablist" aria-label="Seções de configurações" className="flex flex-wrap gap-2">
+      <div className="hidden w-full md:block">
+        <div
+          role="tablist"
+          aria-label="Seções de configurações"
+          className="mb-6 flex w-full flex-row flex-wrap gap-2"
+        >
           {visibleSections.map((section) => {
             const isActive = section.key === activeSection;
             return (
@@ -592,7 +604,7 @@ export function Settings({
         </div>
       </div>
 
-      <div className="space-y-3 md:hidden">
+      <div className="w-full space-y-3 md:hidden">
         {visibleSections.map((section) => {
           const active = section.key === activeSection;
           return (
@@ -610,7 +622,7 @@ export function Settings({
       </div>
 
       {currentSection ? (
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="text-base">{currentSection.title}</CardTitle>
             <CardDescription>Selecione um módulo desta seção.</CardDescription>
@@ -632,7 +644,7 @@ export function Settings({
         </Card>
       ) : null}
 
-      {renderSubContent()}
+      <div className="w-full">{renderSubContent()}</div>
 
       <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
         <DialogContent className="max-w-3xl">

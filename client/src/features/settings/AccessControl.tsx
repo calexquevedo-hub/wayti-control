@@ -61,6 +61,7 @@ const normalizePermissions = (input?: Partial<ProfilePermissions>): PermissionMa
 interface AccessControlProps {
   token?: string;
   initialTab?: "users" | "profiles";
+  hideTabSelector?: boolean;
 }
 
 interface ProfileDraft {
@@ -71,7 +72,11 @@ interface ProfileDraft {
   permissions: PermissionMatrix;
 }
 
-export function AccessControl({ token, initialTab = "users" }: AccessControlProps) {
+export function AccessControl({
+  token,
+  initialTab = "users",
+  hideTabSelector = false,
+}: AccessControlProps) {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -279,10 +284,12 @@ export function AccessControl({ token, initialTab = "users" }: AccessControlProp
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "users" | "profiles")}>
-          <TabsList className="grid w-full max-w-[420px] grid-cols-2">
-            <TabsTrigger value="users">Usuários</TabsTrigger>
-            <TabsTrigger value="profiles">Perfis de Acesso</TabsTrigger>
-          </TabsList>
+          {!hideTabSelector ? (
+            <TabsList className="grid w-full max-w-[420px] grid-cols-2">
+              <TabsTrigger value="users">Usuários</TabsTrigger>
+              <TabsTrigger value="profiles">Perfis de Acesso</TabsTrigger>
+            </TabsList>
+          ) : null}
 
           <TabsContent value="users" className="mt-6 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
