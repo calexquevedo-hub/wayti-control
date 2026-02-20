@@ -58,7 +58,12 @@ const Inbox = lazy(() => import("@/features/Inbox").then((m) => ({ default: m.In
 const Portal = lazy(() => import("@/features/Portal").then((m) => ({ default: m.Portal })));
 const Reports = lazy(() => import("@/features/Reports").then((m) => ({ default: m.Reports })));
 const Settings = lazy(() => import("@/features/Settings").then((m) => ({ default: m.Settings })));
-const Tickets = lazy(() => import("@/features/Tickets").then((m) => ({ default: m.Tickets })));
+const TicketDashboard = lazy(() =>
+  import("@/features/tickets/TicketDashboard").then((m) => ({ default: m.TicketDashboard }))
+);
+const TicketDetails = lazy(() =>
+  import("@/features/tickets/TicketDetails").then((m) => ({ default: m.TicketDetails }))
+);
 const AssetsPage = lazy(() =>
   import("@/features/assets/AssetsPage").then((m) => ({ default: m.AssetsPage }))
 );
@@ -89,7 +94,7 @@ const PAGE_PATHS: Record<string, string> = {
   Demandas: "/demandas",
   Sprint: "/sprints",
   "Follow-ups": "/configuracoes",
-  Chamados: "/chamados",
+  Chamados: "/operacao/chamados",
   Ativos: "/ativos",
   Contratos: "/contratos",
   "Cofre de Senhas": "/senhas",
@@ -106,6 +111,8 @@ const PATH_PAGE_MATCHERS: Array<{ regex: RegExp; page: string }> = [
   { regex: /^\/demandas\/?$/, page: "Demandas" },
   { regex: /^\/sprints\/?$/, page: "Sprint" },
   { regex: /^\/follow-ups\/?$/, page: "Configurações" },
+  { regex: /^\/operacao\/chamados\/?$/, page: "Chamados" },
+  { regex: /^\/operacao\/chamados\/\d+\/?$/, page: "Chamados" },
   { regex: /^\/chamados\/?$/, page: "Chamados" },
   { regex: /^\/ativos\/?$/, page: "Ativos" },
   { regex: /^\/contratos\/?$/, page: "Contratos" },
@@ -140,6 +147,35 @@ const LEGACY_SETTINGS_REDIRECTS: Array<{ regex: RegExp; secao: string; sub: stri
     sub: "configuracoes-de-follow-up",
   },
 ];
+
+function mapLegacyOperationPath(pathname: string) {
+  if (/^\/chamados\/?$/.test(pathname)) return "/operacao/chamados";
+  return null;
+}
+
+type TicketRoute =
+  | { type: "dashboard"; view: "list" | "kanban" }
+  | { type: "details"; id: number; view: "list" | "kanban" }
+  | null;
+
+function getTicketRoute(pathname: string, search: string): TicketRoute {
+  const detailMatch = pathname.match(/^\/operacao\/chamados\/(\d+)\/?$/);
+  if (detailMatch) {
+    const params = new URLSearchParams(search);
+    const view = params.get("view");
+    return {
+      type: "details" as const,
+      id: Number(detailMatch[1]),
+      view: view === "kanban" ? "kanban" : "list",
+    };
+  }
+  if (/^\/operacao\/chamados\/?$/.test(pathname)) {
+    const params = new URLSearchParams(search);
+    const view = params.get("view");
+    return { type: "dashboard" as const, view: view === "kanban" ? "kanban" : "list" };
+  }
+  return null;
+}
 
 function mapLegacySettingsPath(pathname: string) {
   const match = LEGACY_SETTINGS_REDIRECTS.find((item) => item.regex.test(pathname));
@@ -187,6 +223,8 @@ export default function App() {
   const [prefPassword, setPrefPassword] = useState("");
   const [prefPasswordConfirm, setPrefPasswordConfirm] = useState("");
   const [prefSaving, setPrefSaving] = useState(false);
+  const [routePath, setRoutePath] = useState(window.location.pathname);
+  const [routeSearch, setRouteSearch] = useState(window.location.search);
   const notifications = useNotifications();
   const permissions =
     user && typeof user.profile === "object" && user.profile
@@ -288,59 +326,36 @@ export default function App() {
           />
         );
       case "Chamados":
-        return (
-          <Tickets
-            token={user?.token}
-            currentUser={user}
-            tickets={tickets}
-            activeViewId={activeTicketViewId}
-            onChangeView={(viewId) => {
-              setActiveTicketViewId(viewId);
-              setActiveView("tickets", viewId);
-            }}
-            demands={demands}
-            externalParties={externalParties}
-            assets={assets}
-            onUpdateTicket={async (id, payload) => {
-              if (!user?.token) return;
-              const updated = await updateTicket(user.token, id, payload);
-              setTickets((prev) => prev.map((t) => (t.id === id ? updated : t)));
-            }}
-            onCreateTicket={async (payload) => {
-              if (!user?.token) return;
-              const created = await createTicket(user.token, payload);
-              setTickets((prev) => [created, ...prev]);
-            }}
-            onAddComment={async (id, message) => {
-              if (!user?.token) return;
-              const updated = await addTicketComment(user.token, id, {
-                author: user.email,
-                message,
-              });
-              setTickets((prev) => prev.map((t) => (t.id === id ? updated : t)));
-            }}
-            onLinkDemand={async (id, demandId) => {
-              if (!user?.token) return;
-              const updated = await linkTicketDemand(user.token, id, demandId);
-              setTickets((prev) => prev.map((t) => (t.id === id ? updated : t)));
-            }}
-            onDeleteTicket={async (id) => {
-              if (!user?.token) return;
-              await deleteTicket(user.token, id);
-              setTickets((prev) => prev.filter((t) => t.id !== id));
-            }}
-            onApproveTicket={async (id, notes) => {
-              if (!user?.token) return;
-              const updated = await approveTicket(user.token, id, notes);
-              setTickets((prev) => prev.map((t) => (t.id === id ? updated : t)));
-            }}
-            onRejectTicket={async (id, reason) => {
-              if (!user?.token) return;
-              const updated = await rejectTicket(user.token, id, reason);
-              setTickets((prev) => prev.map((t) => (t.id === id ? updated : t)));
-            }}
-          />
-        );
+        {
+          const ticketRoute = getTicketRoute(routePath, routeSearch);
+          if (ticketRoute?.type === "details") {
+            return (
+              <TicketDetails
+                ticketId={ticketRoute.id}
+                returnView={ticketRoute.view}
+                onBack={(view) => {
+                  const url = `/operacao/chamados?view=${view}`;
+                  window.history.pushState({}, "", url);
+                  setRoutePath(window.location.pathname);
+                  setRouteSearch(window.location.search);
+                  setActive("Chamados");
+                }}
+              />
+            );
+          }
+          return (
+            <TicketDashboard
+              initialView={ticketRoute?.view ?? "list"}
+              onOpenTicket={(id, view) => {
+                const url = `/operacao/chamados/${id}?view=${view}`;
+                window.history.pushState({}, "", url);
+                setRoutePath(window.location.pathname);
+                setRouteSearch(window.location.search);
+                setActive("Chamados");
+              }}
+            />
+          );
+        }
       case "Ativos":
         return <AssetsPage token={user?.token} />;
       case "Contratos":
@@ -400,6 +415,8 @@ export default function App() {
     articles,
     activeDemandViewId,
     activeTicketViewId,
+    routePath,
+    routeSearch,
   ]);
 
   useEffect(() => {
@@ -456,6 +473,13 @@ export default function App() {
       window.history.replaceState({}, "", redirectUrl);
       setActive("Configurações");
     }
+    const legacyOperationRedirect = mapLegacyOperationPath(window.location.pathname);
+    if (legacyOperationRedirect) {
+      window.history.replaceState({}, "", legacyOperationRedirect);
+      setActive("Chamados");
+    }
+    setRoutePath(window.location.pathname);
+    setRouteSearch(window.location.search);
   }, []);
 
   useEffect(() => {
@@ -464,6 +488,12 @@ export default function App() {
       if (redirectUrl) {
         window.history.replaceState({}, "", redirectUrl);
       }
+      const legacyOperationRedirect = mapLegacyOperationPath(window.location.pathname);
+      if (legacyOperationRedirect) {
+        window.history.replaceState({}, "", legacyOperationRedirect);
+      }
+      setRoutePath(window.location.pathname);
+      setRouteSearch(window.location.search);
       const byPath = resolvePageFromPath(window.location.pathname);
       if (byPath && canAccessPage(permissions, byPath)) {
         setActive(byPath);
@@ -480,9 +510,13 @@ export default function App() {
     const nextUrl = `${pathname}${search}`;
     if (options?.replace) {
       window.history.replaceState({}, "", nextUrl);
+      setRoutePath(window.location.pathname);
+      setRouteSearch(window.location.search);
       return;
     }
     window.history.pushState({}, "", nextUrl);
+    setRoutePath(window.location.pathname);
+    setRouteSearch(window.location.search);
   };
 
   const handleSelectPage = (page: string) => {

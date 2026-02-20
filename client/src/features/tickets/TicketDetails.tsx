@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
+  ArrowLeft,
   Clock3,
   Link as LinkIcon,
   Paperclip,
@@ -10,72 +11,42 @@ import {
   User,
 } from "lucide-react";
 
-type TimelineItem = {
-  id: string;
-  type: "user" | "agent" | "internal" | "system";
-  author?: string;
-  message: string;
-  createdAt: string;
-};
+import type { TicketItem } from "./mockData";
+import { mockTickets } from "./mockData";
+import type { ViewMode } from "./TicketDashboard";
 
 type ReplyMode = "reply" | "internal";
 
-const mockTimeline: TimelineItem[] = [
-  {
-    id: "1",
-    type: "system",
-    message: "⚙️ Chamado criado via portal às 09:12",
-    createdAt: "09:12",
-  },
-  {
-    id: "2",
-    type: "user",
-    author: "Carla Souza",
-    message:
-      "Ao emitir nota fiscal no ERP, retorna erro 502. Isso começou hoje cedo e bloqueou o faturamento.",
-    createdAt: "09:14",
-  },
-  {
-    id: "3",
-    type: "agent",
-    author: "Equipe TI",
-    message:
-      "Recebido. Já iniciamos análise com o time de aplicações. Pode confirmar se o erro ocorre para todos os usuários?",
-    createdAt: "09:20",
-  },
-  {
-    id: "4",
-    type: "internal",
-    author: "João TI",
-    message:
-      "Visível apenas para a equipe: último deploy do serviço fiscal foi ontem às 23h. Verificar rollback rápido.",
-    createdAt: "09:27",
-  },
-  {
-    id: "5",
-    type: "system",
-    message: "⚙️ João alterou a prioridade para Alta às 09:31",
-    createdAt: "09:31",
-  },
-];
-
 const priorityTone: Record<string, string> = {
-  Baixa: "bg-emerald-100 text-emerald-700",
+  Baixa: "bg-slate-100 text-slate-700",
   Média: "bg-amber-100 text-amber-700",
   Alta: "bg-orange-100 text-orange-700",
   Urgente: "bg-red-100 text-red-700",
 };
 
-export function TicketDetails() {
+interface TicketDetailsProps {
+  ticketId: number;
+  returnView?: ViewMode;
+  onBack?: (view: ViewMode) => void;
+}
+
+export function TicketDetails({ ticketId, returnView = "list", onBack }: TicketDetailsProps) {
   const [replyMode, setReplyMode] = useState<ReplyMode>("reply");
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState("Aberto");
-  const [assignee, setAssignee] = useState("Atribuir a mim");
-  const [priority, setPriority] = useState("Alta");
-  const [category, setCategory] = useState("Sistemas > ERP");
-  const [slaMinutesLeft] = useState(135);
+  const [ticket, setTicket] = useState<TicketItem | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    const timeout = window.setTimeout(() => {
+      const found = mockTickets.find((item) => item.id === ticketId) ?? null;
+      setTicket(found);
+      setLoading(false);
+    }, 200);
+    return () => window.clearTimeout(timeout);
+  }, [ticketId]);
 
   useEffect(() => {
     if (!textareaRef.current) return;
@@ -84,12 +55,10 @@ export function TicketDetails() {
   }, [message]);
 
   const slaUi = useMemo(() => {
+    if (!ticket) return null;
+    const slaMinutesLeft = ticket.slaMinutesLeft;
     if (slaMinutesLeft <= 0) {
-      return {
-        label: "SLA vencido",
-        detail: "⏱️ Venceu",
-        tone: "bg-red-100 text-red-700 border-red-200",
-      };
+      return { label: "SLA vencido", detail: "⏱️ Venceu", tone: "bg-red-100 text-red-700 border-red-200" };
     }
     if (slaMinutesLeft <= 120) {
       const h = Math.floor(slaMinutesLeft / 60);
@@ -107,22 +76,56 @@ export function TicketDetails() {
       detail: `⏱️ Vence em ${h}h ${m}m`,
       tone: "bg-emerald-100 text-emerald-700 border-emerald-200",
     };
-  }, [slaMinutesLeft]);
+  }, [ticket]);
 
   const handleCopyLink = async () => {
-    const url = `${window.location.origin}${window.location.pathname}#ticket-1042`;
+    const url = `${window.location.origin}${window.location.pathname}${window.location.search}`;
     await navigator.clipboard.writeText(url);
   };
+
+  const handleBack = () => {
+    onBack?.(returnView);
+  };
+
+  if (loading) {
+    return <div className="p-6 text-sm text-slate-500">Carregando chamado...</div>;
+  }
+
+  if (!ticket || !slaUi) {
+    return (
+      <div className="p-6">
+        <div className="rounded-lg border bg-white p-6">
+          <p className="text-sm text-slate-600">Chamado não encontrado.</p>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="mt-3 inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar para a Fila
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6 lg:flex-row">
       <section className="flex flex-1 flex-col gap-4">
         <header className="sticky top-0 z-10 flex items-start justify-between gap-4 rounded-lg border bg-white px-4 py-3 shadow-sm">
           <div>
+            <button
+              type="button"
+              onClick={handleBack}
+              className="mb-2 inline-flex items-center gap-2 rounded-md border border-slate-200 px-2.5 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para a Fila
+            </button>
             <h1 className="text-lg font-semibold text-slate-900">
-              #1042 - Erro ao emitir nota fiscal
+              #{ticket.id} - {ticket.title}
             </h1>
-            <p className="text-sm text-slate-500">Sistema ERP • aberto por Carla Souza</p>
+            <p className="text-sm text-slate-500">{ticket.category} • aberto por {ticket.requester}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -146,13 +149,11 @@ export function TicketDetails() {
 
         <div className="flex min-h-[380px] flex-1 flex-col overflow-hidden rounded-lg border bg-white shadow-sm">
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
-            {mockTimeline.map((item) => {
+            {ticket.timeline.map((item) => {
               if (item.type === "system") {
                 return (
                   <div key={item.id} className="text-center text-xs text-slate-500">
-                    <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1">
-                      {item.message}
-                    </span>
+                    <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1">{item.message}</span>
                   </div>
                 );
               }
@@ -160,17 +161,13 @@ export function TicketDetails() {
               const isAgent = item.type === "agent";
               const isInternal = item.type === "internal";
               return (
-                <div
-                  key={item.id}
-                  className={`flex ${isAgent ? "justify-end" : "justify-start"}`}
-                >
+                <div key={item.id} className={`flex ${isAgent ? "justify-end" : "justify-start"}`}>
                   <div
                     className={[
                       "max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed",
                       isAgent && "bg-blue-600 text-white",
                       item.type === "user" && "bg-slate-100 text-slate-800",
-                      isInternal &&
-                        "border border-amber-200 bg-amber-50 text-amber-900",
+                      isInternal && "border border-amber-200 bg-amber-50 text-amber-900",
                     ]
                       .filter(Boolean)
                       .join(" ")}
@@ -198,9 +195,7 @@ export function TicketDetails() {
                 type="button"
                 onClick={() => setReplyMode("reply")}
                 className={`rounded-md px-3 py-1.5 text-sm ${
-                  replyMode === "reply"
-                    ? "bg-white font-medium text-slate-900 shadow-sm"
-                    : "text-slate-600"
+                  replyMode === "reply" ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-600"
                 }`}
               >
                 Responder ao Cliente
@@ -209,9 +204,7 @@ export function TicketDetails() {
                 type="button"
                 onClick={() => setReplyMode("internal")}
                 className={`rounded-md px-3 py-1.5 text-sm ${
-                  replyMode === "internal"
-                    ? "bg-white font-medium text-slate-900 shadow-sm"
-                    : "text-slate-600"
+                  replyMode === "internal" ? "bg-white font-medium text-slate-900 shadow-sm" : "text-slate-600"
                 }`}
               >
                 Adicionar Nota Interna
@@ -265,58 +258,39 @@ export function TicketDetails() {
           <div className="space-y-4 text-sm">
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-slate-500">Status</span>
-              <select
-                value={status}
-                onChange={(event) => setStatus(event.target.value)}
-                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3"
-              >
+              <select defaultValue={ticket.status} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3">
                 <option>Aberto</option>
                 <option>Pendente</option>
                 <option>Resolvido</option>
               </select>
             </label>
-
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-slate-500">Responsável</span>
-              <select
-                value={assignee}
-                onChange={(event) => setAssignee(event.target.value)}
-                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3"
-              >
+              <select defaultValue={ticket.assignee} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3">
                 <option>Atribuir a mim</option>
                 <option>João TI</option>
-                <option>Maria Service Desk</option>
+                <option>Fernanda N1</option>
+                <option>Unassigned</option>
               </select>
             </label>
-
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-slate-500">Prioridade</span>
               <div className="flex items-center gap-2">
-                <select
-                  value={priority}
-                  onChange={(event) => setPriority(event.target.value)}
-                  className="h-10 w-full rounded-md border border-slate-200 bg-white px-3"
-                >
+                <select defaultValue={ticket.priority} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3">
                   <option>Baixa</option>
                   <option>Média</option>
                   <option>Alta</option>
                   <option>Urgente</option>
                 </select>
-                <span
-                  className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${priorityTone[priority]}`}
-                >
-                  {priority}
+                <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${priorityTone[ticket.priority]}`}>
+                  {ticket.priority}
                 </span>
               </div>
             </label>
-
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-slate-500">Categoria</span>
-              <select
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3"
-              >
+              <select defaultValue={ticket.category} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3">
+                <option>{ticket.category}</option>
                 <option>Sistemas &gt; ERP</option>
                 <option>Infraestrutura &gt; Rede</option>
                 <option>Acessos &gt; Permissões</option>
@@ -332,15 +306,12 @@ export function TicketDetails() {
               <User className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-900">Carla Souza</p>
-              <p className="text-xs text-slate-500">Financeiro</p>
-              <p className="mt-1 text-xs text-slate-600">carla.souza@empresa.com</p>
+              <p className="text-sm font-semibold text-slate-900">{ticket.requesterDetails.name}</p>
+              <p className="text-xs text-slate-500">{ticket.requesterDetails.department}</p>
+              <p className="mt-1 text-xs text-slate-600">{ticket.requesterDetails.email}</p>
             </div>
           </div>
-          <button
-            type="button"
-            className="mt-4 text-xs font-medium text-blue-600 hover:text-blue-700"
-          >
+          <button type="button" className="mt-4 text-xs font-medium text-blue-600 hover:text-blue-700">
             Ver chamados anteriores desta pessoa
           </button>
         </div>
@@ -364,3 +335,4 @@ export function TicketDetails() {
 }
 
 export default TicketDetails;
+

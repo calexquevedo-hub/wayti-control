@@ -1,22 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Clock3, LayoutGrid, List, Search } from "lucide-react";
-
-type TicketStatus = "Novo" | "Em Atendimento" | "Aguardando Retorno" | "Resolvido";
-type TicketPriority = "Baixa" | "Média" | "Alta" | "Urgente";
-
-type TicketItem = {
-  id: number;
-  title: string;
-  requester: string;
-  category: string;
-  priority: TicketPriority;
-  status: TicketStatus;
-  slaMinutesLeft: number;
-  assignee: string;
-};
+import type { TicketItem, TicketPriority, TicketStatus } from "./mockData";
+import { mockTickets } from "./mockData";
 
 type QuickFilter = "all" | "unassigned" | "mine" | "waiting" | "sla-risk";
-type ViewMode = "list" | "kanban";
+export type ViewMode = "list" | "kanban";
 
 const quickFilters: Array<{ id: QuickFilter; label: string }> = [
   { id: "unassigned", label: "Não Atribuídos" },
@@ -25,75 +13,7 @@ const quickFilters: Array<{ id: QuickFilter; label: string }> = [
   { id: "sla-risk", label: "SLA em Risco" },
 ];
 
-const statusColumns: TicketStatus[] = [
-  "Novo",
-  "Em Atendimento",
-  "Aguardando Retorno",
-  "Resolvido",
-];
-
-const mockTickets: TicketItem[] = [
-  {
-    id: 1042,
-    title: "Sem acesso ao ERP financeiro",
-    requester: "Maria Silva",
-    category: "Sistemas > ERP",
-    priority: "Urgente",
-    status: "Novo",
-    slaMinutesLeft: 45,
-    assignee: "Unassigned",
-  },
-  {
-    id: 1048,
-    title: "Erro ao anexar XML de NFe",
-    requester: "Carlos Mendes",
-    category: "Fiscal > Emissão",
-    priority: "Alta",
-    status: "Em Atendimento",
-    slaMinutesLeft: 130,
-    assignee: "João TI",
-  },
-  {
-    id: 1051,
-    title: "Solicitação de novo usuário no CRM",
-    requester: "Aline Prado",
-    category: "Acessos > CRM",
-    priority: "Média",
-    status: "Aguardando Retorno",
-    slaMinutesLeft: -20,
-    assignee: "João TI",
-  },
-  {
-    id: 1054,
-    title: "Notebook com lentidão extrema",
-    requester: "Rafael Gomes",
-    category: "Infra > Hardware",
-    priority: "Alta",
-    status: "Em Atendimento",
-    slaMinutesLeft: 210,
-    assignee: "Fernanda N1",
-  },
-  {
-    id: 1058,
-    title: "Ajuste de assinatura de e-mail",
-    requester: "Paula Costa",
-    category: "Comunicação > SMTP",
-    priority: "Baixa",
-    status: "Resolvido",
-    slaMinutesLeft: 320,
-    assignee: "Fernanda N1",
-  },
-  {
-    id: 1062,
-    title: "VPN não conecta fora da matriz",
-    requester: "Henrique Dias",
-    category: "Rede > VPN",
-    priority: "Urgente",
-    status: "Novo",
-    slaMinutesLeft: 18,
-    assignee: "Unassigned",
-  },
-];
+const statusColumns: TicketStatus[] = ["Novo", "Em Atendimento", "Aguardando Retorno", "Resolvido"];
 
 const priorityClass: Record<TicketPriority, string> = {
   Baixa: "bg-slate-100 text-slate-700",
@@ -124,11 +44,20 @@ function avatar(name: string) {
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 }
 
-export function TicketDashboard() {
+interface TicketDashboardProps {
+  initialView?: ViewMode;
+  onOpenTicket?: (id: number, view: ViewMode) => void;
+}
+
+export function TicketDashboard({ initialView = "list", onOpenTicket }: TicketDashboardProps) {
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<QuickFilter>("all");
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [viewMode, setViewMode] = useState<ViewMode>(initialView);
   const [selected, setSelected] = useState<number[]>([]);
+
+  useEffect(() => {
+    setViewMode(initialView);
+  }, [initialView]);
 
   const filtered = useMemo(() => {
     let list = [...mockTickets];
@@ -263,12 +192,17 @@ export function TicketDashboard() {
             </thead>
             <tbody>
               {filtered.map((ticket) => (
-                <tr key={ticket.id} className="cursor-pointer border-t hover:bg-slate-50">
+                <tr
+                  key={ticket.id}
+                  className="cursor-pointer border-t hover:bg-slate-50"
+                  onClick={() => onOpenTicket?.(ticket.id, viewMode)}
+                >
                   <td className="px-3 py-3">
                     <input
                       type="checkbox"
                       checked={selected.includes(ticket.id)}
                       onChange={() => toggleSelect(ticket.id)}
+                      onClick={(event) => event.stopPropagation()}
                       aria-label={`Selecionar chamado ${ticket.id}`}
                     />
                   </td>
@@ -316,7 +250,11 @@ export function TicketDashboard() {
               </div>
               <div className="space-y-3">
                 {grouped[column].map((ticket) => (
-                  <article key={ticket.id} className="rounded-lg border bg-white p-3 shadow-sm">
+                  <article
+                    key={ticket.id}
+                    className="cursor-pointer rounded-lg border bg-white p-3 shadow-sm hover:bg-slate-50"
+                    onClick={() => onOpenTicket?.(ticket.id, viewMode)}
+                  >
                     <p className="text-xs text-slate-500">#{ticket.id}</p>
                     <p className="mt-1 text-sm font-medium text-slate-900">{ticket.title}</p>
                     <div className="mt-2">
