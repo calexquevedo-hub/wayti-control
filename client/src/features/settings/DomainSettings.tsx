@@ -18,6 +18,7 @@ import type { DomainItem, DomainType } from "@/types";
 
 interface DomainSettingsProps {
   token?: string;
+  initialType?: DomainType;
 }
 
 const COLORS = [
@@ -29,8 +30,8 @@ const COLORS = [
   "#0891B2",
 ] as const;
 
-export function DomainSettings({ token }: DomainSettingsProps) {
-  const [activeType, setActiveType] = useState<DomainType>("CATEGORY");
+export function DomainSettings({ token, initialType = "CATEGORY" }: DomainSettingsProps) {
+  const [activeType, setActiveType] = useState<DomainType>(initialType);
   const [categories, setCategories] = useState<DomainItem[]>([]);
   const [epics, setEpics] = useState<DomainItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +68,10 @@ export function DomainSettings({ token }: DomainSettingsProps) {
   useEffect(() => {
     void load();
   }, [token]);
+
+  useEffect(() => {
+    setActiveType(initialType);
+  }, [initialType]);
 
   const addItem = async () => {
     if (!token) return;

@@ -60,6 +60,7 @@ const normalizePermissions = (input?: Partial<ProfilePermissions>): PermissionMa
 
 interface AccessControlProps {
   token?: string;
+  initialTab?: "users" | "profiles";
 }
 
 interface ProfileDraft {
@@ -70,8 +71,8 @@ interface ProfileDraft {
   permissions: PermissionMatrix;
 }
 
-export function AccessControl({ token }: AccessControlProps) {
-  const [activeTab, setActiveTab] = useState("users");
+export function AccessControl({ token, initialTab = "users" }: AccessControlProps) {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [usersStatus, setUsersStatus] = useState<string | null>(null);
@@ -103,6 +104,10 @@ export function AccessControl({ token }: AccessControlProps) {
       .then((data) => setUsers(data))
       .catch(() => setUsers([]));
   }, [token]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   const loadProfiles = async () => {
     if (!token) return;
@@ -273,7 +278,7 @@ export function AccessControl({ token }: AccessControlProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "users" | "profiles")}>
           <TabsList className="grid w-full max-w-[420px] grid-cols-2">
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="profiles">Perfis de Acesso</TabsTrigger>

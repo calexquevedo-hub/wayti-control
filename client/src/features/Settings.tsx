@@ -522,7 +522,8 @@ export function Settings({
     }
 
     if (activeSection === "configuracoes-demandas") {
-      if (activeSub === "categorias" || activeSub === "epicos") return <DomainSettings token={token} />;
+      if (activeSub === "categorias") return <DomainSettings token={token} initialType="CATEGORY" />;
+      if (activeSub === "epicos") return <DomainSettings token={token} initialType="EPIC" />;
       if (activeSub === "automacoes") return <Automations token={token} />;
       if (activeSub === "configuracoes-de-follow-up") {
         if (!onUpdateDemand) {
@@ -553,7 +554,9 @@ export function Settings({
       );
     }
 
-    if (activeSection === "controle-de-acesso") return <AccessControl token={token} />;
+    if (activeSection === "controle-de-acesso") {
+      return <AccessControl token={token} initialTab={activeSub === "perfis" ? "profiles" : "users"} />;
+    }
     if (activeSection === "configuracoes-chamado") return renderConfigChamado();
     return renderCanaisEmail();
   };
@@ -613,16 +616,15 @@ export function Settings({
             <CardDescription>Selecione um módulo desta seção.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-2">
               {currentSection.items.map((item) => (
                 <button
                   key={item.sub}
                   type="button"
                   onClick={() => handleSubChange(item.sub)}
-                  className={`flex min-h-11 items-center justify-between rounded-lg border px-3 py-2 text-left text-sm ${item.sub === activeSub ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted/50"}`}
+                  className={`flex min-h-11 w-full items-center rounded-lg border px-3 py-2 text-left text-sm ${item.sub === activeSub ? "border-primary bg-primary/10" : "border-border bg-card hover:bg-muted/50"}`}
                 >
-                  <span>{item.label}</span>
-                  {item.sub === activeSub ? <Badge>Ativo</Badge> : <Badge variant="outline">Abrir</Badge>}
+                  <span className="w-full truncate">{item.label}</span>
                 </button>
               ))}
             </div>
