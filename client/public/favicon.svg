@@ -1,6 +1,14 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="112" fill="#0B1220"/>
-  <rect x="128" y="140" width="256" height="56" rx="28" fill="#38BDF8"/>
-  <rect x="214" y="196" width="84" height="200" rx="36" fill="#F8FAFC"/>
-  <rect x="320" y="196" width="56" height="200" rx="28" fill="#38BDF8"/>
+  <defs>
+    <linearGradient id="wayti-gradient" x1="96" y1="96" x2="416" y2="416" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#0F172A"/>
+  <rect x="96" y="96" width="320" height="320" rx="88" fill="url(#wayti-gradient)"/>
+  <path
+    d="M154 184C154 171.85 163.85 162 176 162H206.5C215.8 162 224 167.86 227 176.66L256 261.16L285 176.66C288 167.86 296.2 162 305.5 162H336C348.15 162 358 171.85 358 184V328C358 340.15 348.15 350 336 350H317.5C305.35 350 295.5 340.15 295.5 328V257.64L276.8 313.34C273.8 322.14 265.6 328 256.3 328H255.7C246.4 328 238.2 322.14 235.2 313.34L216.5 257.64V328C216.5 340.15 206.65 350 194.5 350H176C163.85 350 154 340.15 154 328V184Z"
+    fill="#F8FAFC"
+  />
 </svg>
