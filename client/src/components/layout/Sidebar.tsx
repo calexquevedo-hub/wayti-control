@@ -52,13 +52,6 @@ const navGroups: NavGroup[] = [
       { value: "Cofre de Senhas", label: "Cofre de Senhas", icon: Key },
     ],
   },
-  {
-    title: "Dados e Sistema",
-    items: [
-      { value: "Relatórios", label: "Relatórios", icon: BarChart3 },
-      { value: "Configurações", label: "Configurações", icon: Settings },
-    ],
-  },
 ];
 
 const rootItems: NavItem[] = [

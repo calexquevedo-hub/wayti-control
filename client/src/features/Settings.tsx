@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchEmailIntegrationConfig, fetchSystemParams, testEmailIntegration, updateEmailIntegrationConfig, updateSystemParams } from "@/lib/api";
 import type { NotificationItem } from "@/hooks/useNotifications";
@@ -567,15 +566,27 @@ export function Settings({
       </div>
 
       <div className="hidden md:block">
-        <Tabs value={activeSection} onValueChange={(value) => handleSectionChange(value as SectionKey)}>
-          <TabsList className="grid w-full grid-cols-4">
-            {visibleSections.map((section) => (
-              <TabsTrigger key={section.key} value={section.key}>
+        <div role="tablist" aria-label="Seções de configurações" className="flex flex-wrap gap-2">
+          {visibleSections.map((section) => {
+            const isActive = section.key === activeSection;
+            return (
+              <button
+                key={section.key}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => handleSectionChange(section.key)}
+                className={`min-h-11 rounded-lg border px-4 py-2 text-sm transition ${
+                  isActive
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-card text-muted-foreground hover:bg-muted"
+                }`}
+              >
                 {section.title}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="space-y-3 md:hidden">
