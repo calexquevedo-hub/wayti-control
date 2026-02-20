@@ -61,7 +61,11 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-const footerItems: NavItem[] = [{ value: "Portal", label: "Portal do Cliente", icon: ExternalLink }];
+const rootItems: NavItem[] = [
+  { value: "Relatórios", label: "Relatórios", icon: BarChart3 },
+  { value: "Portal", label: "Portal do Cliente", icon: ExternalLink },
+  { value: "Configurações", label: "Configurações", icon: Settings },
+];
 
 interface SidebarProps {
   active: string;
@@ -79,7 +83,7 @@ export function Sidebar({ active, onSelect, permissions }: SidebarProps) {
     }))
     .filter((group) => group.items.length > 0);
 
-  const visibleFooterItems = footerItems.filter((item) => canAccessPage(permissions, item.value));
+  const visibleRootItems = rootItems.filter((item) => canAccessPage(permissions, item.value));
 
   return (
     <aside className="hidden h-screen w-72 flex-col border-r border-border bg-card/70 p-6 backdrop-blur lg:flex">
@@ -119,9 +123,9 @@ export function Sidebar({ active, onSelect, permissions }: SidebarProps) {
         ))}
       </nav>
 
-      {visibleFooterItems.length > 0 ? (
-        <div className="mt-auto border-t border-border/70 pt-4">
-          {visibleFooterItems.map((item) => {
+      {visibleRootItems.length > 0 ? (
+        <div className="mt-6 border-t border-border/70 pt-4">
+          {visibleRootItems.map((item) => {
             const Icon = item.icon;
             const isActive = active === item.value;
             return (

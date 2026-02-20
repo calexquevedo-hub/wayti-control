@@ -48,15 +48,12 @@ const navGroups: TopNavGroup[] = [
     ],
   },
   {
-    title: "Dados e Sistema",
+    title: "Raiz",
     items: [
       { value: "Relatórios", label: "Relatórios" },
+      { value: "Portal", label: "Portal do Cliente" },
       { value: "Configurações", label: "Configurações" },
     ],
-  },
-  {
-    title: "Portal",
-    items: [{ value: "Portal", label: "Portal do Cliente" }],
   },
 ];
 

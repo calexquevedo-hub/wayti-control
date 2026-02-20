@@ -85,6 +85,45 @@ const pages = [
   "Configurações",
 ];
 
+const PAGE_PATHS: Record<string, string> = {
+  Inbox: "/inbox",
+  Portal: "/portal",
+  "Visão Geral": "/",
+  Demandas: "/demandas",
+  Sprint: "/sprints",
+  "Follow-ups": "/follow-ups",
+  Chamados: "/chamados",
+  Ativos: "/ativos",
+  Contratos: "/contratos",
+  "Cofre de Senhas": "/senhas",
+  Automações: "/automacoes",
+  Relatórios: "/relatorios",
+  Auditoria: "/auditoria",
+  Configurações: "/configuracoes",
+};
+
+const PATH_PAGE_MATCHERS: Array<{ regex: RegExp; page: string }> = [
+  { regex: /^\/$/, page: "Visão Geral" },
+  { regex: /^\/inbox\/?$/, page: "Inbox" },
+  { regex: /^\/portal\/?$/, page: "Portal" },
+  { regex: /^\/demandas\/?$/, page: "Demandas" },
+  { regex: /^\/sprints\/?$/, page: "Sprint" },
+  { regex: /^\/follow-ups\/?$/, page: "Follow-ups" },
+  { regex: /^\/chamados\/?$/, page: "Chamados" },
+  { regex: /^\/ativos\/?$/, page: "Ativos" },
+  { regex: /^\/contratos\/?$/, page: "Contratos" },
+  { regex: /^\/senhas\/?$/, page: "Cofre de Senhas" },
+  { regex: /^\/automacoes\/?$/, page: "Automações" },
+  { regex: /^\/auditoria\/?$/, page: "Auditoria" },
+  { regex: /^\/relatorios\/?$/, page: "Relatórios" },
+  { regex: /^\/configuracoes\/?$/, page: "Configurações" },
+];
+
+function resolvePageFromPath(pathname: string) {
+  const match = PATH_PAGE_MATCHERS.find((item) => item.regex.test(pathname));
+  return match?.page;
+}
+
 export default function App() {
   const { user, login, logout, updateUser } = useAuth();
   const [active, setActive] = useState(pages[0]);
@@ -147,6 +186,11 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+    const byPath = resolvePageFromPath(window.location.pathname);
+    if (byPath && canAccessPage(permissions, byPath)) {
+      setActive(byPath);
+      return;
+    }
     const preferred = permissions?.settings?.manage ? "Inbox" : "Portal";
     if (canAccessPage(permissions, preferred)) {
       setActive(preferred);
@@ -387,6 +431,34 @@ export default function App() {
       .catch(() => setExternalParties([]));
   }, [user?.token, permissions?.demands?.view]);
 
+  useEffect(() => {
+    const onPopState = () => {
+      const byPath = resolvePageFromPath(window.location.pathname);
+      if (byPath && canAccessPage(permissions, byPath)) {
+        setActive(byPath);
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [permissions]);
+
+  const navigateToPage = (page: string, options?: { replace?: boolean }) => {
+    const pathname = PAGE_PATHS[page];
+    if (!pathname) return;
+    const search = page === "Configurações" ? window.location.search : "";
+    const nextUrl = `${pathname}${search}`;
+    if (options?.replace) {
+      window.history.replaceState({}, "", nextUrl);
+      return;
+    }
+    window.history.pushState({}, "", nextUrl);
+  };
+
+  const handleSelectPage = (page: string) => {
+    setActive(page);
+    navigateToPage(page);
+  };
+
   if (!user) {
     return <LoginPanel onLogin={login} />;
   }
@@ -469,16 +541,18 @@ export default function App() {
   return (
     <AppShell
       active={active}
-      onSelect={setActive}
+      onSelect={handleSelectPage}
       onSelectDemandView={(viewId) => {
         setActiveDemandViewId(viewId);
         setActiveView("demands", viewId);
         setActive("Inbox");
+        navigateToPage("Inbox");
       }}
       onSelectTicketView={(viewId) => {
         setActiveTicketViewId(viewId);
         setActiveView("tickets", viewId);
         setActive("Chamados");
+        navigateToPage("Chamados");
       }}
       userEmail={user.email}
       permissions={permissions}
