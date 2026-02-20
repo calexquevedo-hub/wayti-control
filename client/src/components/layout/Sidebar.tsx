@@ -10,9 +10,6 @@ import {
   LayoutDashboard,
   Rocket,
   Settings,
-  Settings2,
-  ShieldCheck,
-  Zap,
 } from "lucide-react";
 import type { ComponentType } from "react";
 
@@ -59,9 +56,6 @@ const navGroups: NavGroup[] = [
     title: "Dados e Sistema",
     items: [
       { value: "Relatórios", label: "Relatórios", icon: BarChart3 },
-      { value: "Automações", label: "Automações", icon: Zap },
-      { value: "Auditoria", label: "Auditoria", icon: ShieldCheck },
-      { value: "Follow-ups", label: "Configuração de Follow-ups", icon: Settings2 },
       { value: "Configurações", label: "Configurações", icon: Settings },
     ],
   },

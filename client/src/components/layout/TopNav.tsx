@@ -51,8 +51,6 @@ const navGroups: TopNavGroup[] = [
     title: "Dados e Sistema",
     items: [
       { value: "Relatórios", label: "Relatórios" },
-      { value: "Automações", label: "Automações" },
-      { value: "Auditoria", label: "Auditoria" },
       { value: "Configurações", label: "Configurações" },
     ],
   },
