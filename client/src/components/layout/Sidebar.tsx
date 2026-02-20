@@ -8,6 +8,7 @@ import {
   Key,
   Laptop,
   LayoutDashboard,
+  Layers,
   Rocket,
   Settings,
 } from "lucide-react";
@@ -84,9 +85,11 @@ export function Sidebar({ active, onSelect, permissions }: SidebarProps) {
 
   return (
     <aside className="hidden h-screen w-72 flex-col border-r border-border bg-card/70 p-6 backdrop-blur lg:flex">
-      <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">WayTI Control</p>
-        <h1 className="text-2xl font-semibold">Alta Performance</h1>
+      <div className="flex items-center gap-3 py-1">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+          <Layers className="h-5 w-5" />
+        </div>
+        <h1 className="text-xl font-bold text-foreground">WayTI</h1>
       </div>
 
       <nav className="mt-6 flex flex-1 flex-col gap-4 overflow-y-auto pr-1">
