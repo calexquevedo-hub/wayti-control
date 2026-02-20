@@ -52,13 +52,16 @@ const navGroups: NavGroup[] = [
       { value: "Cofre de Senhas", label: "Cofre de Senhas", icon: Key },
     ],
   },
+  {
+    title: "Estratégico",
+    items: [
+      { value: "Relatórios", label: "Relatórios", icon: BarChart3 },
+      { value: "Portal", label: "Portal do Cliente", icon: ExternalLink },
+    ],
+  },
 ];
 
-const rootItems: NavItem[] = [
-  { value: "Relatórios", label: "Relatórios", icon: BarChart3 },
-  { value: "Portal", label: "Portal do Cliente", icon: ExternalLink },
-  { value: "Configurações", label: "Configurações", icon: Settings },
-];
+const footerSettingsItem: NavItem = { value: "Configurações", label: "Configurações", icon: Settings };
 
 interface SidebarProps {
   active: string;
@@ -76,7 +79,8 @@ export function Sidebar({ active, onSelect, permissions }: SidebarProps) {
     }))
     .filter((group) => group.items.length > 0);
 
-  const visibleRootItems = rootItems.filter((item) => canAccessPage(permissions, item.value));
+  const showFooterSettings = canAccessPage(permissions, footerSettingsItem.value);
+  const FooterIcon = footerSettingsItem.icon;
 
   return (
     <aside className="hidden h-screen w-72 flex-col border-r border-border bg-card/70 p-6 backdrop-blur lg:flex">
@@ -116,25 +120,20 @@ export function Sidebar({ active, onSelect, permissions }: SidebarProps) {
         ))}
       </nav>
 
-      {visibleRootItems.length > 0 ? (
-        <div className="mt-6 border-t border-border/70 pt-4">
-          {visibleRootItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = active === item.value;
-            return (
-              <button
-                key={item.value}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
-                  isActive ? "bg-primary/15 text-primary shadow-glow" : "text-muted-foreground hover:bg-muted"
-                )}
-                onClick={() => onSelect(item.value)}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </button>
-            );
-          })}
+      {showFooterSettings ? (
+        <div className="mt-auto border-t border-border/70 pt-4">
+          <button
+            className={cn(
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
+              active === footerSettingsItem.value
+                ? "bg-primary/15 text-primary shadow-glow"
+                : "text-muted-foreground hover:bg-muted"
+            )}
+            onClick={() => onSelect(footerSettingsItem.value)}
+          >
+            <FooterIcon className="h-4 w-4" />
+            {footerSettingsItem.label}
+          </button>
         </div>
       ) : null}
     </aside>

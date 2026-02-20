@@ -570,7 +570,7 @@ export function Settings({
   };
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex w-full flex-col items-stretch gap-6">
       <div className="w-full">
         <h1 className="text-2xl font-bold tracking-tight">Configurações</h1>
         <p className="text-sm text-muted-foreground">Administração central de regras e integrações.</p>
@@ -622,7 +622,7 @@ export function Settings({
       </div>
 
       {currentSection ? (
-        <Card className="w-full">
+        <Card className="w-full self-stretch">
           <CardHeader>
             <CardTitle className="text-base">{currentSection.title}</CardTitle>
             <CardDescription>Selecione um módulo desta seção.</CardDescription>
@@ -644,7 +644,7 @@ export function Settings({
         </Card>
       ) : null}
 
-      <div className="w-full">{renderSubContent()}</div>
+      <div className="w-full self-stretch">{renderSubContent()}</div>
 
       <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
         <DialogContent className="max-w-3xl">
