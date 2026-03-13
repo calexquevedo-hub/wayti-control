@@ -868,6 +868,21 @@ export function DemandModal({
                   />
                 </div>
 
+                <div className="space-y-1">
+                  <Label htmlFor={fieldId("dependencia")} className="inline-flex items-center gap-1">
+                    <ListTodo className="h-3.5 w-3.5" /> Bloqueio / Gate
+                  </Label>
+                  <Textarea
+                    id={fieldId("dependencia")}
+                    rows={3}
+                    placeholder="Descreva o impedimento, dependência externa ou gate de aprovação."
+                    {...form.register("dependencia")}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Essa informação aparece na War Room e ajuda a priorizar desbloqueios.
+                  </p>
+                </div>
+
                 <div className="space-y-2">
                   <Label className="inline-flex items-center gap-1">
                     <DollarSign className="h-3.5 w-3.5" /> Financeiro

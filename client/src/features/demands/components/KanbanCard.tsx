@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { CheckSquare, Clock3, DollarSign } from "lucide-react";
+import { AlertTriangle, CheckSquare, Clock3, DollarSign } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { Demand, DemandPriority } from "@/types";
@@ -122,6 +122,7 @@ function KanbanCardBase({ demand, onClick }: KanbanCardProps) {
   const isChecklistDone = checklist.total > 0 && checklist.done === checklist.total;
   const category = ((demand as Demand & { categoria?: string }).categoria ?? demand.category ?? "").toString();
   const epic = ((demand as Demand & { epico?: string }).epico ?? demand.epic ?? "").toString();
+  const dependency = ((demand as Demand & { dependencia?: string }).dependencia ?? "").trim();
   const categoryBadgeTone = categoryTone[hashIndex(category || demand.id, categoryTone.length)];
   const epicBadgeTone = epicTone[hashIndex(epic || demand.id, epicTone.length)];
 
@@ -160,6 +161,16 @@ function KanbanCardBase({ demand, onClick }: KanbanCardProps) {
         </div>
 
         <p className="line-clamp-3 text-sm font-medium text-slate-900 dark:text-slate-100">{getTitle(demand)}</p>
+
+        {dependency ? (
+          <div
+            className="mt-2 inline-flex max-w-full items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+            title={dependency}
+          >
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{dependency}</span>
+          </div>
+        ) : null}
 
         <div className="mt-3 flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-3 text-xs">

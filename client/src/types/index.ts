@@ -277,6 +277,7 @@ export interface Demand {
   sprint?: Sprint | string;
   nextFollowUpAt?: Date;
   lastContactAt?: Date;
+  dependencia?: string;
   prazo?: Date | string;
   proximo_follow_up?: Date | string;
   ultimo_contato?: Date | string;
