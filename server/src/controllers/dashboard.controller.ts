@@ -65,8 +65,15 @@ export const getDashboardData = async (_req: Request, res: Response) => {
       SprintModel.find().sort({ startDate: 1 }).lean(),
     ]);
 
-    const openDemands = demands.filter(isOpenDemand);
-    const deliveredDemands = demands.filter((item: any) => normalizeText(item.status) === "Concluído");
+    const activeSprintId = activeSprint ? String(activeSprint._id) : "";
+    const executiveSourceDemands = activeSprintId
+      ? demands.filter((item: any) => String(item.sprintId ?? "") === activeSprintId)
+      : demands;
+
+    const openDemands = executiveSourceDemands.filter(isOpenDemand);
+    const deliveredDemands = executiveSourceDemands.filter(
+      (item: any) => normalizeText(item.status) === "Concluído"
+    );
 
     const openEpicSet = new Set<string>();
     for (const demand of openDemands) {
@@ -137,7 +144,7 @@ export const getDashboardData = async (_req: Request, res: Response) => {
     } | null = null;
 
     if (activeSprint) {
-      const sprintId = String(activeSprint._id);
+      const sprintId = activeSprintId;
       const sprintStart = new Date(activeSprint.startDate);
       const sprintEnd = new Date(activeSprint.endDate);
 
