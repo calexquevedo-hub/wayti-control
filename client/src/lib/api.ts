@@ -21,6 +21,19 @@ import type {
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
+function normalizeChoiceValue(value: unknown) {
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number") return String(value);
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.name === "string") return record.name.trim();
+    if (typeof record.label === "string") return record.label.trim();
+    if (typeof record.title === "string") return record.title.trim();
+    if (typeof record.value === "string") return record.value.trim();
+  }
+  return "";
+}
+
 function normalizeStatus(status: Demand["status"]) {
   const value = String(status);
   if (value === "planejado") return "Backlog" as Demand["status"];
@@ -31,9 +44,10 @@ function normalizeStatus(status: Demand["status"]) {
 }
 
 function parseDemand(raw: Demand) {
-  const categoria = String(raw.categoria ?? raw.category ?? "");
-  const epico = String(raw.epico ?? raw.epic ?? "");
-  const responsavel = String(raw.responsavel ?? raw.responsible ?? "");
+  const categoria = normalizeChoiceValue(raw.categoria) || normalizeChoiceValue(raw.category);
+  const epico = normalizeChoiceValue(raw.epico) || normalizeChoiceValue(raw.epic);
+  const responsavel =
+    normalizeChoiceValue(raw.responsavel) || normalizeChoiceValue(raw.responsible);
 
   return {
     ...raw,

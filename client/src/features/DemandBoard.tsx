@@ -43,32 +43,39 @@ function isBlank(value: unknown) {
   return typeof value !== "string" || value.trim().length === 0;
 }
 
+function normalizeChoiceValue(value: unknown) {
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number") return String(value);
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.name === "string") return record.name.trim();
+    if (typeof record.label === "string") return record.label.trim();
+    if (typeof record.title === "string") return record.title.trim();
+    if (typeof record.value === "string") return record.value.trim();
+  }
+  return "";
+}
+
 function mergeDemandIdentity(next: Demand, prev?: Demand): Demand {
   if (!prev) return next;
 
-  const categoria = !isBlank((next as any).categoria)
-    ? String((next as any).categoria)
-    : !isBlank((next as any).category)
-    ? String((next as any).category)
-    : !isBlank((prev as any).categoria)
-    ? String((prev as any).categoria)
-    : String((prev as any).category ?? "");
+  const categoria =
+    normalizeChoiceValue((next as any).categoria) ||
+    normalizeChoiceValue((next as any).category) ||
+    normalizeChoiceValue((prev as any).categoria) ||
+    normalizeChoiceValue((prev as any).category);
 
-  const epico = !isBlank((next as any).epico)
-    ? String((next as any).epico)
-    : !isBlank((next as any).epic)
-    ? String((next as any).epic)
-    : !isBlank((prev as any).epico)
-    ? String((prev as any).epico)
-    : String((prev as any).epic ?? "");
+  const epico =
+    normalizeChoiceValue((next as any).epico) ||
+    normalizeChoiceValue((next as any).epic) ||
+    normalizeChoiceValue((prev as any).epico) ||
+    normalizeChoiceValue((prev as any).epic);
 
-  const responsavel = !isBlank((next as any).responsavel)
-    ? String((next as any).responsavel)
-    : !isBlank((next as any).responsible)
-    ? String((next as any).responsible)
-    : !isBlank((prev as any).responsavel)
-    ? String((prev as any).responsavel)
-    : String((prev as any).responsible ?? "");
+  const responsavel =
+    normalizeChoiceValue((next as any).responsavel) ||
+    normalizeChoiceValue((next as any).responsible) ||
+    normalizeChoiceValue((prev as any).responsavel) ||
+    normalizeChoiceValue((prev as any).responsible);
 
   return {
     ...next,
@@ -237,9 +244,10 @@ export function DemandBoard({
   }, []);
 
   const handleCardClick = useCallback((demand: Demand) => {
-    setEditingDemand(demand);
+    const current = boardDemands.find((item) => item.id === demand.id);
+    setEditingDemand(mergeDemandIdentity(current ?? demand, demand));
     setModalOpen(true);
-  }, []);
+  }, [boardDemands]);
 
   const handleCreateInColumn = useCallback((status: DemandStatus) => {
     setEditingDemand(null);

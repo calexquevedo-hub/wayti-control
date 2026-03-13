@@ -104,6 +104,19 @@ function toDate(value: unknown): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+function normalizeChoiceValue(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (typeof value === "number") return String(value);
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.name === "string") return record.name.trim();
+    if (typeof record.label === "string") return record.label.trim();
+    if (typeof record.title === "string") return record.title.trim();
+    if (typeof record.value === "string") return record.value.trim();
+  }
+  return "";
+}
+
 function FollowUpPicker({
   value,
   open,
@@ -242,6 +255,13 @@ export function DemandModal({
       }
       return "";
     };
+    const pickChoice = (...keys: string[]) => {
+      for (const key of keys) {
+        const value = normalizeChoiceValue(raw[key]);
+        if (value) return value;
+      }
+      return "";
+    };
 
     const checklist = Array.isArray(raw.checklist)
       ? raw.checklist
@@ -256,15 +276,15 @@ export function DemandModal({
       titulo: String(pick("titulo", "name")),
       status: (pick("status") || "Backlog") as DemandFormValues["status"],
       prioridade: (pick("prioridade", "priority") || "P2") as DemandFormValues["prioridade"],
-      categoria: String(pick("categoria", "category")),
-      epico: String(pick("epico", "epic")),
+      categoria: pickChoice("categoria", "category"),
+      epico: pickChoice("epico", "epic"),
       sprintId:
         String(
           typeof rawAny.sprintId === "object"
             ? rawAny.sprintId?.id ?? rawAny.sprintId?._id ?? ""
             : pick("sprintId")
         ) || "",
-      responsavel: String(pick("responsavel", "responsible")),
+      responsavel: pickChoice("responsavel", "responsible"),
       prazo: safeDate(pick("prazo", "deadline")),
       proximo_follow_up: safeISO(pick("proximo_follow_up", "nextFollowUpAt")),
       ultimo_contato: safeDate(pick("ultimo_contato", "lastContactAt")),
