@@ -426,6 +426,10 @@ export function DemandModal({
     }
   }
 
+  function handleInvalid() {
+    setStatusMsg("Preencha os campos obrigatórios antes de salvar.");
+  }
+
   async function handleDelete() {
     if (!isEdit || !demandToEdit?.id || !onDelete) return;
     await onDelete(demandToEdit.id);
@@ -560,7 +564,7 @@ export function DemandModal({
           </div>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="grid grid-cols-12 gap-6 px-6 py-5">
+        <form onSubmit={form.handleSubmit(handleSubmit, handleInvalid)} className="grid grid-cols-12 gap-6 px-6 py-5">
           <section className="col-span-12 space-y-6 lg:col-span-8">
             <div className="space-y-2">
               <Label htmlFor={fieldId("titulo")}>Título</Label>
@@ -673,10 +677,15 @@ export function DemandModal({
                     onValueChange={(value) =>
                       form.setValue("responsavel", value === EMPTY_SELECT_VALUE ? "" : value, {
                         shouldValidate: true,
+                        shouldDirty: true,
                       })
                     }
                   >
-                    <SelectTrigger id={fieldId("responsavel-trigger")} aria-labelledby={fieldId("responsavel-label")}>
+                    <SelectTrigger
+                      id={fieldId("responsavel-trigger")}
+                      name="responsavel"
+                      aria-labelledby={fieldId("responsavel-label")}
+                    >
                       <SelectValue placeholder="Selecione o responsável" />
                     </SelectTrigger>
                     <SelectContent>
@@ -703,6 +712,9 @@ export function DemandModal({
                       ) : null}
                     </SelectContent>
                   </Select>
+                  {form.formState.errors.responsavel ? (
+                    <p className="text-xs text-destructive">{form.formState.errors.responsavel.message}</p>
+                  ) : null}
                 </div>
 
                 <div className="space-y-1">
@@ -712,10 +724,15 @@ export function DemandModal({
                     onValueChange={(value) =>
                       form.setValue("status", value as DemandFormValues["status"], {
                         shouldValidate: true,
+                        shouldDirty: true,
                       })
                     }
                   >
-                    <SelectTrigger id={fieldId("status-trigger")} aria-labelledby={fieldId("status-label")}>
+                    <SelectTrigger
+                      id={fieldId("status-trigger")}
+                      name="status"
+                      aria-labelledby={fieldId("status-label")}
+                    >
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -738,11 +755,13 @@ export function DemandModal({
                     onValueChange={(value) =>
                       form.setValue("sprintId", value === EMPTY_SELECT_VALUE ? "" : value, {
                         shouldValidate: true,
+                        shouldDirty: true,
                       })
                     }
                   >
                     <SelectTrigger
                       id={fieldId("sprintId-trigger")}
+                      name="sprintId"
                       aria-labelledby={fieldId("sprintId-label")}
                     >
                       <SelectValue placeholder="Backlog (sem sprint)" />
@@ -775,10 +794,15 @@ export function DemandModal({
                     onValueChange={(value) =>
                       form.setValue("prioridade", value as DemandFormValues["prioridade"], {
                         shouldValidate: true,
+                        shouldDirty: true,
                       })
                     }
                   >
-                    <SelectTrigger id={fieldId("prioridade-trigger")} aria-labelledby={fieldId("prioridade-label")}>
+                    <SelectTrigger
+                      id={fieldId("prioridade-trigger")}
+                      name="prioridade"
+                      aria-labelledby={fieldId("prioridade-label")}
+                    >
                       <SelectValue placeholder="Prioridade" />
                     </SelectTrigger>
                     <SelectContent>
@@ -797,10 +821,15 @@ export function DemandModal({
                     onValueChange={(value) =>
                       form.setValue("categoria", value === EMPTY_SELECT_VALUE ? "" : value, {
                         shouldValidate: true,
+                        shouldDirty: true,
                       })
                     }
                   >
-                    <SelectTrigger id={fieldId("categoria-trigger")} aria-labelledby={fieldId("categoria-label")}>
+                    <SelectTrigger
+                      id={fieldId("categoria-trigger")}
+                      name="categoria"
+                      aria-labelledby={fieldId("categoria-label")}
+                    >
                       <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
@@ -822,6 +851,9 @@ export function DemandModal({
                       ) : null}
                     </SelectContent>
                   </Select>
+                  {form.formState.errors.categoria ? (
+                    <p className="text-xs text-destructive">{form.formState.errors.categoria.message}</p>
+                  ) : null}
                 </div>
 
                 <div className="space-y-1">
@@ -831,10 +863,15 @@ export function DemandModal({
                     onValueChange={(value) =>
                       form.setValue("epico", value === EMPTY_SELECT_VALUE ? "" : value, {
                         shouldValidate: true,
+                        shouldDirty: true,
                       })
                     }
                   >
-                    <SelectTrigger id={fieldId("epico-trigger")} aria-labelledby={fieldId("epico-label")}>
+                    <SelectTrigger
+                      id={fieldId("epico-trigger")}
+                      name="epico"
+                      aria-labelledby={fieldId("epico-label")}
+                    >
                       <SelectValue placeholder="Épico" />
                     </SelectTrigger>
                     <SelectContent>
