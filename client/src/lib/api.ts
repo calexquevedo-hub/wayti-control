@@ -34,6 +34,16 @@ function normalizeChoiceValue(value: unknown) {
   return "";
 }
 
+function parseCalendarDate(value: string | Date) {
+  if (value instanceof Date) return value;
+  const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch;
+    return new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0, 0);
+  }
+  return new Date(value);
+}
+
 function normalizeStatus(status: Demand["status"]) {
   const value = String(status);
   if (value === "planejado") return "Backlog" as Demand["status"];
@@ -142,8 +152,8 @@ export async function fetchSprints(token: string, status?: "Planned" | "Active" 
   const data = (await response.json()) as Sprint[];
   return data.map((item: any) => ({
     ...item,
-    startDate: new Date(item.startDate),
-    endDate: new Date(item.endDate),
+    startDate: parseCalendarDate(item.startDate),
+    endDate: parseCalendarDate(item.endDate),
   }));
 }
 
@@ -158,8 +168,8 @@ export async function fetchCurrentSprint(token: string) {
   const item = (await response.json()) as Sprint;
   return {
     ...item,
-    startDate: new Date((item as any).startDate),
-    endDate: new Date((item as any).endDate),
+    startDate: parseCalendarDate((item as any).startDate),
+    endDate: parseCalendarDate((item as any).endDate),
   } as Sprint;
 }
 
@@ -259,8 +269,8 @@ export async function createSprint(
   const sprint = (await response.json()) as Sprint;
   return {
     ...sprint,
-    startDate: new Date((sprint as any).startDate),
-    endDate: new Date((sprint as any).endDate),
+    startDate: parseCalendarDate((sprint as any).startDate),
+    endDate: parseCalendarDate((sprint as any).endDate),
   } as Sprint;
 }
 
@@ -286,8 +296,8 @@ export async function updateSprint(
   const sprint = (await response.json()) as Sprint;
   return {
     ...sprint,
-    startDate: new Date((sprint as any).startDate),
-    endDate: new Date((sprint as any).endDate),
+    startDate: parseCalendarDate((sprint as any).startDate),
+    endDate: parseCalendarDate((sprint as any).endDate),
   } as Sprint;
 }
 

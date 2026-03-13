@@ -32,9 +32,20 @@ const EMPTY_FORM: SprintFormState = {
 
 function toDateInput(value: Date | string | undefined) {
   if (!value) return "";
-  const parsed = value instanceof Date ? value : new Date(value);
+  const parsed =
+    value instanceof Date
+      ? value
+      : (() => {
+          const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (!match) return new Date(value);
+          const [, year, month, day] = match;
+          return new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0, 0);
+        })();
   if (Number.isNaN(parsed.getTime())) return "";
-  return parsed.toISOString().slice(0, 10);
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function SprintManagerModal({ isOpen, onClose, token, onSaved }: SprintManagerModalProps) {

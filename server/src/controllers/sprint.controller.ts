@@ -5,6 +5,13 @@ import { DemandModel } from "../models/Demand";
 
 function parseDate(value?: string) {
   if (!value) return undefined;
+  const dateOnlyMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch;
+    const parsed = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0, 0);
+    if (Number.isNaN(parsed.getTime())) return undefined;
+    return parsed;
+  }
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return undefined;
   return parsed;
