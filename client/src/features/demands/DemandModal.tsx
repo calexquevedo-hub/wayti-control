@@ -540,6 +540,17 @@ export function DemandModal({
   }, [currentSprintId, sprints]);
 
   const followUpValue = form.watch("proximo_follow_up");
+  const immediateTitle =
+    normalizeChoiceValue((activeDemand as any)?.titulo) ||
+    normalizeChoiceValue((activeDemand as any)?.name) ||
+    form.watch("titulo") ||
+    (isEdit ? "Editar Demanda" : "Nova Demanda");
+  const immediatePriority =
+    normalizeChoiceValue((activeDemand as any)?.prioridade) ||
+    normalizeChoiceValue((activeDemand as any)?.priority) ||
+    form.watch("prioridade");
+  const immediateStatus =
+    normalizeChoiceValue((activeDemand as any)?.status) || form.watch("status");
 
   return (
     <Dialog open={isOpen} onOpenChange={(next) => !next && onClose()}>
@@ -553,22 +564,75 @@ export function DemandModal({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <DialogTitle className="text-xl font-semibold">
-                {form.watch("titulo") || (isEdit ? "Editar Demanda" : "Nova Demanda")}
+                {immediateTitle}
               </DialogTitle>
               <DialogDescription>
                 {isEdit
-                  ? `na lista ${form.watch("status")}${activeDemand?.sequentialId ? ` • #${activeDemand.sequentialId}` : ""}`
-                  : `na lista ${form.watch("status")}`}
+                  ? `na lista ${immediateStatus}${activeDemand?.sequentialId ? ` • #${activeDemand.sequentialId}` : ""}`
+                  : `na lista ${immediateStatus}`}
               </DialogDescription>
             </div>
-            <Badge variant="outline">{form.watch("prioridade")}</Badge>
+            <Badge variant="outline">{immediatePriority}</Badge>
           </div>
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(handleSubmit, handleInvalid)} className="grid grid-cols-12 gap-6 px-6 py-5">
           {modalLoading ? (
-            <div className="col-span-12 rounded-lg border border-border/60 bg-background/60 p-6 text-sm text-muted-foreground">
-              Carregando dados da demanda...
+            <div className="col-span-12 grid grid-cols-12 gap-6">
+              <section className="col-span-12 space-y-6 lg:col-span-8">
+                <div className="rounded-lg border border-border/60 bg-background/60 p-5">
+                  <div className="mb-4 h-8 w-3/4 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800" />
+                  <div className="h-32 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-900" />
+                </div>
+
+                <div className="rounded-lg border border-border/60 bg-background/60 p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="h-5 w-28 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800" />
+                    <div className="h-4 w-10 animate-pulse rounded bg-slate-100 dark:bg-slate-900" />
+                  </div>
+                  <div className="mb-4 h-2 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-900" />
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="flex gap-2">
+                        <div className="h-10 w-10 animate-pulse rounded bg-slate-100 dark:bg-slate-900" />
+                        <div className="h-10 flex-1 animate-pulse rounded bg-slate-100 dark:bg-slate-900" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border/60 bg-background/60 p-5">
+                  <div className="mb-4 h-5 w-24 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800" />
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="h-16 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-900" />
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <aside className="col-span-12 space-y-4 lg:col-span-4">
+                <div className="rounded-lg border border-border/60 bg-background/60 p-5">
+                  <div className="mb-4 h-4 w-28 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800" />
+                  <div className="space-y-4">
+                    {Array.from({ length: 7 }).map((_, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="h-3 w-20 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800" />
+                        <div className="h-10 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-900" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-border/60 bg-background/60 p-5">
+                  <div className="mb-4 h-4 w-16 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800" />
+                  <div className="space-y-3">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} className="h-10 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-900" />
+                    ))}
+                  </div>
+                </div>
+              </aside>
             </div>
           ) : (
             <>
