@@ -43,6 +43,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   archiveDemand,
   duplicateDemand,
+  fetchDemands,
   fetchDomainItems,
   fetchSprints,
   fetchUsers,
@@ -115,6 +116,65 @@ function normalizeChoiceValue(value: unknown): string {
     if (typeof record.value === "string") return record.value.trim();
   }
   return "";
+}
+
+function buildFormDefaults(source?: (Demand & Record<string, any>) | null): DemandFormInput {
+  if (!source) return defaults;
+
+  const raw = source;
+  const rawAny = raw as any;
+  const safeDate = (value?: string | null) => (value ? String(value).slice(0, 10) : "");
+  const safeISO = (value?: string | null) => (value ? new Date(value).toISOString() : "");
+  const pick = (...keys: string[]) => {
+    for (const key of keys) {
+      const value = raw[key];
+      if (value !== undefined && value !== null && value !== "") return value;
+    }
+    return "";
+  };
+  const pickChoice = (...keys: string[]) => {
+    for (const key of keys) {
+      const value = normalizeChoiceValue(raw[key]);
+      if (value) return value;
+    }
+    return "";
+  };
+
+  const checklist = Array.isArray(raw.checklist)
+    ? raw.checklist
+    : Array.isArray(raw.tasks)
+    ? raw.tasks.map((task: Record<string, unknown>) => ({
+        texto: String(task.title ?? ""),
+        checado: Boolean(task.isCompleted),
+      }))
+    : [];
+
+  return {
+    titulo: String(pick("titulo", "name")),
+    status: (pick("status") || "Backlog") as DemandFormValues["status"],
+    prioridade: (pick("prioridade", "priority") || "P2") as DemandFormValues["prioridade"],
+    categoria: pickChoice("categoria", "category"),
+    epico: pickChoice("epico", "epic"),
+    sprintId:
+      String(
+        typeof rawAny.sprintId === "object"
+          ? rawAny.sprintId?.id ?? rawAny.sprintId?._id ?? ""
+          : pick("sprintId")
+      ) || "",
+    responsavel: pickChoice("responsavel", "responsible"),
+    prazo: safeDate(pick("prazo", "deadline")),
+    proximo_follow_up: safeISO(pick("proximo_follow_up", "nextFollowUpAt")),
+    ultimo_contato: safeDate(pick("ultimo_contato", "lastContactAt")),
+    escalonar_em: safeDate(pick("escalonar_em")),
+    dono_externo: String(pick("dono_externo")),
+    impacto: (pick("impacto", "impact") || "Médio") as DemandFormValues["impacto"],
+    dependencia: String(pick("dependencia")),
+    resumo_executivo: String(pick("resumo_executivo", "executiveSummary", "description")),
+    link_evidencia: String(pick("link_evidencia")),
+    financeiro_mensal: Number(pick("financeiro_mensal", "financialMonthly") || 0),
+    financeiro_one_off: Number(pick("financeiro_one_off", "financialOneOff") || 0),
+    checklist,
+  };
 }
 
 function FollowUpPicker({
@@ -209,8 +269,10 @@ export function DemandModal({
 }: DemandModalProps) {
   const uid = useId();
   const fieldId = (name: string) => `${uid}-${name}`;
-  const isEdit = Boolean(demandToEdit?.id);
-  const isArchived = Boolean(demandToEdit?.isArchived);
+  const [resolvedDemand, setResolvedDemand] = useState<Demand | null>(null);
+  const activeDemand = resolvedDemand ?? demandToEdit ?? null;
+  const isEdit = Boolean(activeDemand?.id);
+  const isArchived = Boolean(activeDemand?.isArchived);
   const [saving, setSaving] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
@@ -220,6 +282,7 @@ export function DemandModal({
   const [usersLoading, setUsersLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [sprintsLoading, setSprintsLoading] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [followUpPickerOpen, setFollowUpPickerOpen] = useState(false);
   const [activityItems, setActivityItems] = useState<
@@ -238,134 +301,72 @@ export function DemandModal({
 
   useEffect(() => {
     if (!isOpen) return;
-
-    if (!demandToEdit) {
-      form.reset(defaults);
-      return;
-    }
-
-    const raw = demandToEdit as Demand & Record<string, any>;
-    const rawAny = raw as any;
-    const safeDate = (value?: string | null) => (value ? String(value).slice(0, 10) : "");
-    const safeISO = (value?: string | null) => (value ? new Date(value).toISOString() : "");
-    const pick = (...keys: string[]) => {
-      for (const key of keys) {
-        const value = raw[key];
-        if (value !== undefined && value !== null && value !== "") return value;
-      }
-      return "";
-    };
-    const pickChoice = (...keys: string[]) => {
-      for (const key of keys) {
-        const value = normalizeChoiceValue(raw[key]);
-        if (value) return value;
-      }
-      return "";
-    };
-
-    const checklist = Array.isArray(raw.checklist)
-      ? raw.checklist
-      : Array.isArray(raw.tasks)
-      ? raw.tasks.map((task: Record<string, unknown>) => ({
-          texto: String(task.title ?? ""),
-          checado: Boolean(task.isCompleted),
-        }))
-      : [];
-
-    form.reset({
-      titulo: String(pick("titulo", "name")),
-      status: (pick("status") || "Backlog") as DemandFormValues["status"],
-      prioridade: (pick("prioridade", "priority") || "P2") as DemandFormValues["prioridade"],
-      categoria: pickChoice("categoria", "category"),
-      epico: pickChoice("epico", "epic"),
-      sprintId:
-        String(
-          typeof rawAny.sprintId === "object"
-            ? rawAny.sprintId?.id ?? rawAny.sprintId?._id ?? ""
-            : pick("sprintId")
-        ) || "",
-      responsavel: pickChoice("responsavel", "responsible"),
-      prazo: safeDate(pick("prazo", "deadline")),
-      proximo_follow_up: safeISO(pick("proximo_follow_up", "nextFollowUpAt")),
-      ultimo_contato: safeDate(pick("ultimo_contato", "lastContactAt")),
-      escalonar_em: safeDate(pick("escalonar_em")),
-      dono_externo: String(pick("dono_externo")),
-      impacto: (pick("impacto", "impact") || "Médio") as DemandFormValues["impacto"],
-      dependencia: String(pick("dependencia")),
-      resumo_executivo: String(pick("resumo_executivo", "executiveSummary", "description")),
-      link_evidencia: String(pick("link_evidencia")),
-      financeiro_mensal: Number(pick("financeiro_mensal", "financialMonthly") || 0),
-      financeiro_one_off: Number(pick("financeiro_one_off", "financialOneOff") || 0),
-      checklist,
-    });
-  }, [demandToEdit, form, isOpen]);
-
-  useEffect(() => {
-    if (!isOpen || !token) return;
     let mounted = true;
 
-    setDomainsLoading(true);
-    Promise.all([fetchDomainItems(token, "CATEGORY"), fetchDomainItems(token, "EPIC")])
-      .then(([categories, epics]) => {
+    async function hydrateModal() {
+      setModalLoading(true);
+      setDomainsLoading(Boolean(token));
+      setSprintsLoading(Boolean(token));
+      setUsersLoading(Boolean(token));
+      setStatusMsg(null);
+
+      if (!token) {
+        setResolvedDemand(demandToEdit ?? null);
+        form.reset(buildFormDefaults(demandToEdit ?? null));
+        setModalLoading(false);
+        setDomainsLoading(false);
+        setSprintsLoading(false);
+        setUsersLoading(false);
+        return;
+      }
+
+      try {
+        const [categories, epics, sprintData, usersData, latestDemands] = await Promise.all([
+          fetchDomainItems(token, "CATEGORY"),
+          fetchDomainItems(token, "EPIC"),
+          fetchSprints(token),
+          fetchUsers(token),
+          demandToEdit?.id
+            ? fetchDemands(token, { archived: Boolean(demandToEdit.isArchived) })
+            : Promise.resolve([]),
+        ]);
+
         if (!mounted) return;
+
+        const latestDemand =
+          demandToEdit?.id
+            ? latestDemands.find((item) => item.id === demandToEdit.id) ?? demandToEdit
+            : null;
+
         setCategoryOptions(categories.map((item) => item.label));
         setEpicOptions(epics.map((item) => item.label));
-      })
-      .catch(() => {
+        setSprints(sprintData);
+        setUsers(usersData.filter((item) => item.isActive));
+        setResolvedDemand(latestDemand);
+        form.reset(buildFormDefaults(latestDemand));
+      } catch {
         if (!mounted) return;
         setCategoryOptions([]);
         setEpicOptions([]);
-      })
-      .finally(() => {
-        if (mounted) setDomainsLoading(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [isOpen, token]);
-
-  useEffect(() => {
-    if (!isOpen || !token) return;
-    let mounted = true;
-    setSprintsLoading(true);
-    fetchSprints(token)
-      .then((data) => {
-        if (!mounted) return;
-        setSprints(data);
-      })
-      .catch(() => {
-        if (!mounted) return;
         setSprints([]);
-      })
-      .finally(() => {
-        if (mounted) setSprintsLoading(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [isOpen, token]);
-
-  useEffect(() => {
-    if (!isOpen || !token) return;
-    let mounted = true;
-    setUsersLoading(true);
-    fetchUsers(token)
-      .then((data) => {
-        if (!mounted) return;
-        setUsers(data.filter((item) => item.isActive));
-      })
-      .catch(() => {
-        if (!mounted) return;
         setUsers([]);
-      })
-      .finally(() => {
-        if (mounted) setUsersLoading(false);
-      });
+        setResolvedDemand(demandToEdit ?? null);
+        form.reset(buildFormDefaults(demandToEdit ?? null));
+      } finally {
+        if (!mounted) return;
+        setDomainsLoading(false);
+        setSprintsLoading(false);
+        setUsersLoading(false);
+        setModalLoading(false);
+      }
+    }
+
+    void hydrateModal();
+
     return () => {
       mounted = false;
     };
-  }, [isOpen, token]);
+  }, [demandToEdit, form, isOpen, token]);
 
   const checklist = form.watch("checklist") ?? [];
   const doneChecklist = checklist.filter((item) => item.checado).length;
@@ -376,15 +377,15 @@ export function DemandModal({
   const currentResponsavel = form.watch("responsavel");
 
   const activity = useMemo(() => {
-    if (!demandToEdit) return [];
-    const comments = (demandToEdit.comments ?? []).map((comment) => ({
+    if (!activeDemand) return [];
+    const comments = (activeDemand.comments ?? []).map((comment) => ({
       at: toDate(comment.at) ?? new Date(),
       author: comment.author,
       text: comment.message,
       type: "comment" as const,
     }));
 
-    const audits = (demandToEdit.audits ?? [])
+    const audits = (activeDemand.audits ?? [])
       .filter((audit) => {
         const field = String(audit.field ?? "").toLowerCase();
         const action = String(audit.action ?? "").toLowerCase();
@@ -407,7 +408,7 @@ export function DemandModal({
     return [...comments, ...audits]
       .sort((a, b) => b.at.getTime() - a.at.getTime())
       .slice(0, 25);
-  }, [demandToEdit]);
+  }, [activeDemand]);
 
   useEffect(() => {
     setActivityItems(activity);
@@ -417,7 +418,7 @@ export function DemandModal({
     setSaving(true);
     setStatusMsg(null);
     try {
-      await onSave(values, demandToEdit?.id);
+      await onSave(values, activeDemand?.id);
       onClose();
     } catch (error: any) {
       setStatusMsg(error?.message ?? "Falha ao salvar demanda.");
@@ -431,18 +432,18 @@ export function DemandModal({
   }
 
   async function handleDelete() {
-    if (!isEdit || !demandToEdit?.id || !onDelete) return;
-    await onDelete(demandToEdit.id);
+    if (!isEdit || !activeDemand?.id || !onDelete) return;
+    await onDelete(activeDemand.id);
     onClose();
   }
 
   async function handleArchiveToggle() {
-    if (!token || !demandToEdit?.id) return;
+    if (!token || !activeDemand?.id) return;
     setSaving(true);
     setStatusMsg(null);
     try {
       if (isArchived) {
-        await unarchiveDemand(token, demandToEdit.id);
+        await unarchiveDemand(token, activeDemand.id);
         setActivityItems((prev) => [
           {
             at: new Date(),
@@ -453,7 +454,7 @@ export function DemandModal({
           ...prev,
         ]);
       } else {
-        await archiveDemand(token, demandToEdit.id);
+        await archiveDemand(token, activeDemand.id);
         setActivityItems((prev) => [
           {
             at: new Date(),
@@ -474,11 +475,11 @@ export function DemandModal({
   }
 
   async function handleDuplicate() {
-    if (!token || !demandToEdit?.id) return;
+    if (!token || !activeDemand?.id) return;
     setSaving(true);
     setStatusMsg(null);
     try {
-      await duplicateDemand(token, demandToEdit.id);
+      await duplicateDemand(token, activeDemand.id);
       await onRefresh?.();
       onClose();
     } catch (error: any) {
@@ -489,8 +490,8 @@ export function DemandModal({
   }
 
   async function handleAddComment() {
-    if (!demandToEdit?.id || !onAddComment || !commentDraft.trim()) return;
-    const result = await onAddComment(demandToEdit.id, commentDraft.trim());
+    if (!activeDemand?.id || !onAddComment || !commentDraft.trim()) return;
+    const result = await onAddComment(activeDemand.id, commentDraft.trim());
     if (!result.ok) {
       setStatusMsg(result.message ?? "Falha ao comentar.");
       return;
@@ -556,7 +557,7 @@ export function DemandModal({
               </DialogTitle>
               <DialogDescription>
                 {isEdit
-                  ? `na lista ${form.watch("status")}${demandToEdit?.sequentialId ? ` • #${demandToEdit.sequentialId}` : ""}`
+                  ? `na lista ${form.watch("status")}${activeDemand?.sequentialId ? ` • #${activeDemand.sequentialId}` : ""}`
                   : `na lista ${form.watch("status")}`}
               </DialogDescription>
             </div>
@@ -565,6 +566,12 @@ export function DemandModal({
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(handleSubmit, handleInvalid)} className="grid grid-cols-12 gap-6 px-6 py-5">
+          {modalLoading ? (
+            <div className="col-span-12 rounded-lg border border-border/60 bg-background/60 p-6 text-sm text-muted-foreground">
+              Carregando dados da demanda...
+            </div>
+          ) : (
+            <>
           <section className="col-span-12 space-y-6 lg:col-span-8">
             <div className="space-y-2">
               <Label htmlFor={fieldId("titulo")}>Título</Label>
@@ -1015,6 +1022,8 @@ export function DemandModal({
 
             {statusMsg ? <p className="text-xs text-amber-600 dark:text-amber-300">{statusMsg}</p> : null}
           </aside>
+            </>
+          )}
         </form>
       </DialogContent>
     </Dialog>
