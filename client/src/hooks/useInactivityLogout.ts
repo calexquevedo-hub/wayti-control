@@ -79,8 +79,9 @@ export function useInactivityLogout({ enabled, onLogout }: UseInactivityLogoutOp
       return;
     }
 
-    const storedActivity = readNumber(localStorage.getItem(LAST_ACTIVITY_KEY));
-    const startingPoint = storedActivity ?? Date.now();
+    loggedOutRef.current = false;
+    const startingPoint = Date.now();
+    lastInteractionRef.current = startingPoint;
     syncActivity(startingPoint);
 
     const handleActivity = () => {
@@ -116,6 +117,7 @@ export function useInactivityLogout({ enabled, onLogout }: UseInactivityLogoutOp
       const remaining = timeoutMs - (Date.now() - lastActivityRef.current);
       setRemainingMs(Math.max(remaining, 0));
       if (remaining <= 0) {
+        console.log("Sessão expirada por inatividade. Tempo limite atingido.");
         performLogout();
         return;
       }
