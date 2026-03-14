@@ -20,6 +20,7 @@ export type TicketItem = {
   title: string;
   requester: string;
   category: string;
+  epic: string;
   priority: TicketPriority;
   status: TicketStatus;
   slaMinutesLeft: number;
@@ -34,6 +35,7 @@ export const mockTickets: TicketItem[] = [
     title: "Sem acesso ao ERP financeiro",
     requester: "Maria Silva",
     category: "Sistemas > ERP",
+    epic: "Operação Financeira",
     priority: "Urgente",
     status: "Novo",
     slaMinutesLeft: 45,
@@ -66,6 +68,7 @@ export const mockTickets: TicketItem[] = [
     title: "Erro ao anexar XML de NFe",
     requester: "Carlos Mendes",
     category: "Fiscal > Emissão",
+    epic: "Fiscal & Compliance",
     priority: "Alta",
     status: "Em Atendimento",
     slaMinutesLeft: 130,
@@ -98,6 +101,7 @@ export const mockTickets: TicketItem[] = [
     title: "Solicitação de novo usuário no CRM",
     requester: "Aline Prado",
     category: "Acessos > CRM",
+    epic: "Crescimento Comercial",
     priority: "Média",
     status: "Aguardando Retorno",
     slaMinutesLeft: -20,
@@ -123,6 +127,7 @@ export const mockTickets: TicketItem[] = [
     title: "Notebook com lentidão extrema",
     requester: "Rafael Gomes",
     category: "Infra > Hardware",
+    epic: "Infraestrutura do Usuário",
     priority: "Alta",
     status: "Em Atendimento",
     slaMinutesLeft: 210,
@@ -148,6 +153,7 @@ export const mockTickets: TicketItem[] = [
     title: "Ajuste de assinatura de e-mail",
     requester: "Paula Costa",
     category: "Comunicação > SMTP",
+    epic: "Comunicação Corporativa",
     priority: "Baixa",
     status: "Resolvido",
     slaMinutesLeft: 320,
@@ -173,6 +179,7 @@ export const mockTickets: TicketItem[] = [
     title: "VPN não conecta fora da matriz",
     requester: "Henrique Dias",
     category: "Rede > VPN",
+    epic: "Conectividade Segura",
     priority: "Urgente",
     status: "Novo",
     slaMinutesLeft: 18,
@@ -195,3 +202,42 @@ export const mockTickets: TicketItem[] = [
   },
 ];
 
+const mockAssigneeOptions = ["Atribuir a mim", "João TI", "Fernanda N1", "Unassigned"];
+const mockCategoryOptions = [
+  "Sistemas > ERP",
+  "Fiscal > Emissão",
+  "Acessos > CRM",
+  "Infra > Hardware",
+  "Comunicação > SMTP",
+  "Rede > VPN",
+];
+const mockEpicOptions = [
+  "Operação Financeira",
+  "Fiscal & Compliance",
+  "Crescimento Comercial",
+  "Infraestrutura do Usuário",
+  "Comunicação Corporativa",
+  "Conectividade Segura",
+];
+
+function delayed<T>(payload: T, ms: number) {
+  return new Promise<T>((resolve) => {
+    window.setTimeout(() => resolve(payload), ms);
+  });
+}
+
+export function fetchMockTicketDetails(ticketId: number) {
+  return delayed(mockTickets.find((item) => item.id === ticketId) ?? null, 120);
+}
+
+export function fetchMockTicketAssignees() {
+  return delayed(mockAssigneeOptions, 180);
+}
+
+export function fetchMockTicketCategories() {
+  return delayed(mockCategoryOptions, 160);
+}
+
+export function fetchMockTicketEpics() {
+  return delayed(mockEpicOptions, 220);
+}

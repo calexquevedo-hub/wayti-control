@@ -11,11 +11,24 @@ import {
   User,
 } from "lucide-react";
 
-import type { TicketItem } from "./mockData";
-import { mockTickets } from "./mockData";
+import type { TicketItem, TicketPriority, TicketStatus } from "./mockData";
+import {
+  fetchMockTicketAssignees,
+  fetchMockTicketCategories,
+  fetchMockTicketDetails,
+  fetchMockTicketEpics,
+} from "./mockData";
 import type { ViewMode } from "./TicketDashboard";
 
 type ReplyMode = "reply" | "internal";
+
+interface TicketFormState {
+  status: TicketStatus;
+  assignee: string;
+  priority: TicketPriority;
+  category: string;
+  epic: string;
+}
 
 const priorityTone: Record<string, string> = {
   Baixa: "bg-slate-100 text-slate-700",
@@ -35,17 +48,52 @@ export function TicketDetails({ ticketId, returnView = "list", onBack }: TicketD
   const [message, setMessage] = useState("");
   const [ticket, setTicket] = useState<TicketItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [relationshipLoading, setRelationshipLoading] = useState(true);
+  const [assigneeOptions, setAssigneeOptions] = useState<string[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [epicOptions, setEpicOptions] = useState<string[]>([]);
+  const [formValues, setFormValues] = useState<TicketFormState | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    const timeout = window.setTimeout(() => {
-      const found = mockTickets.find((item) => item.id === ticketId) ?? null;
-      setTicket(found);
-      setLoading(false);
-    }, 200);
-    return () => window.clearTimeout(timeout);
+    setRelationshipLoading(true);
+
+    Promise.all([
+      fetchMockTicketDetails(ticketId),
+      fetchMockTicketAssignees(),
+      fetchMockTicketCategories(),
+      fetchMockTicketEpics(),
+    ])
+      .then(([found, assignees, categories, epics]) => {
+        if (cancelled) return;
+        setTicket(found);
+        setAssigneeOptions(assignees);
+        setCategoryOptions(categories);
+        setEpicOptions(epics);
+        setFormValues(
+          found
+            ? {
+                status: found.status,
+                assignee: found.assignee,
+                priority: found.priority,
+                category: found.category,
+                epic: found.epic,
+              }
+            : null
+        );
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setRelationshipLoading(false);
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [ticketId]);
 
   useEffect(() => {
@@ -91,7 +139,7 @@ export function TicketDetails({ ticketId, returnView = "list", onBack }: TicketD
     return <div className="p-6 text-sm text-slate-500">Carregando chamado...</div>;
   }
 
-  if (!ticket || !slaUi) {
+  if (!ticket || !slaUi || !formValues) {
     return (
       <div className="p-6">
         <div className="rounded-lg border bg-white p-6">
@@ -125,7 +173,9 @@ export function TicketDetails({ ticketId, returnView = "list", onBack }: TicketD
             <h1 className="text-lg font-semibold text-slate-900">
               #{ticket.id} - {ticket.title}
             </h1>
-            <p className="text-sm text-slate-500">{ticket.category} • aberto por {ticket.requester}</p>
+            <p className="text-sm text-slate-500">
+              {formValues.category} • {formValues.epic} • aberto por {ticket.requester}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -258,42 +308,103 @@ export function TicketDetails({ ticketId, returnView = "list", onBack }: TicketD
           <div className="space-y-4 text-sm">
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-slate-500">Status</span>
-              <select defaultValue={ticket.status} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3">
-                <option>Aberto</option>
-                <option>Pendente</option>
+              <select
+                value={formValues.status}
+                onChange={(event) =>
+                  setFormValues((current) =>
+                    current ? { ...current, status: event.target.value as TicketStatus } : current
+                  )
+                }
+                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3"
+              >
+                <option>Novo</option>
+                <option>Em Atendimento</option>
+                <option>Aguardando Retorno</option>
                 <option>Resolvido</option>
               </select>
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-slate-500">Responsável</span>
-              <select defaultValue={ticket.assignee} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3">
-                <option>Atribuir a mim</option>
-                <option>João TI</option>
-                <option>Fernanda N1</option>
-                <option>Unassigned</option>
+              <select
+                value={formValues.assignee}
+                disabled={relationshipLoading}
+                onChange={(event) =>
+                  setFormValues((current) =>
+                    current ? { ...current, assignee: event.target.value } : current
+                  )
+                }
+                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 disabled:cursor-wait disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                {relationshipLoading ? <option>Carregando responsáveis...</option> : null}
+                {assigneeOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-slate-500">Prioridade</span>
               <div className="flex items-center gap-2">
-                <select defaultValue={ticket.priority} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3">
+                <select
+                  value={formValues.priority}
+                  onChange={(event) =>
+                    setFormValues((current) =>
+                      current ? { ...current, priority: event.target.value as TicketPriority } : current
+                    )
+                  }
+                  className="h-10 w-full rounded-md border border-slate-200 bg-white px-3"
+                >
                   <option>Baixa</option>
                   <option>Média</option>
                   <option>Alta</option>
                   <option>Urgente</option>
                 </select>
-                <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${priorityTone[ticket.priority]}`}>
-                  {ticket.priority}
+                <span
+                  className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${priorityTone[formValues.priority]}`}
+                >
+                  {formValues.priority}
                 </span>
               </div>
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-medium text-slate-500">Categoria</span>
-              <select defaultValue={ticket.category} className="h-10 w-full rounded-md border border-slate-200 bg-white px-3">
-                <option>{ticket.category}</option>
-                <option>Sistemas &gt; ERP</option>
-                <option>Infraestrutura &gt; Rede</option>
-                <option>Acessos &gt; Permissões</option>
+              <select
+                value={formValues.category}
+                disabled={relationshipLoading}
+                onChange={(event) =>
+                  setFormValues((current) =>
+                    current ? { ...current, category: event.target.value } : current
+                  )
+                }
+                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 disabled:cursor-wait disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                {relationshipLoading ? <option>Carregando categorias...</option> : null}
+                {categoryOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-slate-500">Épico</span>
+              <select
+                value={formValues.epic}
+                disabled={relationshipLoading}
+                onChange={(event) =>
+                  setFormValues((current) =>
+                    current ? { ...current, epic: event.target.value } : current
+                  )
+                }
+                className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 disabled:cursor-wait disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                {relationshipLoading ? <option>Carregando épicos...</option> : null}
+                {epicOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
@@ -335,4 +446,3 @@ export function TicketDetails({ ticketId, returnView = "list", onBack }: TicketD
 }
 
 export default TicketDetails;
-
