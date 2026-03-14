@@ -8,6 +8,9 @@ const DEFAULT_TIMEOUT_MS = 15 * 60 * 1000;
 const DEFAULT_WARNING_MS = 60 * 1000;
 
 const ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
+  "mousemove",
+  "scroll",
+  "click",
   "pointerdown",
   "keydown",
   "wheel",
@@ -45,6 +48,7 @@ export function useInactivityLogout({ enabled, onLogout }: UseInactivityLogoutOp
   const [warningOpen, setWarningOpen] = useState(false);
   const lastActivityRef = useRef<number>(Date.now());
   const lastPersistRef = useRef(0);
+  const lastInteractionRef = useRef(0);
   const loggedOutRef = useRef(false);
 
   const performLogout = useCallback(() => {
@@ -79,7 +83,12 @@ export function useInactivityLogout({ enabled, onLogout }: UseInactivityLogoutOp
     const startingPoint = storedActivity ?? Date.now();
     syncActivity(startingPoint);
 
-    const handleActivity = () => syncActivity();
+    const handleActivity = () => {
+      const now = Date.now();
+      if (now - lastInteractionRef.current < 500) return;
+      lastInteractionRef.current = now;
+      syncActivity(now);
+    };
     const handleVisibility = () => {
       if (!document.hidden) syncActivity();
     };
