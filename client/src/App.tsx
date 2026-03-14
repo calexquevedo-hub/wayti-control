@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { LoginPanel } from "@/components/layout/LoginPanel";
-import { useAuth } from "@/hooks/useAuth";
+import { authStorageKeys, useAuth } from "@/hooks/useAuth";
 import { useDemandData } from "@/hooks/useDemandData";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -257,6 +257,14 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+
+    if (sessionStorage.getItem(authStorageKeys.postLoginRedirect) === "1") {
+      sessionStorage.removeItem(authStorageKeys.postLoginRedirect);
+      setActive("Visão Geral");
+      navigateToPage("Visão Geral", { replace: true });
+      return;
+    }
+
     const byPath = resolvePageFromPath(window.location.pathname);
     if (byPath && canAccessPage(permissions, byPath)) {
       setActive(byPath);

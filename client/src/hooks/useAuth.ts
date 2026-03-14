@@ -3,6 +3,7 @@ import { inactivityLogoutStorageKeys } from "@/hooks/useInactivityLogout";
 
 const AUTH_KEY = "tiDemand.auth";
 const LEGACY_KEY = "ti-demand-auth";
+const POST_LOGIN_REDIRECT_KEY = "tiDemand.postLoginRedirect";
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
 
 export interface AuthState {
@@ -65,6 +66,7 @@ export function useAuth() {
       localStorage.removeItem(inactivityLogoutStorageKeys.reason);
       localStorage.removeItem(inactivityLogoutStorageKeys.forceLogout);
       localStorage.setItem(AUTH_KEY, JSON.stringify(payload));
+      sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, "1");
       setUser(payload);
       return { ok: true } as const;
     } catch (error) {
@@ -93,3 +95,7 @@ export function useAuth() {
 
   return { user, login, logout, updateUser };
 }
+
+export const authStorageKeys = {
+  postLoginRedirect: POST_LOGIN_REDIRECT_KEY,
+};
