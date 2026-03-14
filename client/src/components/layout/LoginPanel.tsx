@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Lock, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { inactivityLogoutStorageKeys } from "@/hooks/useInactivityLogout";
 
 interface LoginPanelProps {
   onLogin: (
@@ -17,6 +18,15 @@ export function LoginPanel({ onLogin }: LoginPanelProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const reason = localStorage.getItem(inactivityLogoutStorageKeys.reason);
+    if (reason === "inactive") {
+      setSessionNotice("Sessão encerrada por inatividade. Faça login novamente.");
+      localStorage.removeItem(inactivityLogoutStorageKeys.reason);
+    }
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -73,6 +83,11 @@ export function LoginPanel({ onLogin }: LoginPanelProps) {
                 />
               </label>
             </div>
+            {sessionNotice ? (
+              <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
+                {sessionNotice}
+              </p>
+            ) : null}
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <Button className="gap-2" disabled={loading} type="submit">
               <Lock className="h-4 w-4" />
@@ -84,9 +99,13 @@ export function LoginPanel({ onLogin }: LoginPanelProps) {
               onClick={() => {
                 localStorage.removeItem("tiDemand.auth");
                 localStorage.removeItem("ti-demand-auth");
+                localStorage.removeItem(inactivityLogoutStorageKeys.reason);
+                localStorage.removeItem(inactivityLogoutStorageKeys.forceLogout);
+                localStorage.removeItem(inactivityLogoutStorageKeys.lastActivity);
                 setEmail("");
                 setPassword("");
                 setError(null);
+                setSessionNotice(null);
               }}
             >
               Limpar sessão

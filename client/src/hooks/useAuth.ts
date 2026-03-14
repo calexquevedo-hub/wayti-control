@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { inactivityLogoutStorageKeys } from "@/hooks/useInactivityLogout";
 
 const AUTH_KEY = "tiDemand.auth";
 const LEGACY_KEY = "ti-demand-auth";
@@ -61,6 +62,8 @@ export function useAuth() {
         notificationPrefs: data.user.notificationPrefs,
         token: data.token,
       };
+      localStorage.removeItem(inactivityLogoutStorageKeys.reason);
+      localStorage.removeItem(inactivityLogoutStorageKeys.forceLogout);
       localStorage.setItem(AUTH_KEY, JSON.stringify(payload));
       setUser(payload);
       return { ok: true } as const;
@@ -72,6 +75,7 @@ export function useAuth() {
   const logout = useCallback(() => {
     localStorage.removeItem(AUTH_KEY);
     localStorage.removeItem(LEGACY_KEY);
+    localStorage.removeItem(inactivityLogoutStorageKeys.lastActivity);
     setUser(null);
   }, []);
 
@@ -79,6 +83,7 @@ export function useAuth() {
     if (!next) {
       localStorage.removeItem(AUTH_KEY);
       localStorage.removeItem(LEGACY_KEY);
+      localStorage.removeItem(inactivityLogoutStorageKeys.lastActivity);
       setUser(null);
       return;
     }

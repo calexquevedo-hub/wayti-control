@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { LoginPanel } from "@/components/layout/LoginPanel";
 import { useAuth } from "@/hooks/useAuth";
 import { useDemandData } from "@/hooks/useDemandData";
+import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useTheme } from "@/hooks/useTheme";
 import { canAccessPage } from "@/lib/permissions";
@@ -241,6 +242,10 @@ export default function App() {
   });
 
   const themeController = useTheme();
+  const inactivity = useInactivityLogout({
+    enabled: Boolean(user?.token),
+    onLogout: logout,
+  });
 
   useEffect(() => {
     if (!user) return;
@@ -812,6 +817,26 @@ export default function App() {
             >
               {prefSaving ? "Salvando..." : emailStep === "request" ? "Salvar preferências" : "Validar código"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={inactivity.warningOpen}>
+        <DialogContent className="max-w-md [&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle>Sessão prestes a expirar</DialogTitle>
+            <DialogDescription>
+              Sua sessão será encerrada em {inactivity.remainingSeconds}s por inatividade.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300">
+            Interaja com o sistema ou clique em continuar para manter a sessão ativa.
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={logout}>
+              Encerrar agora
+            </Button>
+            <Button onClick={inactivity.continueSession}>Continuar sessão</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
