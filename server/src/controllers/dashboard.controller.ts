@@ -149,17 +149,9 @@ export const getDashboardData = async (_req: Request, res: Response) => {
       const sprintEnd = new Date(activeSprint.endDate);
 
       const sprintDemands = demands.filter((item: any) => String(item.sprintId ?? "") === sprintId);
-      const carryover = sprintDemands.filter((item: any) => {
-        const createdAt = new Date(item.createdAt);
-        if (Number.isNaN(createdAt.getTime())) return false;
-        return createdAt.getTime() < sprintStart.getTime();
-      }).length;
+      const carryover = sprintDemands.filter((item: any) => !!item.isCarryover).length;
 
-      const newScope = sprintDemands.filter((item: any) => {
-        const createdAt = new Date(item.createdAt);
-        if (Number.isNaN(createdAt.getTime())) return false;
-        return createdAt.getTime() >= sprintStart.getTime();
-      }).length;
+      const newScope = sprintDemands.filter((item: any) => !item.isCarryover).length;
 
       const activeTasks = sprintDemands
         .filter(isOpenDemand)
@@ -238,7 +230,8 @@ export const getDashboardData = async (_req: Request, res: Response) => {
     const sprintHistory = sprints.map((sprint: any) => {
       const sprintId = String(sprint._id);
       const tasks = sprintTaskMap.get(sprintId) ?? [];
-      const allClosedDone = tasks.every((item) => normalizeText(item.status) === "Concluído");
+      const allClosedDone = tasks.length > 0 && tasks.every((item) => normalizeText(item.status) === "Concluído");
+      const carryoverCount = tasks.filter((item) => !!item.isCarryover).length;
 
       return {
         id: sprintId,
@@ -246,6 +239,7 @@ export const getDashboardData = async (_req: Request, res: Response) => {
         startDate: sprint.startDate,
         endDate: sprint.endDate,
         taskCount: tasks.length,
+        carryoverCount,
         statusColor: statusColor(normalizeText(sprint.status), allClosedDone),
       };
     });

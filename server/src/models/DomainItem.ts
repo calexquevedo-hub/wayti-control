@@ -19,6 +19,8 @@ const DomainItemSchema = new Schema(
     value: { type: String, required: true, trim: true },
     color: { type: String, trim: true },
     active: { type: Boolean, default: true, index: true },
+    epicStatus: { type: String, enum: ["Crítico", "Em andamento", "Concluído"], default: "Em andamento" },
+    area: { type: String, trim: true },
   },
   {
     timestamps: true,

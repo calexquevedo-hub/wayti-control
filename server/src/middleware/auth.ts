@@ -43,3 +43,22 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return res.status(401).json({ message: "Token inválido" });
   }
 }
+
+export function checkPermission(module: string, action: string) {
+  return (req: any, res: any, next: NextFunction) => {
+    const user = res.locals.user;
+    if (!user) return res.status(401).json({ message: "Não autenticado" });
+    
+    const profile = user.profile;
+    if (!profile || !profile.permissions) {
+      return res.status(403).json({ message: "Sem perfil ou permissões definidas." });
+    }
+
+    const modPerm = profile.permissions[module];
+    if (modPerm && modPerm[action]) {
+      return next();
+    }
+
+    return res.status(403).json({ message: `Permissão negada para ${module}:${action}` });
+  };
+}

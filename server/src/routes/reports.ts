@@ -229,4 +229,129 @@ router.get("/sla-tickets", requireAuth, checkPermission("reports", "view"), asyn
   });
 });
 
+import { SprintModel } from "../models/Sprint";
+import { DomainItemModel } from "../models/DomainItem";
+import { RiskItemModel } from "../models/RiskItem";
+import { NextStepItemModel } from "../models/NextStepItem";
+import { SprintCloseoutModel } from "../models/SprintCloseout";
+
+router.get("/gerencial", requireAuth, checkPermission("reports", "view"), async (req, res) => {
+  const { sprintId, from, to } = req.query as Record<string, string | undefined>;
+  
+  // 1. Capa e Contexto
+  const sprint = sprintId ? await SprintModel.findById(sprintId) : await SprintModel.findOne({ status: "Active" }).sort({ startDate: -1 });
+  const closeout = sprint ? await SprintCloseoutModel.findOne({ sprintId: sprint._id }) : null;
+
+  const coverInfo = {
+    title: "Relatório Gerencial de Projetos de TI",
+    organization: "Integra Soluções",
+    sprintName: sprint?.name ?? "N/A",
+    period: sprint ? `${new Date(sprint.startDate).toLocaleDateString("pt-BR")} a ${new Date(sprint.endDate).toLocaleDateString("pt-BR")}` : "N/A",
+    status: sprint?.status === "Active" ? "Em andamento" : sprint?.status === "Closed" ? "Concluída" : "Planejada",
+    generatedAt: new Date().toLocaleString("pt-BR"),
+  };
+
+  // 2. Visão Executiva (Slide 2)
+  const allEpics = await DomainItemModel.find({ type: "EPIC", active: true }).lean();
+  const allDemands = await DemandModel.find({ deletedAt: { $exists: false }, isArchived: false }).lean();
+  
+  const executiveSummary = {
+    totalEpics: allEpics.length,
+    activeSprint: coverInfo.sprintName,
+    openTasks: allDemands.filter((d: any) => d.status !== "Concluído" && d.status !== "Cancelado").length,
+    deliveries: allDemands.filter((d: any) => d.status === "Concluído").length,
+    carryoverRate: closeout?.carryoverRate ?? 0,
+    criticalCarryover: closeout?.carryoverCriticalCount ?? 0,
+    epicTable: allEpics.map((epic: any) => {
+      const epicDemands = allDemands.filter((d: any) => d.epico === epic.label || d.epic === epic.value);
+      return {
+        area: epic.area || "N/A",
+        label: epic.label,
+        activeDeliverables: epicDemands.filter((d: any) => d.status !== "Concluído").length,
+        currentSprint: sprint?.name || "N/A",
+        status: (epic as any).epicStatus || "Em andamento"
+      };
+    })
+  };
+
+  // 3. Histórico de Sprints (Slide 3)
+  const lastSprints = await SprintModel.find().sort({ startDate: -1 }).limit(4).lean();
+  const sprintHistory = await Promise.all(lastSprints.map(async (s: any) => {
+    const sDemands = await DemandModel.find({ sprintId: s._id }).select("status progress").lean();
+    return {
+      name: s.name,
+      period: `${new Date(s.startDate).toLocaleDateString("pt-BR")} - ${new Date(s.endDate).toLocaleDateString("pt-BR")}`,
+      taskCount: sDemands.length,
+      status: s.status === "Active" ? "Em andamento" : s.status === "Closed" ? "Concluída" : "Futura"
+    };
+  }));
+
+  // 4. Resumo da Sprint e Detalhamento (Slides 4, 5, 6)
+  const sprintDemands = sprint ? await DemandModel.find({ sprintId: sprint._id }).lean() : [];
+  
+  const sprintSummary = {
+    name: sprint?.name,
+    dates: coverInfo.period,
+    status: coverInfo.status,
+    carryoverFromLast: sprintDemands.filter((d: any) => d.isCarryover).length,
+    carryoverRate: closeout?.carryoverRate ?? 0,
+    carryoverCriticalCount: closeout?.carryoverCriticalCount ?? 0,
+    newTasks: sprintDemands.filter((d: any) => new Date(d.createdAt) >= (sprint?.startDate || new Date(0))).length,
+    totalOpen: sprintDemands.filter((d: any) => d.status !== "Concluído").length,
+    daysRemaining: sprint ? Math.max(0, Math.ceil((new Date(sprint.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0,
+    endDate: sprint ? new Date(sprint.endDate).toLocaleDateString("pt-BR") : "N/A",
+    tasks: sprintDemands.map((d: any) => ({
+      id: d.sequentialId,
+      title: d.titulo || d.name,
+      epic: d.epico || d.epic,
+      responsible: d.responsavel || d.responsible,
+      category: d.categoria || d.category,
+      done: d.status === "Concluído",
+      isCarryover: !!d.isCarryover,
+      carryoverCount: d.carryoverCount || 0,
+      gate: d.gateStatus || d.dependencia || "N/A"
+    }))
+  };
+
+  // Agrupamento por Épico para o Gráfico
+  const tasksByEpicMap: Record<string, number> = {};
+  sprintDemands.forEach((d: any) => {
+    const key = d.epico || d.epic || "Outros";
+    tasksByEpicMap[key] = (tasksByEpicMap[key] || 0) + 1;
+  });
+  const tasksByEpic = Object.entries(tasksByEpicMap).map(([name, count]) => ({
+    name,
+    count,
+    percentage: sprintDemands.length ? Math.round((count / sprintDemands.length) * 100) : 0
+  }));
+
+  // 5. Riscos e Próximos Passos (Slides 7, 8)
+  const risks = await RiskItemModel.find({ 
+    $or: [
+      { linkedSprintId: sprint?._id },
+      { linkedSprintId: { $exists: false } },
+      { linkedSprintId: null }
+    ],
+    status: { $ne: "Resolvido" }
+  }).sort({ severity: 1 }).lean();
+
+  const nextSteps = await NextStepItemModel.find({
+    $or: [
+      { linkedSprintId: sprint?._id },
+      { linkedSprintId: { $exists: false } },
+      { linkedSprintId: null }
+    ]
+  }).sort({ order: 1 }).lean();
+
+  return res.json({
+    coverInfo,
+    executiveSummary,
+    sprintHistory: sprintHistory.reverse(),
+    sprintSummary,
+    tasksByEpic,
+    risks,
+    nextSteps
+  });
+});
+
 export default router;

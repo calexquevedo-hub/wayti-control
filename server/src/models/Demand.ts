@@ -60,6 +60,19 @@ const DEMAND_STATUS_VALUES = [
   "Cancelado",
 ] as const;
 
+export const CARRYOVER_REASONS = [
+  "Escopo/Estimativa inadequada",
+  "Dependência externa (Fornecedor/Parceiro)",
+  "Dependência interna (outra equipe)",
+  "Falta de prioridade / mudança de prioridade",
+  "Impedimento técnico (ambiente/infra)",
+  "Impedimento de negócio (aprovação/pagamento)",
+  "Bug/Incidente consumiu capacidade",
+  "Ausência/Capacidade (férias/doença)",
+  "Replanejamento deliberado (decisão de gestão)",
+  "Outro",
+] as const;
+
 const DemandSchema = new Schema(
   {
     sequentialId: { type: Number, index: true },
@@ -148,6 +161,27 @@ const DemandSchema = new Schema(
     escalonar_em: { type: Date },
     posicao: { type: Number, default: 0 },
     isArchived: { type: Boolean, default: false, index: true },
+    gateStatus: { type: String, trim: true },
+
+    // Carryover Fields
+    isCarryover: { type: Boolean, default: false },
+    carryoverFromSprintId: { type: Schema.Types.ObjectId, ref: "Sprint", default: null },
+    carryoverCount: { type: Number, default: 0 },
+    reasonCategory: { type: String, enum: CARRYOVER_REASONS },
+    carryoverHistory: [
+      new Schema(
+        {
+          fromSprintId: { type: Schema.Types.ObjectId, ref: "Sprint" },
+          toSprintId: { type: Schema.Types.ObjectId, ref: "Sprint" },
+          decidedAt: { type: Date, default: Date.now },
+          decidedBy: { type: String },
+          decisionType: { type: String, enum: ["Carryover", "Backlog", "Cancel", "Split"] },
+          reasonCategory: { type: String, enum: CARRYOVER_REASONS },
+          reasonNotes: { type: String },
+        },
+        { _id: false }
+      ),
+    ],
   },
   {
     timestamps: true,

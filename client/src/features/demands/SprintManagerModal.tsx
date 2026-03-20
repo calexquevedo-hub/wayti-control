@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { createSprint, deleteSprint, fetchSprints, updateSprint } from "@/lib/api";
 import type { Sprint } from "@/types";
+import { SprintCloseWizard } from "./SprintCloseWizard";
+import { CheckCircle } from "lucide-react";
 
 interface SprintManagerModalProps {
   isOpen: boolean;
@@ -55,6 +57,7 @@ export function SprintManagerModal({ isOpen, onClose, token, onSaved }: SprintMa
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<SprintFormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
+  const [closeWizardSprint, setCloseWizardSprint] = useState<Sprint | null>(null);
 
   async function loadSprints() {
     if (!token) return;
@@ -180,6 +183,17 @@ export function SprintManagerModal({ isOpen, onClose, token, onSaved }: SprintMa
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(sprint)}>
                       <Edit2 className="h-3 w-3" />
                     </Button>
+                    {sprint.status === "Active" && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50" 
+                        title="Encerrar Sprint (Carryover)"
+                        onClick={() => setCloseWizardSprint(sprint)}
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -248,7 +262,7 @@ export function SprintManagerModal({ isOpen, onClose, token, onSaved }: SprintMa
                 <SelectContent>
                   <SelectItem value="Planned">Planejada (Futura)</SelectItem>
                   <SelectItem value="Active">Ativa (Em andamento)</SelectItem>
-                  <SelectItem value="Closed">Fechada (Concluída)</SelectItem>
+                  <SelectItem value="Closed" disabled={!editingId || sprints.find(s=>s.id === editingId)?.status !== 'Closed'}>Fechada (Concluída)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -268,6 +282,19 @@ export function SprintManagerModal({ isOpen, onClose, token, onSaved }: SprintMa
           </div>
         </div>
       </DialogContent>
+
+      {closeWizardSprint && (
+        <SprintCloseWizard 
+          sprint={closeWizardSprint}
+          token={token || ""}
+          isOpen={!!closeWizardSprint}
+          onClose={() => setCloseWizardSprint(null)}
+          onSuccess={async () => {
+             await loadSprints();
+             await onSaved?.();
+          }}
+        />
+      )}
     </Dialog>
   );
 }

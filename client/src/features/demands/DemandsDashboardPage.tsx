@@ -304,8 +304,13 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
                     <CardTitle className="text-sm">{sprint.name}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-1 pt-4 text-sm">
-                    <p>
-                      <span className="text-muted-foreground">Tarefas:</span> {sprint.taskCount}
+                    <p className="flex justify-between items-center">
+                      <span><span className="text-muted-foreground">Tarefas:</span> {sprint.taskCount}</span>
+                      {sprint.carryoverCount > 0 && (
+                        <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 text-[10px] py-0 h-5 px-1.5 font-bold">
+                          Carryover: {sprint.carryoverCount}
+                        </Badge>
+                      )}
                     </p>
                     <p className="text-muted-foreground">
                       {formatDate(sprint.startDate)} a {formatDate(sprint.endDate)}

@@ -25,6 +25,9 @@ import profileRoutes from "./routes/profiles";
 import domainRoutes from "./routes/domains";
 import sprintRoutes from "./routes/sprints";
 import dashboardRoutes from "./routes/dashboard";
+import risksRouter from "./routes/risks";
+import nextStepsRouter from "./routes/nextSteps";
+import sprintCloseoutRouter from "./routes/sprintCloseout";
 import { UserModel } from "./models/User";
 import { ProfileModel } from "./models/Profile";
 import { DomainItemModel } from "./models/DomainItem";
@@ -87,6 +90,9 @@ app.use("/api/system-params", systemParamsRoutes);
 app.use("/api/domains", domainRoutes);
 app.use("/api/sprints", sprintRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/risks", risksRouter);
+app.use("/api/next-steps", nextStepsRouter);
+app.use("/api/sprint-closeout", sprintCloseoutRouter);
 
 // --- CONFIGURAÇÃO DE PRODUÇÃO ---
 const clientDistPath =

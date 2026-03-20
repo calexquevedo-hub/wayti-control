@@ -1,11 +1,13 @@
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { exportReportCSV, exportReportPDF } from "@/lib/export";
 import { fetchExecutiveReport, fetchExecutiveTickets, fetchSlaReport } from "@/lib/api";
-import { ManagementReport } from "@/features/reports/ManagementReport";
+import { GerencialReport } from "@/features/reports/GerencialReport/GerencialReport";
+import { ManageGerencialData } from "@/features/reports/GerencialReport/ManageGerencialData";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Demand, ReportSnapshot } from "@/types";
 
 interface ReportsProps {
@@ -101,7 +103,25 @@ export function Reports({ reportSnapshots, demands = [], token }: ReportsProps) 
   };
 
   if (managementMode) {
-    return <ManagementReport token={token} demands={demands} onBack={closeManagementReport} />;
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={closeManagementReport} className="gap-2 mb-4">
+          <ArrowLeft className="h-4 w-4" /> Voltar para Relatórios
+        </Button>
+        <Tabs defaultValue="preview" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="preview">Visualizar Relatório (PDF)</TabsTrigger>
+            <TabsTrigger value="manage">Gerenciar Dados (Riscos/Passos)</TabsTrigger>
+          </TabsList>
+          <TabsContent value="preview">
+            <GerencialReport token={token} sprintId={undefined} />
+          </TabsContent>
+          <TabsContent value="manage">
+            <ManageGerencialData token={token} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
   }
 
   return (

@@ -156,6 +156,16 @@ function KanbanCardBase({ demand, onClick }: KanbanCardProps) {
                 {getAcronym(epic)}
               </span>
             ) : null}
+            {demand.isCarryover && (
+              <span className="inline-flex h-4 items-center justify-center rounded px-1.5 text-[9px] font-bold uppercase tracking-wider bg-orange-100 text-orange-700 border border-orange-200">
+                Carryover
+              </span>
+            )}
+            {(demand.carryoverCount || 0) >= 2 && (
+              <span className="inline-flex h-4 items-center justify-center rounded px-1.5 text-[9px] font-bold uppercase tracking-wider bg-red-100 text-red-700 border border-red-200 animate-pulse">
+                Recorrente
+              </span>
+            )}
           </div>
           <span className="font-mono text-[10px] text-slate-400">{getSequentialId(demand)}</span>
         </div>

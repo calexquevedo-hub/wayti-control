@@ -216,6 +216,7 @@ export async function fetchDashboardData(token: string) {
       startDate: string;
       endDate: string;
       taskCount: number;
+      carryoverCount: number;
       statusColor: "green" | "yellow" | "purple" | "gray";
     }>;
     detailing:
@@ -1623,4 +1624,115 @@ export async function updateMyProfile(
     throw new Error(data?.message ?? "Falha ao atualizar perfil.");
   }
   return (await response.json()) as User;
+}
+export async function fetchGerencialReport(token: string, sprintId?: string) {
+  const query = sprintId ? `?sprintId=${sprintId}` : "";
+  const response = await fetch(`${API_URL}/api/reports/gerencial${query}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data?.message ?? "Falha ao carregar relatório gerencial.");
+  }
+  return await response.json();
+}
+
+export async function fetchRisks(token: string) {
+  const response = await fetch(`${API_URL}/api/risks`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Erro ao carregar riscos.");
+  return await response.json();
+}
+
+export async function createRisk(token: string, payload: any) {
+  const response = await fetch(`${API_URL}/api/risks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Erro ao criar risco.");
+  return await response.json();
+}
+
+export async function updateRisk(token: string, id: string, payload: any) {
+  const response = await fetch(`${API_URL}/api/risks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Erro ao atualizar risco.");
+  return await response.json();
+}
+
+export async function deleteRisk(token: string, id: string) {
+  const response = await fetch(`${API_URL}/api/risks/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Erro ao excluir risco.");
+  return await response.json();
+}
+
+export async function fetchNextSteps(token: string) {
+  const response = await fetch(`${API_URL}/api/next-steps`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Erro ao carregar próximos passos.");
+  return await response.json();
+}
+
+export async function createNextStep(token: string, payload: any) {
+  const response = await fetch(`${API_URL}/api/next-steps`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Erro ao criar próximo passo.");
+  return await response.json();
+}
+
+export async function updateNextStep(token: string, id: string, payload: any) {
+  const response = await fetch(`${API_URL}/api/next-steps/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Erro ao atualizar próximo passo.");
+  return await response.json();
+}
+
+export async function deleteNextStep(token: string, id: string) {
+  const response = await fetch(`${API_URL}/api/next-steps/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Erro ao excluir próximo passo.");
+  return await response.json();
+}
+
+export async function closeSprint(
+  token: string,
+  id: string,
+  payload: {
+    toSprintId?: string;
+    decisions: Array<{
+      taskId: string;
+      decisionType: "Carryover" | "Backlog" | "Cancel" | "Split";
+      reasonCategory: string;
+      reasonNotes?: string;
+    }>;
+    notes?: string;
+  }
+) {
+  const response = await fetch(`${API_URL}/api/sprint-closeout/${id}/closeout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data?.message ?? "Falha ao encerrar sprint.");
+  }
+  return await response.json();
 }

@@ -288,6 +288,21 @@ export interface Demand {
   audits?: AuditEntry[];
   isOverdue?: boolean;
   agingDays?: number;
+
+  // Carryover
+  isCarryover?: boolean;
+  carryoverFromSprintId?: string;
+  carryoverCount?: number;
+  reasonCategory?: string;
+  carryoverHistory?: Array<{
+    fromSprintId: string;
+    toSprintId: string | null;
+    decidedAt: Date;
+    decidedBy: string;
+    decisionType: "Carryover" | "Backlog" | "Cancel" | "Split";
+    reasonCategory: string;
+    reasonNotes?: string;
+  }>;
 }
 
 export interface Sprint {
