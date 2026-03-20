@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, FileDown, Loader2, Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -126,6 +126,51 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
   const [data, setData] = useState<DashboardPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const reportRef = useRef<HTMLDivElement | null>(null);
+
+  const printStyles = `
+    :root {
+      color-scheme: light;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #0f172a;
+    }
+    .management-report-deck {
+      display: block;
+      padding: 0;
+      margin: 0;
+    }
+    .management-report-slide {
+      width: 277mm;
+      min-height: 155.8mm;
+      margin: 0 auto 8mm;
+      break-after: page;
+      page-break-after: always;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid ${COLORS.line};
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .management-report-slide:last-child {
+      break-after: auto;
+      page-break-after: auto;
+      margin-bottom: 0;
+    }
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+  `;
 
   useEffect(() => {
     if (!token) {
@@ -293,7 +338,38 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
   }, [data]);
 
   const handlePrint = () => {
-    window.print();
+    const deck = reportRef.current;
+    if (!deck) return;
+
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1440,height=900");
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const html = `
+      <!doctype html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>WayTI - Relatório Gerencial TI</title>
+          <style>${printStyles}</style>
+        </head>
+        <body>
+          <main class="management-report-deck">${deck.innerHTML}</main>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+
+    printWindow.onload = () => {
+      printWindow.print();
+    };
   };
 
   const sprintTitle = reportBase.sprint?.name ?? "Sprint Atual";
@@ -371,7 +447,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
       ) : null}
 
       {!loading && !error && data ? (
-        <div className="management-report-deck space-y-8">
+        <div ref={reportRef} className="management-report-deck space-y-8">
           <Slide>
             <HeaderBand title={`GERÊNCIA DE TI — ${sprintTitle.toUpperCase()} EM ANDAMENTO`} />
             <div
