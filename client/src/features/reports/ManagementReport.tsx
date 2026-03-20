@@ -141,7 +141,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
       margin: 0;
       padding: 0;
       background: #ffffff;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
       color: #0f172a;
     }
     .management-report-deck {
@@ -347,6 +347,12 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
       return;
     }
 
+    const inheritedStyles = Array.from(
+      document.querySelectorAll('style, link[rel="stylesheet"]'),
+    )
+      .map((node) => node.outerHTML)
+      .join("\n");
+
     const html = `
       <!doctype html>
       <html lang="pt-BR">
@@ -354,6 +360,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>WayTI - Relatório Gerencial TI</title>
+          ${inheritedStyles}
           <style>${printStyles}</style>
         </head>
         <body>
@@ -378,7 +385,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
     : "Período não definido";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ fontFamily: 'Calibri, "Segoe UI", Arial, sans-serif' }}>
       <style>{`
         @page {
           size: A4 landscape;
