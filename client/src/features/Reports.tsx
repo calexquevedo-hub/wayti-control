@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { exportReportCSV, exportReportPDF } from "@/lib/export";
 import { fetchExecutiveReport, fetchExecutiveTickets, fetchSlaReport } from "@/lib/api";
+import { ManagementReport } from "@/features/reports/ManagementReport";
 import type { Demand, ReportSnapshot } from "@/types";
 
 interface ReportsProps {
@@ -14,6 +15,9 @@ interface ReportsProps {
 }
 
 export function Reports({ reportSnapshots, demands = [], token }: ReportsProps) {
+  const [managementMode, setManagementMode] = useState(
+    () => new URLSearchParams(window.location.search).get("modelo") === "gerencial"
+  );
   const [executive, setExecutive] = useState<null | {
     statusCounts: Record<string, number>;
     p0AndOverdue: Demand[];
@@ -55,6 +59,14 @@ export function Reports({ reportSnapshots, demands = [], token }: ReportsProps) 
   }>(null);
 
   useEffect(() => {
+    const syncFromLocation = () => {
+      setManagementMode(new URLSearchParams(window.location.search).get("modelo") === "gerencial");
+    };
+    window.addEventListener("popstate", syncFromLocation);
+    return () => window.removeEventListener("popstate", syncFromLocation);
+  }, []);
+
+  useEffect(() => {
     if (!token) return;
     fetchExecutiveReport(token)
       .then((data) => setExecutive(data))
@@ -75,8 +87,44 @@ export function Reports({ reportSnapshots, demands = [], token }: ReportsProps) 
       .catch(() => setSlaReport(null));
   }, [token]);
 
+  const openManagementReport = () => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("modelo", "gerencial");
+    const next = `/relatorios?${params.toString()}`;
+    window.history.pushState({}, "", next);
+    setManagementMode(true);
+  };
+
+  const closeManagementReport = () => {
+    window.history.pushState({}, "", "/relatorios");
+    setManagementMode(false);
+  };
+
+  if (managementMode) {
+    return <ManagementReport token={token} demands={demands} onBack={closeManagementReport} />;
+  }
+
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="space-y-6">
+      <Card className="bg-card/70">
+        <CardHeader>
+          <CardTitle>Relatório Gerencial TI</CardTitle>
+          <CardDescription>
+            Versão estruturada para replicar o modelo executivo da Sprint em visualização e PDF.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <Button className="gap-2" onClick={openManagementReport}>
+            <FileText className="h-4 w-4" />
+            Abrir relatório gerencial
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            O export usa a visualização print-friendly para gerar PDF com o layout do modelo.
+          </p>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
       <Card className="bg-card/70">
         <CardHeader>
           <CardTitle>Resumo Executivo</CardTitle>
@@ -344,6 +392,7 @@ export function Reports({ reportSnapshots, demands = [], token }: ReportsProps) 
           ) : null}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
