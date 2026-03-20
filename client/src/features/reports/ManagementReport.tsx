@@ -92,7 +92,7 @@ function Slide({
 }) {
   return (
     <section
-      className={`management-report-slide overflow-hidden rounded-[22px] border bg-white shadow-[0_24px_80px_rgba(27,39,94,0.12)] ${className}`}
+      className={`management-report-slide mx-auto aspect-[16/9] w-full max-w-[1365px] overflow-hidden rounded-[22px] border bg-white shadow-[0_24px_80px_rgba(27,39,94,0.12)] ${className}`}
       style={{ borderColor: COLORS.line }}
     >
       {children}
@@ -279,6 +279,19 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
     };
   }, [data]);
 
+  const historyRangeLabel = useMemo(() => {
+    if (!data?.sprintHistory.length) return "Histórico consolidado";
+    const sorted = [...data.sprintHistory].sort(
+      (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    );
+    const first = toDate(sorted[0]?.startDate);
+    const last = toDate(sorted[sorted.length - 1]?.endDate);
+    if (!first || !last) return "Histórico consolidado";
+    const firstLabel = first.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+    const lastLabel = last.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+    return `${firstLabel.toUpperCase()} A ${lastLabel.toUpperCase()}`;
+  }, [data]);
+
   const handlePrint = () => {
     window.print();
   };
@@ -395,7 +408,9 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
             <HeaderBand title="VISÃO EXECUTIVA DO PORTFÓLIO" subtitle={sprintRange} />
             <div className="grid h-[620px] gap-8 px-10 py-10 md:grid-cols-[1.15fr_0.85fr]" style={{ backgroundColor: COLORS.bg }}>
               <div className="rounded-[28px] border bg-white p-8" style={{ borderColor: COLORS.line }}>
-                <h3 className="text-2xl font-extrabold tracking-wide text-slate-900">ÉPICOS E ENTREGÁVEIS</h3>
+                <h3 className="text-2xl font-extrabold tracking-wide text-slate-900">
+                  ÉPICOS E ENTREGÁVEIS — CONFORME BACKLOG
+                </h3>
                 <div className="mt-6 space-y-4">
                   {executiveSummary?.epicsHealth.map((item) => (
                     <div key={item.epicName} className="rounded-2xl border p-4" style={{ borderColor: COLORS.line }}>
@@ -456,7 +471,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
           </Slide>
 
           <Slide>
-            <HeaderBand title="HISTÓRICO DE SPRINTS" subtitle="Roadmap consolidado" />
+            <HeaderBand title="HISTÓRICO DE SPRINTS" subtitle={historyRangeLabel} />
             <div className="h-[620px] px-10 py-10" style={{ backgroundColor: COLORS.bg }}>
               <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                 {data.sprintHistory.map((sprint) => {
@@ -505,7 +520,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
             <div className="grid h-[620px] gap-8 px-10 py-10 md:grid-cols-[1fr_1.18fr]" style={{ backgroundColor: COLORS.bg }}>
               <div className="rounded-[28px] border bg-white p-8" style={{ borderColor: COLORS.line }}>
                 <h3 className="text-2xl font-extrabold tracking-[0.18em] text-slate-900">
-                  TAREFAS POR ÉPICO
+                  TAREFAS POR ÉPICO ({sprintTitle})
                 </h3>
                 <div className="mt-8 space-y-5">
                   {reportBase.topEpics.map((item, index) => {
@@ -585,7 +600,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
           </Slide>
 
           <Slide>
-            <HeaderBand title={`${sprintTitle.toUpperCase()} — CONTINUAÇÃO DO DETALHAMENTO`} />
+            <HeaderBand title={`${sprintTitle.toUpperCase()} | ${sprintRange} — DETALHAMENTO`} />
             <div className="h-[620px] px-10 py-10" style={{ backgroundColor: COLORS.bg }}>
               <div className="rounded-[28px] border bg-white p-6" style={{ borderColor: COLORS.line }}>
                 <div className="overflow-hidden rounded-2xl border" style={{ borderColor: COLORS.line }}>
@@ -659,7 +674,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
                 </div>
               </div>
 
-                <div className="rounded-[28px] border bg-white p-6" style={{ borderColor: COLORS.line }}>
+              <div className="rounded-[28px] border bg-white p-6" style={{ borderColor: COLORS.line }}>
                 <h3 className="text-2xl font-extrabold tracking-[0.18em] text-slate-900">
                   TAREFAS PLANEJADAS PARA A SPRINT
                 </h3>
