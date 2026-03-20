@@ -115,6 +115,13 @@ function LabelValue({
   );
 }
 
+function statusTone(statusColor: "green" | "yellow" | "purple" | "gray") {
+  if (statusColor === "green") return { bg: "#EAF6E4", accent: COLORS.green, text: "Concluída" };
+  if (statusColor === "yellow") return { bg: "#FFF5DB", accent: COLORS.yellow, text: "Carryover" };
+  if (statusColor === "purple") return { bg: "#EEEAFE", accent: "#7C3AED", text: "Em andamento" };
+  return { bg: "#F1F5F9", accent: "#CBD5E1", text: "Futura" };
+}
+
 export function ManagementReport({ token, demands = [], onBack }: ManagementReportProps) {
   const [data, setData] = useState<DashboardPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -353,7 +360,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
       {!loading && !error && data ? (
         <div className="management-report-deck space-y-8">
           <Slide>
-            <HeaderBand title="RELATÓRIO GERENCIAL TI" subtitle="Status report executivo" />
+            <HeaderBand title={`GERÊNCIA DE TI — ${sprintTitle.toUpperCase()} EM ANDAMENTO`} />
             <div
               className="flex h-[620px] flex-col justify-between px-14 py-12"
               style={{ background: `linear-gradient(180deg, ${COLORS.bg} 0%, #FFFFFF 58%)` }}
@@ -363,8 +370,14 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
                   WayTI
                 </div>
                 <div>
-                  <p className="text-6xl font-black tracking-tight text-slate-950">{sprintTitle}</p>
-                  <p className="mt-4 text-2xl font-semibold text-slate-600">{sprintRange}</p>
+                  <p className="text-5xl font-black tracking-tight text-slate-950">
+                    Relatório Gerencial de Projetos de TI
+                  </p>
+                  <p className="mt-5 text-2xl font-semibold text-slate-700">Integra Soluções</p>
+                  <p className="mt-3 text-xl font-medium text-slate-500">
+                    {sprintTitle} · {sprintRange} –{" "}
+                    {data.currentSprint ? "Em andamento" : "Sem sprint ativa"}
+                  </p>
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
@@ -372,6 +385,9 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
                 <LabelValue label="Tarefas em aberto" value={data.executive.totalOpenTasks} />
                 <LabelValue label="Entregues" value={data.executive.totalDeliveredTasks} />
               </div>
+              <p className="text-sm font-medium text-slate-400">
+                Relatório gerado em {formatDate(new Date())}
+              </p>
             </div>
           </Slide>
 
@@ -444,14 +460,7 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
             <div className="h-[620px] px-10 py-10" style={{ backgroundColor: COLORS.bg }}>
               <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                 {data.sprintHistory.map((sprint) => {
-                  const color =
-                    sprint.statusColor === "green"
-                      ? COLORS.green
-                      : sprint.statusColor === "yellow"
-                        ? COLORS.yellow
-                        : sprint.statusColor === "purple"
-                          ? COLORS.navy
-                          : COLORS.slate;
+                  const tone = statusTone(sprint.statusColor);
 
                   return (
                     <div
@@ -459,32 +468,34 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
                       className="overflow-hidden rounded-[28px] border bg-white"
                       style={{ borderColor: COLORS.line }}
                     >
-                      <div className="px-6 py-5 text-white" style={{ backgroundColor: color }}>
-                        <p className="text-2xl font-extrabold">{sprint.name}</p>
-                        <p className="mt-1 text-sm text-white/85">
-                          {formatDate(sprint.startDate)} a {formatDate(sprint.endDate)}
-                        </p>
-                      </div>
-                      <div className="space-y-4 px-6 py-6">
-                        <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">
-                            Tarefas
-                          </p>
-                          <p className="mt-1 text-4xl font-black text-slate-900">{sprint.taskCount}</p>
+                      <div className="px-6 py-6" style={{ backgroundColor: tone.bg }}>
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-2xl font-extrabold text-slate-900">{sprint.name}</p>
+                            <p className="mt-2 text-sm font-medium text-slate-500">
+                              {formatDate(sprint.startDate)}–{formatDate(sprint.endDate)}
+                            </p>
+                          </div>
+                          <div
+                            className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white"
+                            style={{ backgroundColor: tone.accent }}
+                          >
+                            {tone.text}
+                          </div>
                         </div>
-                        <div className="rounded-2xl border px-4 py-3 text-sm font-semibold text-slate-700" style={{ borderColor: COLORS.line }}>
-                          {sprint.statusColor === "green"
-                            ? "Concluída"
-                            : sprint.statusColor === "yellow"
-                              ? "Fechada com carryover"
-                              : sprint.statusColor === "purple"
-                                ? "Em andamento"
-                                : "Planejada"}
+                        <div className="mt-8">
+                          <p className="text-4xl font-black text-slate-900">{sprint.taskCount} tarefas</p>
                         </div>
                       </div>
                     </div>
                   );
                 })}
+              </div>
+              <div className="mt-8 flex flex-wrap gap-4 text-sm font-semibold text-slate-700">
+                <span className="rounded-full bg-emerald-50 px-4 py-2 text-emerald-700">🟢 Concluída</span>
+                <span className="rounded-full bg-amber-50 px-4 py-2 text-amber-700">🟡 Carryover</span>
+                <span className="rounded-full bg-violet-50 px-4 py-2 text-violet-700">🟣 Em andamento</span>
+                <span className="rounded-full bg-slate-100 px-4 py-2 text-slate-700">⚪ Futura</span>
               </div>
             </div>
           </Slide>
@@ -621,14 +632,19 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
           </Slide>
 
           <Slide>
-            <HeaderBand title="WAR ROOM — SPRINT EM ANDAMENTO" subtitle={sprintRange} />
+            <HeaderBand
+              title={`${sprintTitle.toUpperCase()} | ${sprintRange} – EM ANDAMENTO ▶`}
+            />
             <div className="grid h-[620px] gap-8 px-10 py-10 md:grid-cols-[0.78fr_1.22fr]" style={{ backgroundColor: COLORS.bg }}>
               <div className="space-y-5">
+                <div className="rounded-2xl border bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-800" style={{ borderColor: "#F5D7BD" }}>
+                  ⚠ Passivo acumulado: sprint anterior encerrou com carryover para a sprint atual.
+                </div>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <LabelValue label="Dias restantes" value={data.currentSprint?.daysLeft ?? 0} />
-                  <LabelValue label="Carryover" value={data.currentSprint?.carryover ?? 0} />
-                  <LabelValue label="Novo escopo" value={data.currentSprint?.newScope ?? 0} />
-                  <LabelValue label="Total de tarefas" value={reportBase.tasks.length} />
+                  <LabelValue label="Carryover da sprint anterior" value={data.currentSprint?.carryover ?? 0} />
+                  <LabelValue label="Novas da sprint atual" value={data.currentSprint?.newScope ?? 0} />
+                  <LabelValue label="Total em aberto" value={reportBase.tasks.length} />
+                  <LabelValue label="Sprint encerra" value={formatDate(reportBase.sprint?.endDate)} />
                 </div>
 
                 <div className="rounded-[28px] border bg-white p-6" style={{ borderColor: COLORS.line }}>
@@ -643,9 +659,9 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
                 </div>
               </div>
 
-              <div className="rounded-[28px] border bg-white p-6" style={{ borderColor: COLORS.line }}>
+                <div className="rounded-[28px] border bg-white p-6" style={{ borderColor: COLORS.line }}>
                 <h3 className="text-2xl font-extrabold tracking-[0.18em] text-slate-900">
-                  FILA OPERACIONAL
+                  TAREFAS PLANEJADAS PARA A SPRINT
                 </h3>
                 <div className="mt-6 overflow-hidden rounded-2xl border" style={{ borderColor: COLORS.line }}>
                   <table className="w-full border-collapse text-left">
@@ -695,14 +711,30 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
                     reportBase.riskLines.map((item, index) => (
                       <div
                         key={`${item.kind}-${item.title}-${index}`}
-                        className="rounded-2xl border-l-4 bg-slate-50 p-4"
-                        style={{ borderLeftColor: index % 2 === 0 ? COLORS.orange : COLORS.red }}
+                        className="grid grid-cols-[88px_1fr] gap-4 rounded-2xl border bg-slate-50 p-4"
+                        style={{ borderColor: COLORS.line }}
                       >
-                        <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-500">
-                          {item.kind}
-                        </p>
-                        <p className="mt-1 text-lg font-bold text-slate-900">{item.title}</p>
-                        <p className="mt-1 text-sm leading-6 text-slate-600">{item.detail}</p>
+                        <div
+                          className="flex h-fit items-center justify-center rounded-xl px-3 py-2 text-xs font-black uppercase tracking-[0.2em] text-white"
+                          style={{
+                            backgroundColor:
+                              item.kind === "Bloqueio"
+                                ? COLORS.red
+                                : item.kind === "Prazo"
+                                  ? COLORS.orange
+                                  : COLORS.yellow,
+                          }}
+                        >
+                          {item.kind === "Bloqueio"
+                            ? "Crítico"
+                            : item.kind === "Prazo"
+                              ? "Alto"
+                              : "Médio"}
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-slate-900">{item.title}</p>
+                          <p className="mt-1 text-sm leading-6 text-slate-600">{item.detail}</p>
+                        </div>
                       </div>
                     ))
                   ) : (
@@ -757,25 +789,30 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
                     reportBase.nextSteps.map((item) => (
                       <div
                         key={`${item.order}-${item.title}`}
-                        className="grid items-center gap-4 rounded-2xl border p-5 md:grid-cols-[auto_1fr_auto_auto]"
+                        className="grid items-center gap-4 rounded-2xl border p-5 md:grid-cols-[auto_1fr_auto]"
                         style={{ borderColor: COLORS.line }}
                       >
                         <div
                           className="flex h-11 w-11 items-center justify-center rounded-full text-lg font-black text-white"
                           style={{ backgroundColor: COLORS.primary }}
                         >
-                          {item.order}
+                          {String(item.order).padStart(2, "0")}
                         </div>
                         <div>
                           <p className="text-xl font-bold text-slate-900">{item.title}</p>
-                          <p className="text-sm text-slate-500">{item.epic}</p>
+                          <p className="text-sm text-slate-500">
+                            {item.epic} · {item.owner}
+                          </p>
                         </div>
-                        <p className="text-sm font-semibold text-slate-700">{item.owner}</p>
                         <span
                           className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-[0.24em] text-white"
-                          style={{ backgroundColor: COLORS.green }}
+                          style={{
+                            backgroundColor:
+                              item.order <= 2 ? COLORS.red : item.order <= 6 ? COLORS.yellow : COLORS.green,
+                            color: item.order <= 6 ? "#1f2937" : "#fff",
+                          }}
                         >
-                          Próxima ação
+                          {item.order <= 2 ? "Imediato" : item.order <= 6 ? "Curto prazo" : "Acompanhar"}
                         </span>
                       </div>
                     ))
@@ -785,6 +822,9 @@ export function ManagementReport({ token, demands = [], onBack }: ManagementRepo
                     </div>
                   )}
                 </div>
+                <p className="mt-8 text-sm font-medium text-slate-400">
+                  Integra Soluções · Gerência de TI · {formatDate(new Date())}
+                </p>
               </div>
             </div>
           </Slide>
