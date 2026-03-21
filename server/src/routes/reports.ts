@@ -251,30 +251,35 @@ router.get("/gerencial", requireAuth, checkPermission("reports", "view"), async 
     generatedAt: new Date().toLocaleString("pt-BR"),
   };
 
-  // 2. Visão Executiva (Slide 2)
-  const allEpics = await DomainItemModel.find({ type: "EPIC", active: true }).lean();
-  const allDemands = await DemandModel.find({ deletedAt: { $exists: false }, isArchived: false }).lean();
+  // 2. Visão Executiva (Slide 2) - Dados DA SPRINT
+  const sprintIdFilter = sprint?._id;
+  const sprintDemands = sprintIdFilter ? await DemandModel.find({ sprintId: sprintIdFilter, deletedAt: { $exists: false } }).lean() : [];
+  const allEpicsInSprint = Array.from(new Set(sprintDemands.map(d => d.epico || d.epic).filter(Boolean)));
+  const allEpics = await DomainItemModel.find({ 
+    type: "EPIC", 
+    $or: [{ label: { $in: allEpicsInSprint } }, { value: { $in: allEpicsInSprint } }] 
+  }).lean();
   
   const executiveSummary = {
     totalEpics: allEpics.length,
     activeSprint: coverInfo.sprintName,
-    openTasks: allDemands.filter((d: any) => d.status !== "Concluído" && d.status !== "Cancelado").length,
-    deliveries: allDemands.filter((d: any) => d.status === "Concluído").length,
+    openTasks: sprintDemands.filter((d: any) => d.status !== "Concluído" && d.status !== "Cancelado").length,
+    deliveries: sprintDemands.filter((d: any) => d.status === "Concluído").length,
     carryoverRate: closeout?.carryoverRate ?? 0,
     criticalCarryover: closeout?.carryoverCriticalCount ?? 0,
     epicTable: allEpics.map((epic: any) => {
-      const epicDemands = allDemands.filter((d: any) => d.epico === epic.label || d.epic === epic.value);
+      const epicDemands = sprintDemands.filter((d: any) => d.epico === epic.label || d.epic === epic.value);
       return {
         area: epic.area || "N/A",
         label: epic.label,
         activeDeliverables: epicDemands.filter((d: any) => d.status !== "Concluído").length,
         currentSprint: sprint?.name || "N/A",
-        status: (epic as any).epicStatus || "Em andamento"
+        status: epicDemands.some((d: any) => d.priority === "P0" || d.isOverdue) ? "Crítico" : "Em andamento"
       };
     })
   };
 
-  // 3. Histórico de Sprints (Slide 3)
+  // 3. Histórico de Sprints (Slide 3) - Mantém histórico global para contexto
   const lastSprints = await SprintModel.find().sort({ startDate: -1 }).limit(4).lean();
   const sprintHistory = await Promise.all(lastSprints.map(async (s: any) => {
     const sDemands = await DemandModel.find({ sprintId: s._id }).select("status progress").lean();
@@ -287,7 +292,7 @@ router.get("/gerencial", requireAuth, checkPermission("reports", "view"), async 
   }));
 
   // 4. Resumo da Sprint e Detalhamento (Slides 4, 5, 6)
-  const sprintDemands = sprint ? await DemandModel.find({ sprintId: sprint._id }).lean() : [];
+  // sprintDemands já carregado no início do handler
   
   const sprintSummary = {
     name: sprint?.name,
