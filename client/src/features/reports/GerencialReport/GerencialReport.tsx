@@ -105,16 +105,26 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             size: 297mm 210mm;
             margin: 0;
           }
-          /* Esconde absolutamente TUDO do App */
-          html, body {
+          /* RESET DRÁSTICO DE HIERARQUIA */
+          html, body, #root, main, 
+          .h-screen, .max-h-screen, .min-h-screen,
+          .overflow-hidden, .overflow-y-auto, .overflow-auto {
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+            position: static !important;
+            visibility: visible !important;
+          }
+          
+          body {
             visibility: hidden !important;
-            margin: 0 !important;
-            padding: 0 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             background: white !important;
           }
-          /* Força apenas o relatório a aparecer e no topo absoluto */
+
+          /* ÁREA DO RELATÓRIO */
           #gerencial-report-print-area {
             visibility: visible !important;
             display: block !important;
@@ -124,10 +134,11 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             width: 297mm !important;
             z-index: 999999;
           }
-          /* Garante que todos os elementos internos do relatório sejam visíveis */
+
           #gerencial-report-print-area * {
             visibility: visible !important;
           }
+
           .gerencial-page {
             width: 297mm !important;
             height: 209mm !important;
@@ -142,15 +153,18 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          /* Esconde botões e UI de dentro do relatório se necessário */
-          .print\\:hidden, button, .sticky {
+
+          /* UI E NAVEGAÇÃO */
+          .print\\:hidden, .sticky, button, nav, aside {
             display: none !important;
             visibility: hidden !important;
           }
+
           .aspect-\\[16\\/9\\] {
             aspect-ratio: auto !important;
           }
-          /* Cores da capa */
+
+          /* CORES DA CAPA */
           .bg-\\[\\#1a237e\\] { background-color: #1a237e !important; }
           .bg-\\[\\#448aff\\] { background-color: #448aff !important; }
         }
