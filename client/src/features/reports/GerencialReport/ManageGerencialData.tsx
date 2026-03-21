@@ -13,9 +13,10 @@ import { Plus, Trash2, Save, Loader2 } from "lucide-react";
 
 interface Props {
   token?: string;
+  activeSprintId?: string;
 }
 
-export const ManageGerencialData: React.FC<Props> = ({ token }) => {
+export const ManageGerencialData: React.FC<Props> = ({ token, activeSprintId }) => {
   const [risks, setRisks] = useState<any[]>([]);
   const [nextSteps, setNextSteps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,11 +43,17 @@ export const ManageGerencialData: React.FC<Props> = ({ token }) => {
   };
 
   const addRisk = () => {
-    setRisks([...risks, { title: "", severity: "Médio", status: "Aberto", impact: "Médio", isNew: true }]);
+    setRisks([...risks, { 
+      title: "", severity: "Médio", status: "Aberto", impact: "Médio", 
+      linkedSprintId: activeSprintId, isNew: true 
+    }]);
   };
 
   const addNextStep = () => {
-    setNextSteps([...nextSteps, { title: "", priorityColor: "green", order: nextSteps.length + 1, responsible: "", dueLabel: "IMEDIATO", isNew: true }]);
+    setNextSteps([...nextSteps, { 
+      title: "", priorityColor: "green", order: nextSteps.length + 1, 
+      responsible: "", dueLabel: "IMEDIATO", linkedSprintId: activeSprintId, isNew: true 
+    }]);
   };
 
   const saveRisk = async (idx: number) => {

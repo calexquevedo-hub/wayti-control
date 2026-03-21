@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { exportReportCSV, exportReportPDF } from "@/lib/export";
-import { fetchExecutiveReport, fetchExecutiveTickets, fetchSlaReport } from "@/lib/api";
+import { fetchExecutiveReport, fetchExecutiveTickets, fetchSlaReport, fetchSprints } from "@/lib/api";
 import { GerencialReport } from "@/features/reports/GerencialReport/GerencialReport";
 import { ManageGerencialData } from "@/features/reports/GerencialReport/ManageGerencialData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -59,6 +59,7 @@ export function Reports({ reportSnapshots, demands = [], token }: ReportsProps) 
     byAssignee: Record<string, { open: number; overdue: number; warning: number }>;
     agingBuckets: Record<string, number>;
   }>(null);
+  const [activeSprint, setActiveSprint] = useState<any>(null);
 
   useEffect(() => {
     const syncFromLocation = () => {
@@ -87,6 +88,11 @@ export function Reports({ reportSnapshots, demands = [], token }: ReportsProps) 
     fetchSlaReport(token)
       .then((data) => setSlaReport(data))
       .catch(() => setSlaReport(null));
+    
+    // Buscar Sprint Ativa para vincular riscos/passos
+    fetchSprints(token, "Active").then(s => {
+      if (s && s.length > 0) setActiveSprint(s[0]);
+    });
   }, [token]);
 
   const openManagementReport = () => {
@@ -114,10 +120,10 @@ export function Reports({ reportSnapshots, demands = [], token }: ReportsProps) 
             <TabsTrigger value="manage">Gerenciar Dados (Riscos/Passos)</TabsTrigger>
           </TabsList>
           <TabsContent value="preview">
-            <GerencialReport token={token} sprintId={undefined} />
+            <GerencialReport token={token} sprintId={activeSprint?.id} />
           </TabsContent>
           <TabsContent value="manage">
-            <ManageGerencialData token={token} />
+            <ManageGerencialData token={token} activeSprintId={activeSprint?.id} />
           </TabsContent>
         </Tabs>
       </div>
