@@ -149,7 +149,6 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             display: block !important;
             position: relative !important;
             overflow: hidden !important;
-            background: white !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
@@ -168,7 +167,6 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
           .bg-\\[\\#1a237e\\] { background-color: #1a237e !important; }
           .bg-\\[\\#283593\\] { background-color: #283593 !important; }
           .bg-\\[\\#448aff\\] { background-color: #448aff !important; }
-          .bg-\\[\\#f5f7fb\\] { background-color: #f5f7fb !important; }
           .bg-\\[\\#303f9f\\] { background-color: #303f9f !important; }
           .bg-\\[\\#f0f4ff\\] { background-color: #f0f4ff !important; }
           .border-blue-600 { border-color: #2563eb !important; }
