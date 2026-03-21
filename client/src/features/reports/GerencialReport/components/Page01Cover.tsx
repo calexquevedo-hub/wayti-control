@@ -13,7 +13,7 @@ interface Props {
 
 export const Page01Cover: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full h-full text-[#1a237e] flex flex-col justify-between p-16 relative overflow-hidden print:shadow-none shadow-xl rounded-lg print:rounded-none">
+    <div className="w-full flex-1 flex flex-col justify-between p-16 relative overflow-hidden">
       {/* Decorative vertical bar like in Slide1 */}
       <div className="absolute left-0 top-0 bottom-0 w-4 bg-[#448aff]" />
       

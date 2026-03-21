@@ -19,7 +19,7 @@ interface Props {
 
 export const Page05SprintTasks: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full h-full flex flex-col p-8 relative overflow-hidden rounded-lg shadow-xl print:shadow-none">
+    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff]" />
       
       <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8">
@@ -43,7 +43,7 @@ export const Page05SprintTasks: React.FC<Props> = ({ data }) => {
             </tr>
           </thead>
           <tbody className="text-[11px]">
-            {data.tasks.map((task, idx) => (
+            {data.tasks.slice(0, 20).map((task, idx) => (
               <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                 <td className="p-2 px-6 border-b border-gray-100 font-bold text-center">#{task.id}</td>
                 <td className="p-2 px-6 border-b border-gray-100 font-medium text-xs">

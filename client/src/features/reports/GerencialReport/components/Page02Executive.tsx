@@ -20,7 +20,7 @@ interface Props {
 
 export const Page02Executive: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full h-full flex flex-col p-8 relative overflow-hidden rounded-lg shadow-xl print:shadow-none print:rounded-none">
+    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:bg-[#448aff]" />
       
       <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8 flex items-center justify-between print:bg-[#1a237e]">

@@ -102,63 +102,71 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           @page {
-            size: 297mm 210mm;
+            size: A4 landscape;
             margin: 0;
           }
-          /* RESET DRÁSTICO DE HIERARQUIA */
-          html, body, #root, main, 
-          .h-screen, .max-h-screen, .min-h-screen,
-          .overflow-hidden, .overflow-y-auto, .overflow-auto {
-            height: auto !important;
-            min-height: 0 !important;
-            max-height: none !important;
-            overflow: visible !important;
-            position: static !important;
-            visibility: visible !important;
-          }
-          
-          body {
-            visibility: hidden !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            background: white !important;
-          }
 
-          /* ÁREA DO RELATÓRIO */
-          #gerencial-report-print-area {
-            visibility: visible !important;
-            display: block !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 297mm !important;
-            z-index: 999999;
-          }
-
-          #gerencial-report-print-area * {
-            visibility: visible !important;
-          }
-
-          .gerencial-page {
-            width: 297mm !important;
-            height: 209mm !important;
-            page-break-after: always !important;
-            break-after: page !important;
+          /* RESET DE FLUXO PARA IMPRESSÃO */
+          html, body {
             margin: 0 !important;
             padding: 0 !important;
+            height: auto !important;
+            min-height: 100% !important;
+            background: white !important;
+            overflow: visible !important;
+          }
+
+          /* OCULTAR ELEMENTOS DE NAVEGAÇÃO */
+          .print\\:hidden, 
+          header.sticky,
+          button,
+          nav,
+          aside {
+            display: none !important;
+          }
+
+          /* CONTAINER DE IMPRESSÃO */
+          #gerencial-report-print-area {
             display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+          }
+
+          /* DEFINIÇÃO DE PÁGINA (SLIDE) */
+          .gerencial-page {
+            width: 297mm !important;
+            height: 209.5mm !important; /* Altura exata A4 Paisagem */
+            page-break-after: always !important;
+            break-after: page !important;
+            display: flex !important;
+            flex-direction: column !important;
+            margin: 0 !important;
+            padding: 0 !important;
             position: relative !important;
             overflow: hidden !important;
+            background: transparent !important;
+          }
+
+          /* REMOVER SOMBRAS E BORDAS RESIDUAIS */
+          * {
+            box-shadow: none !important;
+            text-shadow: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
 
-          /* UI E NAVEGAÇÃO */
-          .print\\:hidden, .sticky, button, nav, aside {
+          /* OCULTAR TOOLTIPS DO RECHARTS E COMPONENTES INTERATIVOS */
+          .recharts-tooltip-wrapper,
+          .recharts-default-tooltip,
+          .recharts-legend-wrapper {
             display: none !important;
             visibility: hidden !important;
+            opacity: 0 !important;
           }
 
+          /* AJUSTE DE ASPECT RATIO */
           .aspect-\\[16\\/9\\] {
             aspect-ratio: auto !important;
           }
@@ -169,18 +177,14 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
           .bg-\\[\\#448aff\\] { background-color: #448aff !important; }
           .bg-\\[\\#303f9f\\] { background-color: #303f9f !important; }
           .bg-\\[\\#f0f4ff\\] { background-color: #f0f4ff !important; }
+          
+          /* BORDAS INDICATIVAS */
           .border-blue-600 { border-color: #2563eb !important; }
           .border-purple-600 { border-color: #9333ea !important; }
           .border-red-600 { border-color: #dc2626 !important; }
           .border-green-600 { border-color: #16a34a !important; }
           .border-orange-500 { border-color: #f97316 !important; }
           .border-red-800 { border-color: #991b1b !important; }
-          
-          /* Forçar cores em todos os elementos */
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
         }
       `}} />
     </div>

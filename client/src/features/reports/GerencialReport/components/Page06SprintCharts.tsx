@@ -23,7 +23,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
   const topEpic = data.tasksByEpic.sort((a, b) => b.count - a.count)[0];
 
   return (
-    <div className="w-full h-full flex flex-col p-8 relative overflow-hidden rounded-lg shadow-xl print:shadow-none">
+    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff]" />
       
       <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8">
@@ -38,8 +38,8 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
           <h3 className="text-xs font-bold uppercase tracking-widest text-[#1a237e] mb-6 border-b pb-2">
             Tarefas por Épico ({data.name})
           </h3>
-          <div className="flex-1 min-h-[300px] pr-8">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="flex-1 min-h-[350px] pr-8 print:min-h-[350px]">
+            <ResponsiveContainer width="100%" height="100%" minHeight={350}>
               <BarChart data={data.tasksByEpic} layout="vertical" margin={{ left: 100, right: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                 <XAxis type="number" hide />
@@ -82,7 +82,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
               </tr>
             </thead>
             <tbody className="text-[10px]">
-              {data.tasks.slice(0, 15).map((task, idx) => (
+              {data.tasks.slice(0, 18).map((task, idx) => (
                 <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                   <td className="p-2 px-4 border-b border-gray-100 font-bold text-center">#{task.id}</td>
                   <td className="p-2 px-4 border-b border-gray-100 font-medium truncate max-w-[150px]">{task.title}</td>
