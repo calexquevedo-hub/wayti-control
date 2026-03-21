@@ -39,7 +39,6 @@ export const Page03History: React.FC<Props> = ({ data }) => {
         <LegendItem color="bg-yellow-400" label="Carryover" />
         <LegendItem color="bg-red-500" label="Carryover crítico" />
         <LegendItem color="bg-purple-500" label="Em andamento" />
-        <LegendItem color="bg-gray-300" label="Futura" />
       </div>
     </div>
   );
