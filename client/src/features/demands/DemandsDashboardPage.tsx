@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
@@ -135,6 +136,16 @@ export function DemandsDashboardPage({ token }: DemandsDashboardPageProps) {
           </TabsList>
 
           <TabsContent value="executive" className="space-y-4 pt-3">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold tracking-tight">Status do Portfólio</h2>
+              <Button 
+                onClick={() => window.location.href = "/relatorios?modelo=gerencial"}
+                className="gap-2 bg-blue-700 hover:bg-blue-800"
+              >
+                <FileText className="h-4 w-4" />
+                Relatório Gerencial PDF
+              </Button>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <Card>
                 <CardHeader className="pb-2">

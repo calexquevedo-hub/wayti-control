@@ -15,6 +15,8 @@ export interface GerencialData {
     activeSprint: string;
     openTasks: number;
     deliveries: number;
+    carryoverRate: number;
+    criticalCarryover: number;
     epicTable: Array<{
       area: string;
       label: string;
@@ -34,6 +36,8 @@ export interface GerencialData {
     dates: string;
     status: string;
     carryoverFromLast: number;
+    carryoverRate: number;
+    carryoverCriticalCount: number;
     newTasks: number;
     totalOpen: number;
     daysRemaining: number;
@@ -46,6 +50,8 @@ export interface GerencialData {
       category: string;
       done: boolean;
       gate: string;
+      isCarryover?: boolean;
+      carryoverCount?: number;
     }>;
   };
   tasksByEpic: Array<{
