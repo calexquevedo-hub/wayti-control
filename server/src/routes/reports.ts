@@ -265,8 +265,8 @@ router.get("/gerencial", requireAuth, checkPermission("reports", "view"), async 
     activeSprint: coverInfo.sprintName,
     openTasks: sprintDemands.filter((d: any) => d.status !== "Concluído" && d.status !== "Cancelado").length,
     deliveries: sprintDemands.filter((d: any) => d.status === "Concluído").length,
-    carryoverRate: closeout?.carryoverRate ?? 0,
-    criticalCarryover: closeout?.carryoverCriticalCount ?? 0,
+    carryoverRate: sprint ? (sprintDemands.length > 0 ? (sprintDemands.filter((d: any) => d.isCarryover).length / sprintDemands.length) * 100 : 0) : 0,
+    criticalCarryover: sprintDemands.filter((d: any) => d.isCarryover && (d.priority === "P0" || d.priority === "P1" || d.isOverdue)).length,
     epicTable: allEpics.map((epic: any) => {
       const epicDemands = sprintDemands.filter((d: any) => d.epico === epic.label || d.epic === epic.value);
       return {
