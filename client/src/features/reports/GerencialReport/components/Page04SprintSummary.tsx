@@ -92,8 +92,8 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
 };
 
 const MiniCard = ({ label, value, color, isDate }: any) => (
-  <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 text-center">
-    <p className={`font-black tracking-tighter ${isDate ? "text-xl" : "text-4xl"} ${color}`}>{value}</p>
-    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">{label}</p>
+  <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 flex flex-col items-center justify-center text-center min-h-[100px]">
+    <p className={`font-black ${isDate ? "text-2xl tracking-normal" : "text-4xl tracking-tighter"} ${color}`}>{value}</p>
+    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-2">{label}</p>
   </div>
 );
