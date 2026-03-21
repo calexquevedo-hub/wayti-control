@@ -13,9 +13,9 @@ interface Props {
 
 export const Page01Cover: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full h-full bg-[#1a237e] text-white flex flex-col justify-between p-16 relative overflow-hidden print:shadow-none shadow-xl rounded-lg">
+    <div className="w-full h-full bg-[#1a237e] text-white flex flex-col justify-between p-16 relative overflow-hidden print:shadow-none shadow-xl rounded-lg print:rounded-none">
       {/* Decorative vertical bar like in Slide1 */}
-      <div className="absolute left-0 top-0 bottom-0 w-4 bg-[#448aff]" />
+      <div className="absolute left-0 top-0 bottom-0 w-4 bg-[#448aff] print:bg-[#448aff]" />
       
       <div className="space-y-4">
         <p className="text-sm font-medium tracking-[0.3em] uppercase opacity-80">

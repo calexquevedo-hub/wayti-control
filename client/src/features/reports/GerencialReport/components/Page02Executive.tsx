@@ -20,10 +20,10 @@ interface Props {
 
 export const Page02Executive: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full h-full bg-[#f5f7fb] flex flex-col p-8 relative overflow-hidden rounded-lg shadow-xl print:shadow-none">
-      <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff]" />
+    <div className="w-full h-full bg-[#f5f7fb] flex flex-col p-8 relative overflow-hidden rounded-lg shadow-xl print:shadow-none print:rounded-none">
+      <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:bg-[#448aff]" />
       
-      <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8 flex items-center justify-between">
+      <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8 flex items-center justify-between print:bg-[#1a237e]">
         <h2 className="text-xl font-bold uppercase tracking-wider ml-8">Visão Executiva do Portfólio</h2>
       </header>
 
@@ -36,13 +36,13 @@ export const Page02Executive: React.FC<Props> = ({ data }) => {
         <MetricCard label="Carryover Crítico" value={data.criticalCarryover} subtext="P0/P1 ou Bloqueados" borderColor="border-red-800" />
       </div>
 
-      <div className="flex-1 overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200">
-        <h3 className="bg-[#1a237e] text-white text-sm font-bold uppercase p-3 px-6 tracking-widest">
+      <div className="flex-1 overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200 print:rounded-none">
+        <h3 className="bg-[#1a237e] text-white text-sm font-bold uppercase p-3 px-6 tracking-widest print:bg-[#1a237e]">
           Épicos e Entregáveis — conforme backlog
         </h3>
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-[#283593] text-white text-[10px] uppercase font-bold">
+            <tr className="bg-[#283593] text-white text-[10px] uppercase font-bold print:bg-[#283593]">
               <th className="p-3 px-6 border-r border-white/10">Épico (Área)</th>
               <th className="p-3 px-6 border-r border-white/10">Entregáveis ativos</th>
               <th className="p-3 px-6 border-r border-white/10">Sprint Atual</th>
