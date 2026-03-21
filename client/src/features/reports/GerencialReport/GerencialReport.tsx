@@ -170,6 +170,7 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
           .bg-\\[\\#448aff\\] { background-color: #448aff !important; }
           .bg-\\[\\#f5f7fb\\] { background-color: #f5f7fb !important; }
           .bg-\\[\\#303f9f\\] { background-color: #303f9f !important; }
+          .bg-\\[\\#f0f4ff\\] { background-color: #f0f4ff !important; }
           .border-blue-600 { border-color: #2563eb !important; }
           .border-purple-600 { border-color: #9333ea !important; }
           .border-red-600 { border-color: #dc2626 !important; }
