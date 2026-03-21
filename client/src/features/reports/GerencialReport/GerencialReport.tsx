@@ -102,30 +102,37 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           @page {
-            size: landscape;
+            size: 297mm 210mm;
             margin: 0;
           }
           body {
             visibility: hidden;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            background: white !important;
           }
           .gerencial-page, .gerencial-page * {
             visibility: visible !important;
           }
           .gerencial-page {
             position: relative !important;
-            width: 100vw !important;
-            height: 100vh !important;
+            width: 297mm !important;
+            height: 209.5mm !important;
             page-break-after: always !important;
             break-after: page !important;
             margin: 0 !important;
             padding: 0 !important;
             display: block !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
           }
           .print\\:hidden, .sticky, button {
             display: none !important;
             visibility: hidden !important;
+          }
+          /* Remove aspect-ratio classes during print */
+          .aspect-\\[16\\/9\\] {
+            aspect-ratio: auto !important;
           }
         }
       `}} />
