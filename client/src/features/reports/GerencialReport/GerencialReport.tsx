@@ -105,35 +105,32 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             size: 297mm 210mm;
             margin: 0;
           }
+          /* Esconde absolutamente TUDO do App */
           html, body {
+            visibility: hidden !important;
             margin: 0 !important;
             padding: 0 !important;
-            height: auto !important;
-            min-height: 0 !important;
-            overflow: visible !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             background: white !important;
           }
-          /* Esconde absolutamente TUDO exceto o relatório */
-          body > *:not(.relative.group), 
-          .relative.group > *:not(#gerencial-report-print-area),
-          .print\\:hidden, .sticky, button, nav, aside {
-            display: none !important;
-          }
+          /* Força apenas o relatório a aparecer e no topo absoluto */
           #gerencial-report-print-area {
-            display: block !important;
             visibility: visible !important;
+            display: block !important;
             position: absolute !important;
             top: 0 !important;
             left: 0 !important;
             width: 297mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            z-index: 999999;
+          }
+          /* Garante que todos os elementos internos do relatório sejam visíveis */
+          #gerencial-report-print-area * {
+            visibility: visible !important;
           }
           .gerencial-page {
             width: 297mm !important;
-            height: 209mm !important; /* 209mm para garantir que cabe em 210mm total */
+            height: 209mm !important;
             page-break-after: always !important;
             break-after: page !important;
             margin: 0 !important;
@@ -141,14 +138,19 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             display: block !important;
             position: relative !important;
             overflow: hidden !important;
-            visibility: visible !important;
+            background: white !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+          }
+          /* Esconde botões e UI de dentro do relatório se necessário */
+          .print\\:hidden, button, .sticky {
+            display: none !important;
+            visibility: hidden !important;
           }
           .aspect-\\[16\\/9\\] {
             aspect-ratio: auto !important;
           }
-          /* Força as cores da capa e headers */
+          /* Cores da capa */
           .bg-\\[\\#1a237e\\] { background-color: #1a237e !important; }
           .bg-\\[\\#448aff\\] { background-color: #448aff !important; }
         }
