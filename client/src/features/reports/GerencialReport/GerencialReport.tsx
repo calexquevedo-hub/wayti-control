@@ -106,28 +106,15 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             margin: 0;
           }
           body {
+            visibility: hidden;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            margin: 0 !important;
-            padding: 0 !important;
           }
-          .print\\:hidden {
-            display: none !important;
-          }
-          /* Esconde tudo exceto o conteúdo do relatório */
-          body > *:not(.relative.group) {
-            display: none !important;
-          }
-          .relative.group > *:not(.pb-20) {
-            display: none !important;
-          }
-          .relative.group .pb-20 {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: none !important;
-            display: block !important;
+          .gerencial-page, .gerencial-page * {
+            visibility: visible !important;
           }
           .gerencial-page {
+            position: relative !important;
             width: 100vw !important;
             height: 100vh !important;
             page-break-after: always !important;
@@ -135,11 +122,11 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             margin: 0 !important;
             padding: 0 !important;
             display: block !important;
-            position: relative !important;
           }
-          /* Remove gaps e shadows que podem vazar na impressão */
-          .pb-20 { gap: 0 !important; }
-          .shadow-xl, .shadow-sm { box-shadow: none !important; }
+          .print\\:hidden, .sticky, button {
+            display: none !important;
+            visibility: hidden !important;
+          }
         }
       `}} />
     </div>
