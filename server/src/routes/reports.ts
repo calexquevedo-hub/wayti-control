@@ -280,8 +280,12 @@ router.get("/gerencial", requireAuth, checkPermission("reports", "view"), async 
   };
 
   // 3. Histórico de Sprints (Slide 3) - Mantém histórico global para contexto
-  const lastSprints = await SprintModel.find().sort({ startDate: 1 }).limit(10).lean(); // Pega mais para filtrar as últimas 4 relevantes
-  const relevantSprints = lastSprints.slice(-4);
+  // 3. Histórico de Sprints (Slide 3) - Mostrar apenas as últimas 4 concluídas ou ativa
+  const historySprints = await SprintModel.find({ 
+    status: { $in: ["Active", "Closed"] } 
+  }).sort({ startDate: 1 }).lean();
+  
+  const relevantSprints = historySprints.slice(-4);
   
   const sprintHistory = await Promise.all(relevantSprints.map(async (s: any) => {
     const sDemands = await DemandModel.find({ sprintId: s._id }).select("status isCarryover").lean();
@@ -290,7 +294,8 @@ router.get("/gerencial", requireAuth, checkPermission("reports", "view"), async 
     let statusLabel = "Futura";
     if (s.status === "Active") statusLabel = "Em andamento";
     else if (s.status === "Closed") {
-      statusLabel = (sCloseout && sCloseout.carryoverRate > 0) ? "Carryover" : "Concluída";
+      // Se houve qualquer carryover movido, marca como Carryover
+      statusLabel = (sCloseout && sCloseout.totals.carryoverMoved > 0) ? "Carryover" : "Concluída";
     }
 
     return {
@@ -311,10 +316,10 @@ router.get("/gerencial", requireAuth, checkPermission("reports", "view"), async 
     carryoverFromLast: sprintDemands.filter((d: any) => d.isCarryover).length,
     carryoverRate: closeout?.carryoverRate ?? 0,
     carryoverCriticalCount: closeout?.carryoverCriticalCount ?? 0,
-    newTasks: sprintDemands.filter((d: any) => new Date(d.createdAt) >= (sprint?.startDate || new Date(0))).length,
+    newTasks: sprintDemands.filter((d: any) => !d.isCarryover).length,
     totalOpen: sprintDemands.filter((d: any) => d.status !== "Concluído").length,
     daysRemaining: sprint ? Math.max(0, Math.ceil((new Date(sprint.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0,
-    endDate: sprint ? new Date(sprint.endDate).toLocaleDateString("pt-BR") : "N/A",
+    endDate: sprint ? new Date(sprint.endDate).toLocaleDateString("pt-BR", { day: '2-digit', month: '2-digit', year: '2-digit' }) : "N/A",
     tasks: sprintDemands.map((d: any) => ({
       id: d.sequentialId,
       title: d.titulo || d.name,
