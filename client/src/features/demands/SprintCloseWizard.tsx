@@ -39,6 +39,8 @@ export const SprintCloseWizard: React.FC<Props> = ({ sprint, token, isOpen, onCl
   const [pendingDemands, setPendingDemands] = useState<Demand[]>([]);
   const [toSprintId, setToSprintId] = useState<string>("");
   const [decisions, setDecisions] = useState<Record<string, { type: string; reason: string; notes: string }>>({});
+  const [showStatus, setShowStatus] = useState<"none" | "success" | "error">("none");
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -91,10 +93,11 @@ export const SprintCloseWizard: React.FC<Props> = ({ sprint, token, isOpen, onCl
         notes: "Encerramento via Wizard"
       };
       await closeSprint(token, sprint.id, payload);
+      setShowStatus("success");
       onSuccess();
-      onClose();
     } catch (err: any) {
-      alert(err.message || "Erro ao encerrar sprint");
+      setErrorMsg(err.message || "Erro ao encerrar sprint");
+      setShowStatus("error");
     } finally {
       setLoading(false);
     }
@@ -243,6 +246,37 @@ export const SprintCloseWizard: React.FC<Props> = ({ sprint, token, isOpen, onCl
                   <p className="text-2xl font-bold">{Object.values(decisions).filter(d => d.type === "Cancel").length}</p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {showStatus !== "none" && (
+            <div className="absolute inset-0 bg-white z-[100] flex flex-col items-center justify-center p-10 text-center animate-in fade-in zoom-in duration-300">
+              {showStatus === "success" ? (
+                <>
+                  <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                    <CheckCircle2 className="w-12 h-12" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900">Sprint Encerrada!</h3>
+                  <p className="text-gray-500 mt-2 max-w-sm">
+                    A {sprint.name} foi finalizada e os itens foram movidos conforme planejado.
+                  </p>
+                  <Button onClick={onClose} className="mt-8 bg-green-700 hover:bg-green-800 px-8">
+                    Concluir
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                    <XCircle className="w-12 h-12" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900">Falha no Encerramento</h3>
+                  <p className="text-red-500 mt-2 font-medium">{errorMsg}</p>
+                  <p className="text-gray-400 text-sm mt-1">Verifique os dados e tente novamente.</p>
+                  <Button onClick={() => setShowStatus("none")} variant="outline" className="mt-8 px-8">
+                    Tentar Novamente
+                  </Button>
+                </>
+              )}
             </div>
           )}
         </div>

@@ -15,7 +15,7 @@ router.post("/:id/closeout", requireAuth, checkPermission("reports", "view"), as
   try {
     const { id } = req.params;
     const { toSprintId, decisions, notes } = req.body;
-    const actor = req.user.name || req.user.email;
+    const actor = res.locals.user.email;
 
     const sprint = await SprintModel.findById(id).session(session);
     if (!sprint) {
