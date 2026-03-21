@@ -62,7 +62,7 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
       </div>
 
       {/* Pages Container */}
-      <div className="flex flex-col gap-12 max-w-[1200px] mx-auto pb-20 print:gap-0 print:max-w-none print:p-0">
+      <div id="gerencial-report-print-area" className="flex flex-col gap-12 max-w-[1200px] mx-auto pb-20 print:gap-0 print:max-w-none print:p-0">
         
         <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
           <Page01Cover data={data.coverInfo} />
@@ -105,46 +105,52 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             size: 297mm 210mm;
             margin: 0;
           }
-          /* Limpa TUDO que possa prender o scroll ou a altura */
-          html, body, #root, main, div {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
             height: auto !important;
             min-height: 0 !important;
-            max-height: none !important;
             overflow: visible !important;
-            position: static !important;
-            visibility: visible !important;
-          }
-          body {
-            visibility: hidden !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             background: white !important;
           }
-          /* Mostra apenas o conteúdo do relatório */
-          .gerencial-page, .gerencial-page * {
+          /* Esconde absolutamente TUDO exceto o relatório */
+          body > *:not(.relative.group), 
+          .relative.group > *:not(#gerencial-report-print-area),
+          .print\\:hidden, .sticky, button, nav, aside {
+            display: none !important;
+          }
+          #gerencial-report-print-area {
+            display: block !important;
             visibility: visible !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 297mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
           .gerencial-page {
-            position: relative !important;
             width: 297mm !important;
-            height: 209.5mm !important;
+            height: 209mm !important; /* 209mm para garantir que cabe em 210mm total */
             page-break-after: always !important;
             break-after: page !important;
             margin: 0 !important;
             padding: 0 !important;
             display: block !important;
+            position: relative !important;
             overflow: hidden !important;
-            box-sizing: border-box !important;
+            visibility: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          /* Esconde UI do sistema */
-          .print\\:hidden, .sticky, button, nav, aside {
-            display: none !important;
-            visibility: hidden !important;
-          }
-          /* Remove aspect-ratio classes during print */
           .aspect-\\[16\\/9\\] {
             aspect-ratio: auto !important;
           }
+          /* Força as cores da capa e headers */
+          .bg-\\[\\#1a237e\\] { background-color: #1a237e !important; }
+          .bg-\\[\\#448aff\\] { background-color: #448aff !important; }
         }
       `}} />
     </div>
