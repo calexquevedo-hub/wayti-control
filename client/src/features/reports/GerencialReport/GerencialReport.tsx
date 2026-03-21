@@ -105,12 +105,22 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             size: 297mm 210mm;
             margin: 0;
           }
+          /* Limpa TUDO que possa prender o scroll ou a altura */
+          html, body, #root, main, div {
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+            position: static !important;
+            visibility: visible !important;
+          }
           body {
-            visibility: hidden;
+            visibility: hidden !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             background: white !important;
           }
+          /* Mostra apenas o conteúdo do relatório */
           .gerencial-page, .gerencial-page * {
             visibility: visible !important;
           }
@@ -126,7 +136,8 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             overflow: hidden !important;
             box-sizing: border-box !important;
           }
-          .print\\:hidden, .sticky, button {
+          /* Esconde UI do sistema */
+          .print\\:hidden, .sticky, button, nav, aside {
             display: none !important;
             visibility: hidden !important;
           }
