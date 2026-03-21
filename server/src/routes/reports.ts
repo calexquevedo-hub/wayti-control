@@ -280,14 +280,24 @@ router.get("/gerencial", requireAuth, checkPermission("reports", "view"), async 
   };
 
   // 3. Histórico de Sprints (Slide 3) - Mantém histórico global para contexto
-  const lastSprints = await SprintModel.find().sort({ startDate: -1 }).limit(4).lean();
-  const sprintHistory = await Promise.all(lastSprints.map(async (s: any) => {
-    const sDemands = await DemandModel.find({ sprintId: s._id }).select("status progress").lean();
+  const lastSprints = await SprintModel.find().sort({ startDate: 1 }).limit(10).lean(); // Pega mais para filtrar as últimas 4 relevantes
+  const relevantSprints = lastSprints.slice(-4);
+  
+  const sprintHistory = await Promise.all(relevantSprints.map(async (s: any) => {
+    const sDemands = await DemandModel.find({ sprintId: s._id }).select("status isCarryover").lean();
+    const sCloseout = await SprintCloseoutModel.findOne({ sprintId: s._id }).lean();
+    
+    let statusLabel = "Futura";
+    if (s.status === "Active") statusLabel = "Em andamento";
+    else if (s.status === "Closed") {
+      statusLabel = (sCloseout && sCloseout.carryoverRate > 0) ? "Carryover" : "Concluída";
+    }
+
     return {
       name: s.name,
       period: `${new Date(s.startDate).toLocaleDateString("pt-BR")} - ${new Date(s.endDate).toLocaleDateString("pt-BR")}`,
       taskCount: sDemands.length,
-      status: s.status === "Active" ? "Em andamento" : s.status === "Closed" ? "Concluída" : "Futura"
+      status: statusLabel
     };
   }));
 

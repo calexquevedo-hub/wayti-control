@@ -27,7 +27,7 @@ export const Page03History: React.FC<Props> = ({ data }) => {
             </header>
             <div className="p-4 flex-1 flex flex-col justify-between">
               <p className="text-xs text-gray-400 font-bold mb-4">{sprint.period}</p>
-              <p className="text-sm font-bold text-gray-700">{sprint.status === "Concluída" ? "Concluída" : sprint.status === "Em andamento" ? "Em andamento" : `Carryover → S${idx + 12}`}</p>
+              <p className="text-sm font-bold text-gray-700">{sprint.status}</p>
             </div>
           </div>
         ))}
@@ -49,8 +49,10 @@ const getStatusColor = (status: string) => {
   switch (status) {
     case "Concluída": return "bg-green-600";
     case "Em andamento": return "bg-purple-600";
+    case "Carryover": return "bg-yellow-500";
     case "Crítico": return "bg-red-600";
-    default: return "bg-red-600"; // No Slide3 o histórico parece ser vermelho se houve carryover
+    case "Futura": return "bg-gray-400";
+    default: return "bg-gray-400";
   }
 };
 
