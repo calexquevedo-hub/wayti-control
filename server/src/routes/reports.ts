@@ -294,8 +294,20 @@ router.get("/gerencial", requireAuth, checkPermission("reports", "view"), async 
     let statusLabel = "Futura";
     if (s.status === "Active") statusLabel = "Em andamento";
     else if (s.status === "Closed") {
-      // Se houve qualquer carryover movido, marca como Carryover
-      statusLabel = (sCloseout && sCloseout.totals.carryoverMoved > 0) ? "Carryover" : "Concluída";
+      if (sCloseout) {
+        const isHighCarryover = sCloseout.carryoverRate > 25;
+        const hasCritical = sCloseout.carryoverCriticalCount > 0;
+        
+        if (hasCritical || isHighCarryover) {
+          statusLabel = "Crítico";
+        } else if (sCloseout.totals.carryoverMoved > 0) {
+          statusLabel = "Carryover";
+        } else {
+          statusLabel = "Concluída";
+        }
+      } else {
+        statusLabel = "Concluída";
+      }
     }
 
     return {
