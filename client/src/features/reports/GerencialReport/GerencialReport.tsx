@@ -106,38 +106,35 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             margin: 0;
           }
 
-          /* RESET DE FLUXO PARA IMPRESSÃO */
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            height: auto !important;
-            min-height: 100% !important;
+          /* ESTRATÉGIA DE VISIBILIDADE SEGURA */
+          body {
+            visibility: hidden !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
             background: white !important;
-            overflow: visible !important;
           }
 
-          /* OCULTAR ELEMENTOS DE NAVEGAÇÃO */
-          .print\\:hidden, 
-          header.sticky,
-          button,
-          nav,
-          aside {
-            display: none !important;
-          }
-
-          /* CONTAINER DE IMPRESSÃO */
+          /* ÁREA DO RELATÓRIO - POSICIONAMENTO ABSOLUTO NO TOPO */
           #gerencial-report-print-area {
+            visibility: visible !important;
             display: block !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 297mm !important;
             margin: 0 !important;
             padding: 0 !important;
-            width: 100% !important;
-            max-width: none !important;
+            z-index: 999999;
+          }
+
+          #gerencial-report-print-area * {
+            visibility: visible !important;
           }
 
           /* DEFINIÇÃO DE PÁGINA (SLIDE) */
           .gerencial-page {
             width: 297mm !important;
-            height: 209.5mm !important; /* Altura exata A4 Paisagem */
+            height: 209.5mm !important;
             page-break-after: always !important;
             break-after: page !important;
             display: flex !important;
@@ -149,15 +146,19 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             background: transparent !important;
           }
 
+          /* UI E NAVEGAÇÃO */
+          .print\\:hidden, .sticky, button, nav, aside {
+            display: none !important;
+            visibility: hidden !important;
+          }
+
           /* REMOVER SOMBRAS E BORDAS RESIDUAIS */
           * {
             box-shadow: none !important;
             text-shadow: none !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
           }
 
-          /* OCULTAR TOOLTIPS DO RECHARTS E COMPONENTES INTERATIVOS */
+          /* OCULTAR TOOLTIPS DO RECHARTS */
           .recharts-tooltip-wrapper,
           .recharts-default-tooltip,
           .recharts-legend-wrapper {
