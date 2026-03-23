@@ -46,7 +46,7 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
   };
 
   return (
-    <div className="relative group">
+    <div className="relative group print:absolute print:left-0 print:top-0 print:w-full print:h-auto print:overflow-visible print:bg-white print:z-[9999] print:m-0 print:p-0 print:text-black">
       {/* ... (toolbar remains same) */}
       <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md p-4 mb-8 flex justify-between items-center border-b print:hidden shadow-sm">
         <div className="space-y-1">
@@ -60,44 +60,44 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
           Exportar PDF (Imprimir)
         </Button>
       </div>
-
+ 
       {/* Pages Container */}
-      <div id="gerencial-report-print-area" className="flex flex-col gap-12 max-w-[1200px] mx-auto pb-20 print:gap-0 print:max-w-none print:p-0">
+      <div id="gerencial-report-print-area" className="flex flex-col gap-12 max-w-[1200px] mx-auto pb-20 print:gap-0 print:max-w-none print:p-0 print:block print:h-auto print:overflow-visible">
         
         <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
           <Page01Cover data={data.coverInfo} />
         </div>
-
+ 
         <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
           <Page02Executive data={data.executiveSummary} />
         </div>
-
+ 
         <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
           <Page03History data={data.sprintHistory} />
         </div>
-
+ 
         <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
           <Page04SprintSummary data={data.sprintSummary} />
         </div>
-
+ 
         <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
           <Page05SprintTasks data={data.sprintSummary} />
         </div>
-
+ 
         <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
           <Page06SprintCharts data={{ ...data.sprintSummary, tasksByEpic: data.tasksByEpic }} />
         </div>
-
+ 
         <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
           <Page07Risks data={data.risks} />
         </div>
-
+ 
         <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
           <Page08NextSteps data={data.nextSteps} />
         </div>
-
+ 
       </div>
-
+ 
       {/* Printing Styles */}
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
@@ -105,9 +105,9 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             size: A4 landscape;
             margin: 0;
           }
-
+ 
           /* REGRAS DE OURO: LIBERAÇÃO DO FLUXO (SENIOR) */
-          html, body, #root, #gerencial-report-print-area {
+          html, body, #root {
             height: auto !important;
             min-height: 0 !important;
             max-height: none !important;
@@ -116,25 +116,16 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             margin: 0 !important;
             padding: 0 !important;
             position: static !important;
-            visibility: visible !important;
+            background: white !important;
           }
-
-          /* OCULTAR UI */
-          .print\\:hidden, 
-          header.sticky,
-          button,
-          nav,
-          aside {
-            display: none !important;
-          }
-
+ 
           /* DEFINIÇÃO DE PÁGINA (SLIDE) */
           .gerencial-page {
             width: 297mm !important;
-            min-height: 209mm !important; /* Mínimo para estética de slide */
+            min-height: 209mm !important;
             page-break-after: always !important;
             break-after: page !important;
-            display: block !important; /* Alterado de flex para block conforme pedido */
+            display: block !important;
             position: relative !important;
             margin: 0 !important;
             padding: 0 !important;

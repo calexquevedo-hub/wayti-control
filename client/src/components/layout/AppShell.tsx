@@ -28,24 +28,28 @@ export function AppShell({
   children,
 }: AppShellProps) {
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <Sidebar
-        active={active}
-        onSelect={onSelect}
-        onSelectDemandView={onSelectDemandView}
-        onSelectTicketView={onSelectTicketView}
-        permissions={permissions}
-      />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <TopNav
+    <div className="flex h-screen w-full overflow-hidden print:block print:h-auto print:overflow-visible print:bg-white">
+      <div className="print:hidden">
+        <Sidebar
           active={active}
           onSelect={onSelect}
+          onSelectDemandView={onSelectDemandView}
+          onSelectTicketView={onSelectTicketView}
           permissions={permissions}
-          userEmail={userEmail}
-          onLogout={onLogout}
-          onOpenPreferences={onOpenPreferences}
         />
-        <main className="flex-1 overflow-y-auto px-6 py-6 lg:px-10">
+      </div>
+      <div className="flex flex-1 flex-col overflow-hidden print:block print:h-auto print:overflow-visible">
+        <div className="print:hidden">
+          <TopNav
+            active={active}
+            onSelect={onSelect}
+            permissions={permissions}
+            userEmail={userEmail}
+            onLogout={onLogout}
+            onOpenPreferences={onOpenPreferences}
+          />
+        </div>
+        <main className="flex-1 overflow-y-auto px-6 py-6 lg:px-10 print:block print:h-auto print:overflow-visible print:p-0">
           {children}
         </main>
       </div>
