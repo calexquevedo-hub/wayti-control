@@ -64,7 +64,7 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
       {/* Rodapé Oficial (Fixado na Impressão) */}
       <div className="hidden print:block print:fixed print:bottom-0 print:left-0 print:w-full print:text-center print:text-xs print:bg-white print:py-4 print:z-[10000]">
         <p className="font-bold text-gray-400 uppercase tracking-[0.3em]">
-          INTEGRA SOLUÇÕES • GERÊNCIA DE TI
+          INTEGRA SOLUÇÕES • GERÊNCIA DE TI • {new Date().toLocaleDateString('pt-BR')}
         </p>
       </div>
 

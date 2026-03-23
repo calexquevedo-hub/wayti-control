@@ -19,26 +19,26 @@ interface Props {
 
 export const Page05SprintTasks: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden print:p-2">
+    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden print:p-2 print:break-before-page">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:w-2" />
       
-      <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8 print:bg-transparent print:border-b-2 print:border-blue-900 print:text-blue-900 print:mb-4">
-        <h2 className="text-xl font-bold uppercase tracking-wider ml-8">
+      <header className="text-blue-900 border-b border-gray-300 pb-2 mb-6">
+        <h2 className="text-xl font-bold uppercase tracking-wider">
           {data.name} | {data.dates} — DETALHAMENTO
         </h2>
       </header>
  
-      <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print:rounded-none print:border-none">
-        <h3 className="bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest print:bg-gray-100 print:text-gray-900 print:border-b print:px-2 print:py-1">
+      <div className="flex-1 bg-white">
+        <h3 className="text-blue-900 text-sm font-bold uppercase pb-2 mb-2 border-b border-gray-200 tracking-widest px-2 print:px-0">
           Todas as tarefas da sprint
         </h3>
         <table className="w-full text-left border-collapse print:table print:text-xs">
           <thead>
-            <tr className="bg-[#283593] text-white text-[10px] uppercase font-bold print:bg-transparent print:text-gray-900 print:border-b-2 print:border-gray-200">
-              <th className="p-3 px-6 border-r border-white/10 w-16 text-center print:px-2 print:py-1 print:border-none">ID</th>
-              <th className="p-3 px-6 border-r border-white/10 print:px-2 print:py-1 print:border-none">Tarefa</th>
-              <th className="p-3 px-6 border-r border-white/10 print:px-2 print:py-1 print:border-none">Categoria</th>
-              <th className="p-3 px-6 border-r border-white/10 print:px-2 print:py-1 print:border-none">Épico</th>
+            <tr className="text-gray-500 text-[10px] uppercase font-bold border-b-2 border-gray-200">
+              <th className="p-3 px-6 w-16 text-center print:px-2 print:py-1">ID</th>
+              <th className="p-3 px-6 print:px-2 print:py-1">Tarefa</th>
+              <th className="p-3 px-6 print:px-2 print:py-1">Categoria</th>
+              <th className="p-3 px-6 print:px-2 print:py-1">Épico</th>
               <th className="p-3 px-6 w-16 text-center print:px-2 print:py-1">Concl.</th>
             </tr>
           </thead>

@@ -12,11 +12,11 @@ interface Props {
 
 export const Page08NextSteps: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden">
-      <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff]" />
+    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden print:p-2 print:break-before-page">
+      <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:w-2" />
       
-      <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-12 print:bg-transparent print:border-b-2 print:border-blue-900 print:text-blue-900 print:mb-8 print:break-before-page">
-        <h2 className="text-xl font-bold uppercase tracking-wider ml-8">
+      <header className="text-blue-900 border-b border-gray-300 pb-2 mb-6">
+        <h2 className="text-xl font-bold uppercase tracking-wider">
           PRÓXIMOS PASSOS
         </h2>
       </header>
@@ -25,7 +25,7 @@ export const Page08NextSteps: React.FC<Props> = ({ data }) => {
         <div className="space-y-6 max-w-4xl mx-auto print:space-y-3">
           {data.map((step, idx) => (
             <div key={idx} className="flex items-center gap-6 group print:gap-3">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#1a237e] text-white flex items-center justify-center font-bold text-lg shadow-md print:w-8 print:h-8 print:text-sm print:shadow-none print:border print:border-blue-900 print:text-blue-900 print:bg-transparent">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full border-2 border-blue-900 text-blue-900 flex items-center justify-center font-bold text-lg print:w-8 print:h-8 print:text-sm">
                 {(idx + 1).toString().padStart(2, '0')}
               </div>
               

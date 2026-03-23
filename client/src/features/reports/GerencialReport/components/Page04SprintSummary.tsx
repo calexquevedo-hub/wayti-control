@@ -30,13 +30,13 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
     <div className="w-full h-full flex flex-col p-8 relative overflow-hidden print:p-2 print:break-after-page">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:w-2" />
       
-      <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8 print:bg-transparent print:border-b-2 print:border-blue-900 print:text-blue-900 print:mb-4">
-        <h2 className="text-xl font-bold uppercase tracking-wider ml-8 print:text-lg">
-          {data.name} | {data.dates} — {data.status}
-        </h2>
-      </header>
+      <div className="flex-1 flex flex-col print:break-before-page print:break-inside-avoid">
+        <header className="text-blue-900 border-b border-gray-300 pb-2 mb-6">
+          <h2 className="text-xl font-bold uppercase tracking-wider">
+            {data.name} | {data.dates} — {data.status}
+          </h2>
+        </header>
 
-      <div className="print:break-inside-avoid">
         <div className="bg-red-50 border border-red-200 p-4 rounded-md mb-8 flex items-center gap-4 text-red-700 print:p-2 print:bg-white print:border-red-100 print:mb-4">
           <AlertCircle className="w-8 h-8 print:w-6 print:h-6" />
           <div>
@@ -54,17 +54,17 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
           <MiniCard label="Data Fim" value={data.endDate} color="text-gray-800" isDate />
         </div>
 
-        <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print:rounded-none print:border-none print:shadow-none">
-          <h3 className="bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest print:bg-gray-100 print:text-gray-900 print:border-b print:px-2 print:py-1">
+        <div className="flex-1 bg-white mb-4">
+          <h3 className="text-blue-900 text-sm font-bold uppercase pb-2 mb-2 border-b border-gray-200 tracking-widest px-2 print:px-0">
             Tarefas planejadas para a sprint
           </h3>
           <table className="w-full text-left border-collapse print:table print:text-xs">
             <thead>
-              <tr className="bg-[#283593] text-white text-[9px] uppercase font-bold print:bg-transparent print:text-gray-900 print:border-b-2 print:border-gray-200">
-                <th className="p-2 px-6 border-r border-white/10 w-16 text-center print:px-2 print:py-1 print:border-none">ID</th>
-                <th className="p-2 px-6 border-r border-white/10 print:px-2 print:py-1 print:border-none">Tarefa</th>
-                <th className="p-2 px-6 border-r border-white/10 print:px-2 print:py-1 print:border-none">Épico</th>
-                <th className="p-2 px-6 border-r border-white/10 print:px-2 print:py-1 print:border-none">Responsável</th>
+              <tr className="text-gray-500 text-[10px] uppercase font-bold border-b-2 border-gray-200">
+                <th className="p-2 px-6 w-16 text-center print:px-2 print:py-1">ID</th>
+                <th className="p-2 px-6 print:px-2 print:py-1">Tarefa</th>
+                <th className="p-2 px-6 print:px-2 print:py-1">Épico</th>
+                <th className="p-2 px-6 print:px-2 print:py-1">Responsável</th>
                 <th className="p-2 px-6 print:px-2 print:py-1">Bloqueio / Gate</th>
               </tr>
             </thead>

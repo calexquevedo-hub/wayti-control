@@ -23,11 +23,11 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
   const topEpic = data.tasksByEpic.sort((a, b) => b.count - a.count)[0];
 
   return (
-    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden print:p-2">
+    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden print:p-2 print:break-before-page">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:w-2" />
       
-      <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8 print:bg-transparent print:border-b-2 print:border-blue-900 print:text-blue-900 print:mb-4">
-        <h2 className="text-xl font-bold uppercase tracking-wider ml-8">
+      <header className="text-blue-900 border-b border-gray-300 pb-2 mb-6">
+        <h2 className="text-xl font-bold uppercase tracking-wider">
           {data.name} | {data.dates} — DETALHAMENTO
         </h2>
       </header>
@@ -35,7 +35,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
       <div className="grid grid-cols-2 gap-8 flex-1 overflow-hidden print:gap-4">
         {/* Gráfico */}
         <div className="flex flex-col print:break-inside-avoid">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-[#1a237e] mb-6 border-b pb-2 print:mb-2 print:text-[10px]">
+          <h3 className="text-blue-900 text-xs font-bold uppercase tracking-widest pb-2 mb-6 border-b border-gray-200 print:mb-2 print:text-[10px]">
             Tarefas por Épico ({data.name})
           </h3>
           <div className="flex-1 min-h-[350px] pr-8 print:min-h-[320px] print:pr-0">
@@ -67,17 +67,17 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
         </div>
  
         {/* Tabela Resumida */}
-        <div className="flex flex-col overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200 print:rounded-none print:border-none">
-          <h3 className="bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest print:bg-gray-100 print:text-gray-900 print:border-b print:px-2 print:py-1">
+        <div className="flex flex-col overflow-hidden bg-white">
+          <h3 className="text-blue-900 text-[10px] font-bold uppercase pb-2 mb-2 border-b border-gray-200 tracking-widest px-2 print:px-0">
             Todas as tarefas da sprint
           </h3>
           <table className="w-full text-left border-collapse print:table print:text-xs">
             <thead>
-              <tr className="bg-[#1a237e] text-white text-[9px] uppercase font-bold print:bg-transparent print:text-gray-900 print:border-b-2 print:border-gray-200">
-                <th className="p-2 px-4 w-12 text-center print:px-2 print:py-1 print:border-none">ID</th>
-                <th className="p-2 px-4 print:px-2 print:py-1 print:border-none">Tarefa</th>
-                <th className="p-2 px-4 print:px-2 print:py-1 print:border-none">Categoria</th>
-                <th className="p-2 px-4 print:px-2 print:py-1 print:border-none">Épico</th>
+              <tr className="text-gray-500 text-[9px] uppercase font-bold border-b-2 border-gray-200">
+                <th className="p-2 px-4 w-12 text-center print:px-2 print:py-1">ID</th>
+                <th className="p-2 px-4 print:px-2 print:py-1">Tarefa</th>
+                <th className="p-2 px-4 print:px-2 print:py-1">Categoria</th>
+                <th className="p-2 px-4 print:px-2 print:py-1">Épico</th>
                 <th className="p-2 px-4 w-12 text-center print:px-2 print:py-1">Concl.</th>
               </tr>
             </thead>
