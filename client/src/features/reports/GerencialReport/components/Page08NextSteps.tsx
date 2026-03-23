@@ -15,7 +15,7 @@ export const Page08NextSteps: React.FC<Props> = ({ data }) => {
     <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff]" />
       
-      <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-12 print:bg-transparent print:border-b-2 print:border-blue-900 print:text-blue-900 print:mb-8">
+      <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-12 print:bg-transparent print:border-b-2 print:border-blue-900 print:text-blue-900 print:mb-8 print:break-before-page">
         <h2 className="text-xl font-bold uppercase tracking-wider ml-8">
           PRÓXIMOS PASSOS
         </h2>

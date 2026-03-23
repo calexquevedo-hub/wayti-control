@@ -67,7 +67,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
         </div>
  
         {/* Tabela Resumida */}
-        <div className="flex flex-col overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200 print:rounded-none print:border-none print:break-inside-avoid">
+        <div className="flex flex-col overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200 print:rounded-none print:border-none">
           <h3 className="bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest print:bg-gray-100 print:text-gray-900 print:border-b print:px-2 print:py-1">
             Todas as tarefas da sprint
           </h3>
@@ -83,7 +83,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
             </thead>
             <tbody className="text-[10px]">
               {data.tasks.slice(0, 18).map((task, idx) => (
-                <tr key={idx} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} print:bg-transparent print:border-b print:border-gray-50`}>
+                <tr key={idx} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} print:bg-transparent print:border-b print:border-gray-50 print:break-inside-avoid`}>
                   <td className="p-2 px-4 border-b border-gray-100 font-bold text-center print:px-2 print:py-1 print:border-none">#{task.id}</td>
                   <td className="p-2 px-4 border-b border-gray-100 font-medium truncate max-w-[150px] print:px-2 print:py-1 print:border-none print:max-w-none print:truncate-none print:whitespace-normal">{task.title}</td>
                   <td className="p-2 px-4 border-b border-gray-100 print:px-2 print:py-1 print:border-none">{task.category}</td>

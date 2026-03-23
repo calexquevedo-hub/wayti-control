@@ -46,7 +46,7 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
   };
 
   return (
-    <div className="relative group print:absolute print:left-0 print:top-0 print:w-full print:h-auto print:overflow-visible print:bg-white print:z-[9999] print:m-0 print:p-0 print:text-black print:pb-20">
+    <div className="relative group print:absolute print:left-0 print:top-0 print:w-full print:h-auto print:overflow-visible print:bg-white print:z-[9999] print:m-0 print:p-0 print:text-black print:pb-12">
       {/* ... (toolbar remains same) */}
       <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md p-4 mb-8 flex justify-between items-center border-b print:hidden shadow-sm">
         <div className="space-y-1">
@@ -62,9 +62,9 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
       </div>
  
       {/* Rodapé Oficial (Fixado na Impressão) */}
-      <div className="hidden print:flex print:fixed print:bottom-0 print:left-0 print:w-full print:bg-white print:py-4 print:border-t print:border-gray-100 print:justify-center print:items-center print:z-[10000]">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">
-          INTEGRA SOLUÇÕES — GERÊNCIA DE TI — {new Date().toLocaleDateString("pt-BR")}
+      <div className="hidden print:block print:fixed print:bottom-0 print:left-0 print:w-full print:text-center print:text-xs print:bg-white print:py-4 print:z-[10000]">
+        <p className="font-bold text-gray-400 uppercase tracking-[0.3em]">
+          INTEGRA SOLUÇÕES • GERÊNCIA DE TI
         </p>
       </div>
 
