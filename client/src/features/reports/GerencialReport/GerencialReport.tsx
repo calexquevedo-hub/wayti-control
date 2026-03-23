@@ -46,7 +46,7 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
   };
 
   return (
-    <div className="relative group print:absolute print:left-0 print:top-0 print:w-full print:h-auto print:overflow-visible print:bg-white print:z-[9999] print:m-0 print:p-0 print:text-black">
+    <div className="relative group print:absolute print:left-0 print:top-0 print:w-full print:h-auto print:overflow-visible print:bg-white print:z-[9999] print:m-0 print:p-0 print:text-black print:pb-20">
       {/* ... (toolbar remains same) */}
       <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md p-4 mb-8 flex justify-between items-center border-b print:hidden shadow-sm">
         <div className="space-y-1">
@@ -61,6 +61,13 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
         </Button>
       </div>
  
+      {/* Rodapé Oficial (Fixado na Impressão) */}
+      <div className="hidden print:flex print:fixed print:bottom-0 print:left-0 print:w-full print:bg-white print:py-4 print:border-t print:border-gray-100 print:justify-center print:items-center print:z-[10000]">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">
+          INTEGRA SOLUÇÕES — GERÊNCIA DE TI — {new Date().toLocaleDateString("pt-BR")}
+        </p>
+      </div>
+
       {/* Pages Container */}
       <div id="gerencial-report-print-area" className="flex flex-col gap-12 max-w-[1200px] mx-auto pb-20 print:gap-0 print:max-w-none print:p-0 print:block print:h-auto print:overflow-visible">
         
@@ -106,7 +113,7 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             margin: 0;
           }
  
-          /* REGRAS DE OURO: LIBERAÇÃO DO FLUXO (SENIOR) */
+          /* REGRAS SENIOR: CLEAN & INK-FRIENDLY */
           html, body, #root {
             height: auto !important;
             min-height: 0 !important;
@@ -117,8 +124,20 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             padding: 0 !important;
             position: static !important;
             background: white !important;
+            color: black !important;
+            font-size: 12pt !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
  
+          /* FIM DO EFEITO PÔSTER: ESCALA REDUZIDA */
+          h1 { font-size: 24pt !important; }
+          h2 { font-size: 18pt !important; }
+          h3 { font-size: 14pt !important; }
+          h4 { font-size: 11pt !important; }
+          p, span, td, th { font-size: 9pt !important; }
+          .text-xs, .text-\\[10px\\] { font-size: 8pt !important; }
+
           /* DEFINIÇÃO DE PÁGINA (SLIDE) */
           .gerencial-page {
             width: 297mm !important;
@@ -128,9 +147,15 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             display: block !important;
             position: relative !important;
             margin: 0 !important;
-            padding: 0 !important;
+            padding: 20mm !important; /* Respiro interno para impressão */
             overflow: visible !important;
-            background: transparent !important;
+            background: white !important;
+          }
+
+          /* QUEBRAS INTELIGENTES */
+          h2, h3, header {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
           }
 
           /* EVITAR QUEBRAS DENTRO DE CARDS E TABELAS */
