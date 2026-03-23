@@ -29,7 +29,7 @@ export const Page08NextSteps: React.FC<Props> = ({ data }) => {
                 {(idx + 1).toString().padStart(2, '0')}
               </div>
               
-              <div className="flex-1 bg-white p-4 rounded-lg shadow-sm border-l-4 border-gray-100 flex items-center justify-between group-hover:shadow-md transition-shadow" style={{ borderLeftColor: getStepColor(step.priorityColor) }}>
+              <div className="flex-1 bg-white p-4 rounded-lg shadow-sm border-l-4 border-gray-100 flex items-center justify-between group-hover:shadow-md transition-shadow print:break-inside-avoid" style={{ borderLeftColor: getStepColor(step.priorityColor) }}>
                 <div className="space-y-1">
                   <h4 className="text-base font-bold text-gray-700 tracking-tight">{step.title}</h4>
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">

@@ -44,7 +44,7 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-6 gap-3 mb-8">
+      <div className="grid grid-cols-6 gap-3 mb-8 print:break-inside-avoid">
         <MiniCard label="Carryover Anterior" value={data.carryoverFromLast} color="text-red-600" />
         <MiniCard label="Novas Tarefas" value={data.newTasks} color="text-blue-600" />
         <MiniCard label="Taxa Carryover" value={`${Math.round(data.carryoverRate)}%`} color="text-orange-600" />
@@ -53,7 +53,7 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
         <MiniCard label="Data Fim" value={data.endDate} color="text-gray-800" isDate />
       </div>
 
-      <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print:break-inside-avoid">
         <h3 className="bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest">
           Tarefas planejadas para a sprint
         </h3>

@@ -106,56 +106,59 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
             margin: 0;
           }
 
-          /* ESTRATÉGIA DE VISIBILIDADE SEGURA */
-          body {
-            visibility: hidden !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            background: white !important;
-          }
-
-          /* ÁREA DO RELATÓRIO - POSICIONAMENTO ABSOLUTO NO TOPO */
-          #gerencial-report-print-area {
-            visibility: visible !important;
+          /* REGRAS DE OURO: LIBERAÇÃO DO FLUXO (SENIOR) */
+          html, body, #root, #gerencial-report-print-area {
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
             display: block !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 297mm !important;
             margin: 0 !important;
             padding: 0 !important;
-            z-index: 999999;
+            position: static !important;
+            visibility: visible !important;
           }
 
-          #gerencial-report-print-area * {
-            visibility: visible !important;
+          /* OCULTAR UI */
+          .print\\:hidden, 
+          header.sticky,
+          button,
+          nav,
+          aside {
+            display: none !important;
           }
 
           /* DEFINIÇÃO DE PÁGINA (SLIDE) */
           .gerencial-page {
             width: 297mm !important;
-            height: 209.5mm !important;
+            min-height: 209mm !important; /* Mínimo para estética de slide */
             page-break-after: always !important;
             break-after: page !important;
-            display: flex !important;
-            flex-direction: column !important;
+            display: block !important; /* Alterado de flex para block conforme pedido */
+            position: relative !important;
             margin: 0 !important;
             padding: 0 !important;
-            position: relative !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             background: transparent !important;
           }
 
-          /* UI E NAVEGAÇÃO */
-          .print\\:hidden, .sticky, button, nav, aside {
-            display: none !important;
-            visibility: hidden !important;
+          /* EVITAR QUEBRAS DENTRO DE CARDS E TABELAS */
+          .gerencial-page > *,
+          .rounded-lg,
+          .shadow-sm,
+          table,
+          tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
 
           /* REMOVER SOMBRAS E BORDAS RESIDUAIS */
           * {
             box-shadow: none !important;
             text-shadow: none !important;
+            border-radius: 0 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
           /* OCULTAR TOOLTIPS DO RECHARTS */

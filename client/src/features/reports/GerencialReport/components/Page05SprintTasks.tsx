@@ -28,7 +28,7 @@ export const Page05SprintTasks: React.FC<Props> = ({ data }) => {
         </h2>
       </header>
 
-      <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden print:break-inside-avoid">
         <h3 className="bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest">
           Todas as tarefas da sprint
         </h3>

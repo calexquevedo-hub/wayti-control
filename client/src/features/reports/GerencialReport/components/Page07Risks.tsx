@@ -23,7 +23,7 @@ export const Page07Risks: React.FC<Props> = ({ data }) => {
         </h2>
       </header>
 
-      <div className="grid grid-cols-2 gap-6 flex-1 overflow-auto pr-4 custom-scrollbar">
+      <div className="grid grid-cols-2 gap-6 flex-1 overflow-auto pr-4 custom-scrollbar print:break-inside-avoid">
         {data.length > 0 ? (
           data.map((risk, idx) => (
             <div key={idx} className="bg-white rounded-lg shadow-md border-l-8 overflow-hidden h-fit" style={{ borderLeftColor: getSeverityColor(risk.severity) }}>

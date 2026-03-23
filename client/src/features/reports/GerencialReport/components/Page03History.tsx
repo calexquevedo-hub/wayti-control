@@ -18,7 +18,7 @@ export const Page03History: React.FC<Props> = ({ data }) => {
         <h2 className="text-xl font-bold uppercase tracking-wider ml-8">Histórico de Sprints — OUT/2025 A MAR/2026</h2>
       </header>
 
-      <div className="grid grid-cols-4 gap-8 mb-12">
+      <div className="grid grid-cols-4 gap-8 mb-12 print:break-inside-avoid">
         {data.map((sprint, idx) => (
           <div key={idx} className="bg-white rounded-md shadow-lg overflow-hidden flex flex-col min-h-[160px]">
             <header className={`${getStatusColor(sprint.status)} p-3 text-white flex justify-between items-center`}>

@@ -34,7 +34,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
 
       <div className="grid grid-cols-2 gap-8 flex-1 overflow-hidden">
         {/* Gráfico */}
-        <div className="flex flex-col">
+        <div className="flex flex-col print:break-inside-avoid">
           <h3 className="text-xs font-bold uppercase tracking-widest text-[#1a237e] mb-6 border-b pb-2">
             Tarefas por Épico ({data.name})
           </h3>
@@ -67,7 +67,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
         </div>
 
         {/* Tabela Resumida */}
-        <div className="flex flex-col overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="flex flex-col overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200 print:break-inside-avoid">
           <h3 className="bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest">
             Todas as tarefas da sprint
           </h3>

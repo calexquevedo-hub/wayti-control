@@ -27,7 +27,7 @@ export const Page02Executive: React.FC<Props> = ({ data }) => {
         <h2 className="text-xl font-bold uppercase tracking-wider ml-8">Visão Executiva do Portfólio</h2>
       </header>
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-3 gap-4 mb-8 print:break-inside-avoid">
         <MetricCard label="Épicos (áreas)" value={data.totalEpics} subtext="em andamento" borderColor="border-blue-600" />
         <MetricCard label="Sprint em andamento" value={data.activeSprint} subtext="vigente" borderColor="border-purple-600" />
         <MetricCard label="Tarefas em aberto" value={data.openTasks} subtext="⚠️ passivo acumulado" borderColor="border-red-600" />
@@ -36,7 +36,7 @@ export const Page02Executive: React.FC<Props> = ({ data }) => {
         <MetricCard label="Carryover Crítico" value={data.criticalCarryover} subtext="P0/P1 ou Bloqueados" borderColor="border-red-800" />
       </div>
 
-      <div className="flex-1 overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200 print:rounded-none">
+      <div className="flex-1 overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200 print:rounded-none print:break-inside-avoid">
         <h3 className="bg-[#1a237e] text-white text-sm font-bold uppercase p-3 px-6 tracking-widest print:bg-[#1a237e]">
           Épicos e Entregáveis — conforme backlog
         </h3>
