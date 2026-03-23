@@ -27,7 +27,7 @@ interface Props {
 
 export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full h-full flex flex-col p-8 relative overflow-hidden print:p-4 print:break-after-page">
+    <div className="w-full h-full flex flex-col p-8 relative overflow-hidden print:p-2 print:break-after-page">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:w-2" />
       
       <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8 print:bg-transparent print:border-b-2 print:border-blue-900 print:text-blue-900 print:mb-4">

@@ -23,8 +23,8 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
   const topEpic = data.tasksByEpic.sort((a, b) => b.count - a.count)[0];
 
   return (
-    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden">
-      <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff]" />
+    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden print:p-2">
+      <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:w-2" />
       
       <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8 print:bg-transparent print:border-b-2 print:border-blue-900 print:text-blue-900 print:mb-4">
         <h2 className="text-xl font-bold uppercase tracking-wider ml-8">
@@ -71,7 +71,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
           <h3 className="bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest print:bg-gray-100 print:text-gray-900 print:border-b print:px-2 print:py-1">
             Todas as tarefas da sprint
           </h3>
-          <table className="w-full text-left border-collapse print:table">
+          <table className="w-full text-left border-collapse print:table print:text-xs">
             <thead>
               <tr className="bg-[#1a237e] text-white text-[9px] uppercase font-bold print:bg-transparent print:text-gray-900 print:border-b-2 print:border-gray-200">
                 <th className="p-2 px-4 w-12 text-center print:px-2 print:py-1 print:border-none">ID</th>

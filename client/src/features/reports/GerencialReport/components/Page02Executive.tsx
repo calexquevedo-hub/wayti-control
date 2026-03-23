@@ -20,7 +20,7 @@ interface Props {
 
 export const Page02Executive: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full h-full flex flex-col p-8 relative overflow-hidden print:p-4 print:break-after-page">
+    <div className="w-full h-full flex flex-col p-8 relative overflow-hidden print:p-2 print:break-after-page">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:w-2" />
       
       <header className="bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8 print:bg-transparent print:border-b-2 print:border-blue-900 print:text-blue-900 print:mb-4">
@@ -71,7 +71,7 @@ export const Page02Executive: React.FC<Props> = ({ data }) => {
  
 const MetricCard = ({ label, value, subtext, borderColor }: any) => (
   <div className={`bg-white p-6 rounded-lg shadow-md border-t-8 ${borderColor} flex flex-col items-center justify-center text-center print:p-2 print:border-t-4 print:shadow-none print:border print:border-gray-100`}>
-    <h4 className="text-6xl font-black mb-1 print:text-3xl print:mb-0">{value}</h4>
+    <h4 className="text-6xl font-black mb-1 print:text-2xl print:mb-0">{value}</h4>
     <p className="text-sm font-bold text-gray-800 uppercase mb-1 print:text-[8px] print:mb-0">{label}</p>
     <p className="text-[10px] text-gray-400 uppercase tracking-tighter print:hidden">{subtext}</p>
   </div>
