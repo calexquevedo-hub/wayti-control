@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useGerencialData } from "./useGerencialData";
 import { Page01Cover } from "./components/Page01Cover";
 import { Page02Executive } from "./components/Page02Executive";
@@ -19,6 +19,13 @@ interface Props {
 
 export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
   const { data, loading, error } = useGerencialData(token, sprintId);
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  useEffect(() => {
+    const handleAfterPrint = () => setIsPrinting(false);
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => window.removeEventListener("afterprint", handleAfterPrint);
+  }, []);
 
   // ... (if loading/error logic)
 
@@ -42,65 +49,72 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
   // ... (handlePrint remains same)
 
   const handlePrint = () => {
-    window.print();
+    setIsPrinting(true);
+    setTimeout(() => {
+      window.print();
+    }, 300);
   };
 
   return (
-    <div className="relative group print:absolute print:left-0 print:top-0 print:w-full print:h-auto print:overflow-visible print:bg-white print:z-[9999] print:m-0 print:p-0 print:text-black print:pb-12">
+    <div className="relative group w-full h-auto bg-white m-0 p-0 text-black">
       {/* ... (toolbar remains same) */}
-      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md p-4 mb-8 flex justify-between items-center border-b print:hidden shadow-sm">
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold text-gray-800">Preview do Relatório Gerencial</h2>
-          <p className="text-xs text-gray-500 font-mono tracking-tighter">
-            {data.coverInfo.sprintName} · {data.coverInfo.period}
-          </p>
+      {!isPrinting && (
+        <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md p-4 mb-8 flex justify-between items-center border-b shadow-sm">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-gray-800">Preview do Relatório Gerencial</h2>
+            <p className="text-xs text-gray-500 font-mono tracking-tighter">
+              {data.coverInfo.sprintName} · {data.coverInfo.period}
+            </p>
+          </div>
+          <Button onClick={handlePrint} className="gap-2 bg-blue-700 hover:bg-blue-800 shadow-lg" disabled={isPrinting}>
+            <Printer className="w-4 h-4" />
+            {isPrinting ? "Preparando..." : "Exportar PDF (Imprimir)"}
+          </Button>
         </div>
-        <Button onClick={handlePrint} className="gap-2 bg-blue-700 hover:bg-blue-800 shadow-lg">
-          <Printer className="w-4 h-4" />
-          Exportar PDF (Imprimir)
-        </Button>
-      </div>
+      )}
  
       {/* Rodapé Oficial (Fixado na Impressão) */}
-      <div className="hidden print:block print:fixed print:bottom-0 print:left-0 print:w-full print:text-center print:text-xs print:bg-white print:py-4 print:z-[10000]">
-        <p className="font-bold text-gray-400 uppercase tracking-[0.3em]">
-          INTEGRA SOLUÇÕES • GERÊNCIA DE TI • {new Date().toLocaleDateString('pt-BR')}
-        </p>
-      </div>
+      {isPrinting && (
+        <div className="fixed bottom-0 left-0 w-full text-center text-xs bg-white py-4 z-[10000]">
+          <p className="font-bold text-gray-400 uppercase tracking-[0.3em]">
+            INTEGRA SOLUÇÕES • GERÊNCIA DE TI • {new Date().toLocaleDateString('pt-BR')}
+          </p>
+        </div>
+      )}
 
       {/* Pages Container */}
-      <div id="gerencial-report-print-area" className="flex flex-col gap-12 max-w-[1200px] mx-auto pb-20 print:gap-0 print:max-w-none print:p-0 print:block print:h-auto print:overflow-visible">
+      <div id="gerencial-report-print-area" className="flex flex-col gap-12 max-w-[1200px] mx-auto pb-20">
         
-        <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
-          <Page01Cover data={data.coverInfo} />
+        <div className="gerencial-page aspect-[16/9] w-full">
+          <Page01Cover data={data.coverInfo} isPrinting={isPrinting} />
         </div>
  
-        <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
-          <Page02Executive data={data.executiveSummary} />
+        <div className="gerencial-page aspect-[16/9] w-full">
+          <Page02Executive data={data.executiveSummary} isPrinting={isPrinting} />
         </div>
  
-        <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
-          <Page03History data={data.sprintHistory} />
+        <div className="gerencial-page aspect-[16/9] w-full">
+          <Page03History data={data.sprintHistory} isPrinting={isPrinting} />
         </div>
  
-        <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
-          <Page04SprintSummary data={data.sprintSummary} />
+        <div className="gerencial-page aspect-[16/9] w-full">
+          <Page04SprintSummary data={data.sprintSummary} isPrinting={isPrinting} />
         </div>
  
-        <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
-          <Page05SprintTasks data={data.sprintSummary} />
+        <div className="gerencial-page aspect-[16/9] w-full">
+          <Page05SprintTasks data={data.sprintSummary} isPrinting={isPrinting} />
         </div>
  
-        <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
-          <Page06SprintCharts data={{ ...data.sprintSummary, tasksByEpic: data.tasksByEpic }} />
+        <div className="gerencial-page aspect-[16/9] w-full">
+          <Page06SprintCharts data={{ ...data.sprintSummary, tasksByEpic: data.tasksByEpic }} isPrinting={isPrinting} />
         </div>
  
-        <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
-          <Page07Risks data={data.risks} />
+        <div className="gerencial-page aspect-[16/9] w-full">
+          <Page07Risks data={data.risks} isPrinting={isPrinting} />
         </div>
  
-        <div className="gerencial-page aspect-[16/9] w-full print:m-0 print:rounded-none">
-          <Page08NextSteps data={data.nextSteps} />
+        <div className="gerencial-page aspect-[16/9] w-full">
+          <Page08NextSteps data={data.nextSteps} isPrinting={isPrinting} />
         </div>
  
       </div>

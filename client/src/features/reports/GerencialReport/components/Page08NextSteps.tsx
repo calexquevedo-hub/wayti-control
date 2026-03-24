@@ -8,38 +8,39 @@ interface Props {
     responsible: string;
     dueLabel: string;
   }>;
+  isPrinting?: boolean;
 }
 
-export const Page08NextSteps: React.FC<Props> = ({ data }) => {
+export const Page08NextSteps: React.FC<Props> = ({ data, isPrinting }) => {
   return (
-    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden print:p-2 print:break-before-page">
-      <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:w-2" />
+    <div className={`w-full flex-1 flex flex-col p-8 relative overflow-hidden ${isPrinting ? 'p-2' : ''}`} style={isPrinting ? { pageBreakBefore: 'always' } : {}}>
+      <div className={`absolute left-0 top-0 bottom-0 bg-[#448aff] ${isPrinting ? 'w-2' : 'w-3'}`} />
       
-      <header className="text-blue-900 border-b border-gray-300 pb-2 mb-6">
-        <h2 className="text-xl font-bold uppercase tracking-wider">
+      <header className={isPrinting ? "bg-white text-blue-900 border-b-2 border-blue-900 pb-2 mb-6" : "bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-12"}>
+        <h2 className={`font-bold uppercase tracking-wider ${isPrinting ? 'text-xl' : 'text-xl ml-8'}`}>
           PRÓXIMOS PASSOS
         </h2>
       </header>
  
-      <div className="flex-1 px-8 print:px-0">
-        <div className="space-y-6 max-w-4xl mx-auto print:space-y-3">
+      <div className={`flex-1 ${isPrinting ? 'px-0' : 'px-8'}`}>
+        <div className={`space-y-6 max-w-4xl mx-auto ${isPrinting ? 'space-y-3' : ''}`}>
           {data.map((step, idx) => (
-            <div key={idx} className="flex items-center gap-6 group print:gap-3">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full border-2 border-blue-900 text-blue-900 flex items-center justify-center font-bold text-lg print:w-8 print:h-8 print:text-sm">
+            <div key={idx} className={`flex items-center gap-6 group ${isPrinting ? 'gap-3' : ''}`}>
+              <div className={`flex-shrink-0 rounded-full flex items-center justify-center font-bold shadow-md ${isPrinting ? 'w-8 h-8 text-sm shadow-none border border-blue-900 bg-white text-blue-900' : 'w-12 h-12 text-lg bg-[#1a237e] text-white'}`}>
                 {(idx + 1).toString().padStart(2, '0')}
               </div>
               
-              <div className="flex-1 bg-white p-4 rounded-lg shadow-sm border-l-4 border-gray-100 flex items-center justify-between group-hover:shadow-md transition-shadow print:break-inside-avoid print:p-2 print:shadow-none print:border print:border-gray-100 print:border-l-4" style={{ borderLeftColor: getStepColor(step.priorityColor) }}>
+              <div className={`flex-1 bg-white p-4 rounded-lg shadow-sm border-l-4 border-gray-100 flex items-center justify-between group-hover:shadow-md transition-shadow ${isPrinting ? 'p-2 shadow-none border border-gray-100 border-l-4' : ''}`} style={{ borderLeftColor: getStepColor(step.priorityColor), ...(isPrinting ? { pageBreakInside: 'avoid' } : {}) }}>
                 <div className="space-y-1">
-                  <h4 className="text-base font-bold text-gray-700 tracking-tight print:text-xs">{step.title}</h4>
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest print:text-[8px]">
+                  <h4 className={`font-bold text-gray-700 tracking-tight ${isPrinting ? 'text-xs' : 'text-base'}`}>{step.title}</h4>
+                  <p className={`text-gray-400 font-bold uppercase tracking-widest ${isPrinting ? 'text-[8px]' : 'text-[10px]'}`}>
                     Responsável: <span className="text-gray-600 font-normal">{step.responsible}</span>
                   </p>
                 </div>
                 
-                <div className="flex items-center gap-4 print:gap-2">
-                  <div className={`w-3 h-3 rounded-full ${getStepBg(step.priorityColor)} shadow-sm print:w-2 print:h-2 print:bg-transparent print:border`} style={{ borderColor: getStepColor(step.priorityColor) }} />
-                  <span className="text-sm font-black text-gray-800 uppercase italic print:text-[10px]">
+                <div className={`flex items-center gap-4 ${isPrinting ? 'gap-2' : ''}`}>
+                  <div className={`rounded-full shadow-sm ${isPrinting ? 'w-2 h-2 bg-white border border-[color:var(--tw-border-opacity)]' : 'w-3 h-3 ' + getStepBg(step.priorityColor)}`} style={{ borderColor: getStepColor(step.priorityColor) }} />
+                  <span className={`font-black text-gray-800 uppercase italic ${isPrinting ? 'text-[10px]' : 'text-sm'}`}>
                     {step.dueLabel}
                   </span>
                 </div>
