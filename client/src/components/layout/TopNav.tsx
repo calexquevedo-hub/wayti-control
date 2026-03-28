@@ -125,9 +125,17 @@ export function TopNav({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onOpenPreferences}>Preferências</DropdownMenuItem>
             <DropdownMenuItem>Centro de ajuda</DropdownMenuItem>
-            <DropdownMenuItem className="text-[10px] text-muted-foreground pointer-events-none">
-              Deploy: {new Date(__APP_BUILD_TIME__).toLocaleString('pt-BR')}
-            </DropdownMenuItem>
+            <div className="px-2 py-1.5 text-[10px] text-muted-foreground pointer-events-none opacity-70">
+              Deploy: {(() => {
+                try {
+                  return typeof __APP_BUILD_TIME__ !== 'undefined' 
+                    ? new Date(__APP_BUILD_TIME__).toLocaleString('pt-BR') 
+                    : 'Processando...';
+                } catch (e) {
+                  return 'Versão Atual';
+                }
+              })()}
+            </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout}>Sair</DropdownMenuItem>
           </DropdownMenuContent>
