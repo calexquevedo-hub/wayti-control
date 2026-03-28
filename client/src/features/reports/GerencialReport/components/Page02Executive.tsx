@@ -28,7 +28,7 @@ export const Page02Executive: React.FC<Props> = ({ data }) => {
           <h2 className={`font-bold uppercase tracking-wider text-xl ml-8`}>Visão Executiva do Portfólio</h2>
         </header>
  
-        <div className={`grid grid-cols-3 gap-6 mb-8 `}>
+        <div className={`grid grid-cols-3 gap-3 mb-4 `}>
           <MetricCard label="Épicos (áreas)" value={data.totalEpics} subtext="em andamento" borderColor="border-blue-600" />
           <MetricCard label="Sprint em andamento" value={data.activeSprint} subtext="vigente" borderColor="border-purple-600" />
           <MetricCard label="Tarefas em aberto" value={data.openTasks} subtext="⚠️ passivo acumulado" borderColor="border-red-600" />
@@ -73,15 +73,12 @@ const MetricCard = ({ label, value, subtext, borderColor}: any) => {
   // Check if value is a long string (like "Sprint 13")
   const isLongValue = typeof value === 'string' && value.length >= 8;
   return (
-    <div className={`bg-white rounded-xl shadow-md flex flex-col items-center justify-center text-center py-10 px-4 border-t-[10px] ${borderColor} h-full transform transition-all`}>
-      <h4 
-        className="font-black mb-4 text-blue-800 tracking-tighter" 
-        style={{ fontSize: isLongValue ? '4.5rem' : '7.5rem', lineHeight: '1' }}
-      >
+    <div className={`bg-white rounded-xl shadow-sm flex flex-col items-center justify-center text-center py-4 px-4 border-t-[6px] ${borderColor} h-full`}>
+      <h4 className={`font-black mb-1 ${isLongValue ? "text-3xl tracking-tighter" : "text-5xl"} text-slate-900`}>
         {value}
       </h4>
-      <p className="font-bold text-slate-700 uppercase mb-2 text-sm tracking-[0.2em]">{label}</p>
-      <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">{subtext}</p>
+      <p className={`font-bold text-slate-800 uppercase mb-0.5 text-[10px] tracking-wide`}>{label}</p>
+      <p className="text-[9px] text-slate-400 uppercase tracking-tight font-medium">{subtext}</p>
     </div>
   );
 };
