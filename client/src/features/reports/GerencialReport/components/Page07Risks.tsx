@@ -23,32 +23,30 @@ export const Page07Risks: React.FC<Props> = ({ data }) => {
         </h2>
       </header>
  
-      <div className={`grid grid-cols-2 gap-6 flex-1 overflow-auto pr-4 custom-scrollbar `}>
+      <div className={`flex flex-col gap-4 flex-1 overflow-auto pr-4 custom-scrollbar `}>
         {data.length > 0 ? (
           data.map((risk, idx) => (
-            <div key={idx} className={`bg-white rounded-lg shadow-md border-l-8 overflow-hidden h-fit `} style={{ borderLeftColor: getSeverityColor(risk.severity), ...({}) }}>
-              <div className={`p-4 `}>
-                <div className={`flex justify-between items-start mb-2 `}>
-                  <div className="flex items-center gap-2">
-                    {risk.severity === "Crítico" ? <ShieldAlert className={`text-red-600 w-5 h-5`} /> : <AlertTriangle className={`text-yellow-500 w-5 h-5`} />}
-                    <span className={`font-black uppercase tracking-tighter text-[10px]`} style={{ color: getSeverityColor(risk.severity) }}>
-                      {risk.severity}
-                    </span>
-                  </div>
-                  <span className={`font-bold px-2 py-0.5 rounded-full uppercase ${'text-[9px] ' + (risk.status === "Aberto" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")}`}>
-                    {risk.status}
+            <div key={idx} className={`bg-white rounded-lg shadow-sm border-l-4 overflow-hidden flex flex-col md:flex-row items-start md:items-center gap-4 p-4 border border-gray-100`} style={{ borderLeftColor: getSeverityColor(risk.severity) }}>
+              <div className="flex flex-col min-w-[100px] gap-1">
+                <div className="flex items-center gap-1.5">
+                  {risk.severity === "Crítico" ? <ShieldAlert className={`text-red-600 w-4 h-4`} /> : <AlertTriangle className={`text-yellow-500 w-4 h-4`} />}
+                  <span className={`font-black uppercase tracking-tighter text-[9px]`} style={{ color: getSeverityColor(risk.severity) }}>
+                    {risk.severity}
                   </span>
                 </div>
-                <h4 className={`font-bold text-gray-800 mb-1 leading-tight text-sm`}>{risk.title}</h4>
-                <p className={`text-gray-500 mb-3 text-[11px] line-clamp-3`}>{risk.description}</p>
-                <div className={`flex justify-between border-t pt-2 mt-auto `}>
-                  <div className={`uppercase font-bold text-gray-400 text-[8px]`}>
-                    <p>Impacto: <span className="text-gray-600">{risk.impact}</span></p>
-                  </div>
-                  <div className={`uppercase font-bold text-gray-400 text-right text-[8px]`}>
-                    <p>Dono: <span className="text-gray-600">{risk.ownerInternal}</span></p>
-                  </div>
-                </div>
+                <span className={`font-bold px-2 py-0.5 rounded-full uppercase w-fit text-center ${risk.status === "Aberto" ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"} text-[8px]`}>
+                  {risk.status}
+                </span>
+              </div>
+              
+              <div className="flex-1">
+                <h4 className={`font-bold text-gray-800 mb-0.5 leading-tight text-xs`}>{risk.title}</h4>
+                <p className={`text-gray-500 text-[11px] leading-relaxed`}>{risk.description}</p>
+              </div>
+
+              <div className={`flex flex-col text-right gap-1 min-w-[120px] pt-2 md:pt-0`}>
+                <p className="uppercase font-bold text-gray-400 text-[8px]">Impacto: <span className="text-gray-600 truncate">{risk.impact}</span></p>
+                <p className="uppercase font-bold text-gray-400 text-[8px]">Responsável: <span className="text-gray-600 truncate">{risk.ownerInternal}</span></p>
               </div>
             </div>
           ))

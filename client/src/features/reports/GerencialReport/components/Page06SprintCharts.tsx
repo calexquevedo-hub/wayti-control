@@ -88,11 +88,11 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
                   <td className={`p-2 px-4 border-b border-gray-100 font-medium truncate max-w-[150px] `}>{task.title}</td>
                   <td className={`p-2 px-4 border-b border-gray-100 `}>{task.category}</td>
                   <td className={`p-2 px-4 border-b border-gray-100 truncate max-w-[80px] `}>{task.epic}</td>
-                  <td className={`p-2 px-4 border-b border-gray-100 text-center `}>
-                    {task.done ? (
-                      <Check className="w-3 h-3 text-green-600 mx-auto" strokeWidth={3} />
+                  <td className={`p-2 px-4 border-b border-gray-100 text-center font-bold`}>
+                    {!!task.done ? (
+                      <span className="text-green-600">Sim</span>
                     ) : (
-                      <X className="w-3 h-3 text-red-600 mx-auto" strokeWidth={3} />
+                      <span className="text-red-500">Não</span>
                     )}
                   </td>
                 </tr>

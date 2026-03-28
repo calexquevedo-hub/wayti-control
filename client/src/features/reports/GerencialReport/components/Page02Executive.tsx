@@ -70,15 +70,15 @@ export const Page02Executive: React.FC<Props> = ({ data }) => {
 };
  
 const MetricCard = ({ label, value, color, description, isLong }: any) => (
-  <div className={`bg-white rounded-xl border flex flex-col items-center justify-center text-center p-4 py-6 shadow-md border-gray-100 min-h-[160px]`}>
-    <p className={`font-black tracking-tighter ${isLong ? "text-2xl" : "text-6xl"} ${color} mb-3 leading-none`}>
+  <div className={`bg-white rounded-xl border flex flex-col items-center justify-center text-center p-4 py-8 shadow-md border-gray-100 min-h-[140px] w-full`}>
+    <p className={`font-black tracking-tight ${isLong ? "text-xl pb-2" : "text-4xl"} ${color} mb-5 leading-none`}>
       {value}
     </p>
     <p className={`font-bold text-gray-500 uppercase tracking-widest text-[10px]`}>
       {label}
     </p>
     {description && (
-      <p className={`text-[8px] text-gray-400 mt-1 uppercase font-medium`}>{description}</p>
+      <p className={`text-[8px] text-gray-400 mt-2 uppercase font-medium`}>{description}</p>
     )}
   </div>
 );

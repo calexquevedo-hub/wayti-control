@@ -123,15 +123,6 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
         </div>
       )}
  
-      {/* Rodapé Oficial (Fixado na Impressão) */}
-      {isExporting && (
-        <div className="fixed bottom-0 left-0 w-full text-center text-xs bg-white py-4 z-[10000]">
-          <p className="font-bold text-gray-400 uppercase tracking-[0.3em]">
-            INTEGRA SOLUÇÕES • GERÊNCIA DE TI • {new Date().toLocaleDateString('pt-BR')}
-          </p>
-        </div>
-      )}
-
       {/* Pages Container */}
       <div id="gerencial-report-print-area" className="flex flex-col gap-12 max-w-[1200px] mx-auto pb-20">
         
