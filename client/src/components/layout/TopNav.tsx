@@ -128,9 +128,13 @@ export function TopNav({
             <div className="px-2 py-1.5 text-[10px] text-muted-foreground pointer-events-none opacity-70">
               Deploy: {(() => {
                 try {
-                  return typeof __APP_BUILD_TIME__ !== 'undefined' 
+                  const timeStr = typeof __APP_BUILD_TIME__ !== 'undefined' 
                     ? new Date(__APP_BUILD_TIME__).toLocaleString('pt-BR') 
                     : 'Processando...';
+                  const versionStr = typeof __APP_VERSION__ !== 'undefined'
+                    ? ` (${__APP_VERSION__})`
+                    : '';
+                  return `${timeStr}${versionStr}`;
                 } catch (e) {
                   return 'Versão Atual';
                 }
