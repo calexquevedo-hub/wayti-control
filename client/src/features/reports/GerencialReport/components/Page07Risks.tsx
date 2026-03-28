@@ -44,9 +44,9 @@ export const Page07Risks: React.FC<Props> = ({ data }) => {
                 <p className={`text-gray-500 text-[11px] leading-relaxed`}>{risk.description}</p>
               </div>
 
-              <div className={`flex flex-col text-right gap-1 min-w-[120px] pt-2 md:pt-0`}>
-                <p className="uppercase font-bold text-gray-400 text-[8px]">Impacto: <span className="text-gray-600 truncate">{risk.impact}</span></p>
-                <p className="uppercase font-bold text-gray-400 text-[8px]">Responsável: <span className="text-gray-600 truncate">{risk.ownerInternal}</span></p>
+              <div className={`flex flex-col text-right gap-1 min-w-[160px] pt-2 md:pt-0`}>
+                <p className="uppercase font-bold text-gray-500 text-[10px]">Impacto: <span className="text-gray-700">{risk.impact}</span></p>
+                <p className="uppercase font-bold text-gray-500 text-[10px]">Responsável: <span className="text-gray-700">{risk.ownerInternal}</span></p>
               </div>
             </div>
           ))
