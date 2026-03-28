@@ -707,7 +707,7 @@ export function Settings({
                 type="password"
                 value={emailPasswordDraft}
                 onChange={(event) => setEmailPasswordDraft(event.target.value)}
-                placeholder={emailConfig.hasPassword ? "Senha já configurada (em branco para mantes)" : "Cole aqui"}
+                placeholder={emailConfig.hasPassword ? "Senha já configurada (em branco para manter)" : "Cole aqui"}
               />
             </div>
 
@@ -752,6 +752,10 @@ export function Settings({
                   setEmailConfig((prev) => ({ ...prev, ...updated }));
                   setEmailPasswordDraft("");
                   setEmailStatus("Configuração IMAP salva com sucesso.");
+                  setTimeout(() => {
+                    setEmailDialogOpen(false);
+                    setEmailStatus("");
+                  }, 1500);
                 } catch (error: any) {
                   setEmailStatus(`Erro: ${error?.message || "Falha ao salvar configuração."}`);
                 }

@@ -121,7 +121,14 @@ router.post("/test", requireAuth, checkPermission("settings", "manage"), async (
     return res.json({ ok: true });
   } catch (error: any) {
     console.error("Falha ao testar IMAP:", error);
-    return res.status(400).json({ ok: false, message: `Falha ao conectar no IMAP: ${error?.message || "Verifique as credenciais"}` });
+    let detailedMessage = error?.message || "Verifique as credenciais";
+    
+    // Tenta ser mais específico se for erro de autenticação
+    if (detailedMessage.toLowerCase().includes("authenticate") || detailedMessage.toLowerCase().includes("invalid user")) {
+      detailedMessage = "Falha na autenticação. Verifique seu e-mail e tenha certeza de estar usando uma Senha de Aplicativo (e não a senha comum) se o MFA estiver ativo.";
+    }
+
+    return res.status(400).json({ ok: false, message: `Falha ao conectar no IMAP: ${detailedMessage}` });
   }
 });
 
