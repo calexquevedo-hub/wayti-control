@@ -38,8 +38,8 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
           <h3 className={"text-xs font-bold uppercase tracking-widest text-[#1a237e] mb-6 border-b pb-2"}>
             Tarefas por Épico ({data.name})
           </h3>
-          <div className={`flex-1 min-h-[350px] pr-8 `}>
-            <ResponsiveContainer width="100%" height="100%" minHeight={320}>
+          <div className={`flex-1 min-h-[280px] pr-8 mb-6`}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={280}>
               <BarChart data={data.tasksByEpic} layout="vertical" margin={{ left: 80, right: 30, top: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f0f0f0" />
                 <XAxis type="number" hide />
@@ -61,9 +61,12 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className={`mt-10 text-[12px] text-gray-700 font-medium italic `}>
-            {topEpic ? `Nota: O épico "${topEpic.name}" concentra ${topEpic.count} de ${data.tasks.length} tarefas (${topEpic.percentage}%).` : ""}
-          </p>
+
+          <div className={`p-3 bg-slate-50 border border-slate-200 rounded-md shadow-sm`}>
+            <p className="text-[11px] text-slate-900 font-bold leading-tight">
+              {topEpic ? `Sumário: O épico ${topEpic.name} representa ${topEpic.count} das ${data.tasks.length} tarefas (${topEpic.percentage}%).` : ""}
+            </p>
+          </div>
         </div>
  
         {/* Tabela Resumida */}
