@@ -652,28 +652,112 @@ export function Settings({
             <DialogTitle>Integração IMAP</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3 text-sm">
-            <div className="grid gap-1"><label>E-mail</label><Input value={emailConfig.emailAddress} onChange={(event) => setEmailConfig((prev) => ({ ...prev, emailAddress: event.target.value }))} /></div>
-            <div className="grid gap-1"><label>Senha</label><Input type="password" value={emailPasswordDraft} onChange={(event) => setEmailPasswordDraft(event.target.value)} placeholder={emailConfig.hasPassword ? "Senha já configurada" : "Cole aqui"} /></div>
-            <div className="grid gap-1"><label>Servidor IMAP</label><Input value={emailConfig.imapHost} onChange={(event) => setEmailConfig((prev) => ({ ...prev, imapHost: event.target.value }))} /></div>
-            <div className="grid gap-1"><label>Porta</label><Input type="number" value={emailConfig.imapPort} onChange={(event) => setEmailConfig((prev) => ({ ...prev, imapPort: Number(event.target.value) }))} /></div>
-            {emailStatus ? <p className="text-xs text-amber-300">{emailStatus}</p> : null}
+            <div className="grid gap-1">
+              <label className="font-semibold">Provedor</label>
+              <div className="grid grid-cols-3 gap-2">
+                {["Gmail", "Office365", "IMAP"].map((p) => (
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant={emailConfig.provider === p ? "default" : "outline"}
+                    onClick={() => {
+                      let host = emailConfig.imapHost;
+                      let port = emailConfig.imapPort;
+                      let tls = emailConfig.imapTls;
+
+                      if (p === "Gmail") {
+                        host = "imap.gmail.com";
+                        port = 993;
+                        tls = true;
+                      } else if (p === "Office365") {
+                        host = "outlook.office365.com";
+                        port = 993;
+                        tls = true; // SSL/TLS
+                      }
+
+                      setEmailConfig((prev) => ({
+                        ...prev,
+                        provider: p as any,
+                        imapHost: host,
+                        imapPort: port,
+                        imapTls: tls,
+                      }));
+                    }}
+                  >
+                    {p === "Office365" ? "Microsoft 365" : p}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-1">
+              <label className="font-semibold">E-mail</label>
+              <Input
+                value={emailConfig.emailAddress}
+                onChange={(event) =>
+                  setEmailConfig((prev) => ({ ...prev, emailAddress: event.target.value }))
+                }
+                placeholder="exemplo@empresa.com"
+              />
+            </div>
+
+            <div className="grid gap-1">
+              <label className="font-semibold">Senha de Aplicativo / Senha</label>
+              <Input
+                type="password"
+                value={emailPasswordDraft}
+                onChange={(event) => setEmailPasswordDraft(event.target.value)}
+                placeholder={emailConfig.hasPassword ? "Senha já configurada (em branco para mantes)" : "Cole aqui"}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1">
+                <label className="font-semibold">Servidor IMAP</label>
+                <Input
+                  value={emailConfig.imapHost}
+                  onChange={(event) =>
+                    setEmailConfig((prev) => ({ ...prev, imapHost: event.target.value }))
+                  }
+                />
+              </div>
+              <div className="grid gap-1">
+                <label className="font-semibold">Porta</label>
+                <Input
+                  type="number"
+                  value={emailConfig.imapPort}
+                  onChange={(event) =>
+                    setEmailConfig((prev) => ({ ...prev, imapPort: Number(event.target.value) }))
+                  }
+                />
+              </div>
+            </div>
+
+            {emailStatus ? (
+              <p className={`text-xs p-2 rounded ${emailStatus.includes("Erro") || emailStatus.includes("Falha") ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"}`}>
+                {emailStatus}
+              </p>
+            ) : null}
+
             <Button
+              className="mt-2"
               onClick={async () => {
                 if (!token) return;
                 try {
+                  setEmailStatus("Salvando...");
                   const updated = await updateEmailIntegrationConfig(token, {
                     ...emailConfig,
                     appPassword: emailPasswordDraft || undefined,
                   });
                   setEmailConfig((prev) => ({ ...prev, ...updated }));
                   setEmailPasswordDraft("");
-                  setEmailStatus("Configuração salva.");
+                  setEmailStatus("Configuração IMAP salva com sucesso.");
                 } catch (error: any) {
-                  setEmailStatus(error?.message ?? "Falha ao salvar configuração.");
+                  setEmailStatus(`Erro: ${error?.message || "Falha ao salvar configuração."}`);
                 }
               }}
             >
-              Salvar
+              Salvar Configuração
             </Button>
           </div>
         </DialogContent>
@@ -681,32 +765,143 @@ export function Settings({
 
       <Dialog open={systemDialogOpen} onOpenChange={setSystemDialogOpen}>
         <DialogContent className="max-w-3xl">
-          <DialogHeader><DialogTitle>Envio SMTP</DialogTitle></DialogHeader>
-          <div className="grid gap-3 text-sm">
-            <div className="grid gap-1"><label>Servidor SMTP</label><Input value={systemParams.smtpHost} onChange={(event) => setSystemParams((prev) => ({ ...prev, smtpHost: event.target.value }))} /></div>
-            <div className="grid gap-1"><label>Porta</label><Input type="number" value={systemParams.smtpPort} onChange={(event) => setSystemParams((prev) => ({ ...prev, smtpPort: Number(event.target.value) }))} /></div>
-            <div className="grid gap-1"><label>Usuário SMTP</label><Input value={systemParams.smtpUser} onChange={(event) => setSystemParams((prev) => ({ ...prev, smtpUser: event.target.value }))} /></div>
-            <div className="grid gap-1"><label>Senha SMTP</label><Input type="password" value={systemSecrets.smtpPass} onChange={(event) => setSystemSecrets((prev) => ({ ...prev, smtpPass: event.target.value }))} /></div>
-            {systemStatus ? <p className="text-xs text-amber-300">{systemStatus}</p> : null}
+          <DialogHeader>
+            <DialogTitle>Configuração de Envio SMTP</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 text-sm">
+            <div className="grid gap-2">
+              <label className="font-semibold">Provedor de E-mail</label>
+              <div className="grid grid-cols-3 gap-2">
+                {["Gmail", "Office365", "SMTP"].map((p) => (
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant={systemParams.mailProvider === p ? "default" : "outline"}
+                    onClick={() => {
+                      let host = systemParams.smtpHost;
+                      let port = systemParams.smtpPort;
+                      if (p === "Gmail") {
+                         host = "smtp.gmail.com";
+                         port = 465;
+                      } else if (p === "Office365") {
+                         host = "smtp.office365.com";
+                         port = 587; // STARTTLS
+                      }
+                      setSystemParams((prev) => ({ ...prev, mailProvider: p as any, smtpHost: host, smtpPort: port }));
+                    }}
+                  >
+                    {p === "Office365" ? "Microsoft 365" : (p === "SMTP" ? "Empresarial" : p)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-1">
+                <label className="font-semibold text-xs uppercase text-muted-foreground">Nome (Remetente)</label>
+                <Input
+                  value={systemParams.fromName}
+                  onChange={(e) => setSystemParams((prev) => ({ ...prev, fromName: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-1">
+                <label className="font-semibold text-xs uppercase text-muted-foreground">E-mail (Remetente)</label>
+                <Input
+                  value={systemParams.fromEmail}
+                  onChange={(e) => setSystemParams((prev) => ({ ...prev, fromEmail: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <hr className="border-border/40" />
+
+            <div className="grid gap-3">
+              <div className="grid gap-1">
+                <label className="font-semibold">Usuário {systemParams.mailProvider || "SMTP"}</label>
+                <Input
+                  value={systemParams.mailProvider === "Gmail" ? systemParams.gmailUser : (systemParams.mailProvider === "Office365" ? systemParams.office365User : systemParams.smtpUser)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSystemParams((prev) => {
+                      if (prev.mailProvider === "Gmail") return { ...prev, gmailUser: val };
+                      if (prev.mailProvider === "Office365") return { ...prev, office365User: val };
+                      return { ...prev, smtpUser: val };
+                    });
+                  }}
+                  placeholder="usuario@dominio.com"
+                />
+              </div>
+              <div className="grid gap-1">
+                <label className="font-semibold">Senha / Token</label>
+                <Input
+                  type="password"
+                  value={systemSecrets.smtpPass}
+                  onChange={(e) => setSystemSecrets((prev) => ({ ...prev, smtpPass: e.target.value }))}
+                  placeholder="Deixe vazio para manter a atual"
+                />
+              </div>
+            </div>
+
+            {systemParams.mailProvider === "SMTP" && (
+              <div className="grid grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg">
+                <div className="grid gap-1">
+                  <label className="text-xs font-bold uppercase">Servidor</label>
+                  <Input
+                    value={systemParams.smtpHost}
+                    onChange={(e) => setSystemParams((prev) => ({ ...prev, smtpHost: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-1">
+                  <label className="text-xs font-bold uppercase">Porta</label>
+                  <Input
+                    type="number"
+                    value={systemParams.smtpPort}
+                    onChange={(e) => setSystemParams((prev) => ({ ...prev, smtpPort: Number(e.target.value) }))}
+                  />
+                </div>
+              </div>
+            )}
+
+            {systemStatus ? (
+              <p className={`text-xs p-2 rounded ${systemStatus.includes("Erro") || systemStatus.includes("Falha") ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"}`}>
+                {systemStatus}
+              </p>
+            ) : null}
+
             <Button
               onClick={async () => {
                 if (!token) return;
                 try {
-                  const updated = await updateSystemParams(token, {
-                    smtpHost: systemParams.smtpHost,
-                    smtpPort: systemParams.smtpPort,
-                    smtpUser: systemParams.smtpUser,
-                    smtpPass: systemSecrets.smtpPass || undefined,
-                  });
+                  setSystemStatus("Salvando...");
+                  const payload: any = {
+                    mailProvider: systemParams.mailProvider,
+                    fromName: systemParams.fromName,
+                    fromEmail: systemParams.fromEmail,
+                  };
+
+                  if (systemParams.mailProvider === "Gmail") {
+                    payload.gmailUser = systemParams.gmailUser;
+                    if (systemSecrets.smtpPass) payload.gmailAppPassword = systemSecrets.smtpPass;
+                  } else if (systemParams.mailProvider === "Office365") {
+                    payload.office365User = systemParams.office365User;
+                    if (systemSecrets.smtpPass) payload.office365Pass = systemSecrets.smtpPass;
+                  } else {
+                    payload.smtpHost = systemParams.smtpHost;
+                    payload.smtpPort = systemParams.smtpPort;
+                    payload.smtpUser = systemParams.smtpUser;
+                    if (systemSecrets.smtpPass) payload.smtpPass = systemSecrets.smtpPass;
+                  }
+
+                  const updated = await updateSystemParams(token, payload);
                   setSystemParams((prev) => ({ ...prev, ...updated }));
                   setSystemSecrets((prev) => ({ ...prev, smtpPass: "" }));
-                  setSystemStatus("Configuração SMTP salva.");
+                  setSystemStatus("Configuração SMTP salva com sucesso.");
                 } catch (error: any) {
-                  setSystemStatus(error?.message ?? "Falha ao salvar SMTP.");
+                  setSystemStatus(`Erro: ${error?.message || "Falha ao salvar SMTP."}`);
                 }
               }}
             >
-              Salvar
+              Salvar Configuração SMTP
             </Button>
           </div>
         </DialogContent>

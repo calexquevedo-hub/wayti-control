@@ -125,6 +125,18 @@ app.get("*", (req, res) => {
   });
 });
 // --- FIM DA CONFIGURAÇÃO ---
+ 
+// Global Error Handler
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error("Unhandled Error:", err);
+  const status = err.status || 500;
+  const message = err.message || "Erro interno no servidor.";
+  res.status(status).json({
+    error: true,
+    message,
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+  });
+});
 
 async function ensureSystemProfiles() {
   const count = await ProfileModel.countDocuments();
