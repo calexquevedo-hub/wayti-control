@@ -42,11 +42,11 @@ export const Page05SprintTasks: React.FC<Props> = ({ data }) => {
               <th className={`p-3 px-6 w-16 text-center`}>Concl.</th>
             </tr>
           </thead>
-          <tbody className="text-[11px]">
-            {data.tasks.slice(0, 20).map((task, idx) => (
+          <tbody className="text-[10px]">
+            {data.tasks.slice(0, 24).map((task, idx) => (
               <tr key={idx} className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} `} style={{}}>
-                <td className={`p-2 px-6 border-b border-gray-100 font-bold text-center `}>#{task.id}</td>
-                <td className={`p-2 px-6 border-b border-gray-100 font-medium text-xs `}>
+                <td className={`p-1.5 px-6 border-b border-gray-100 font-bold text-center `}>#{task.id}</td>
+                <td className={`p-1.5 px-6 border-b border-gray-100 font-medium `}>
                   {task.title}
                   {task.isCarryover && (
                     <span className={`ml-2 uppercase font-bold px-1 rounded border bg-orange-100 border-orange-200 text-orange-700 text-[8px]`}>
@@ -54,13 +54,13 @@ export const Page05SprintTasks: React.FC<Props> = ({ data }) => {
                     </span>
                   )}
                 </td>
-                <td className={`p-2 px-6 border-b border-gray-100 whitespace-nowrap `}>{task.category}</td>
-                <td className={`p-2 px-6 border-b border-gray-100 `}>{task.epic}</td>
-                <td className={`p-2 px-6 border-b border-gray-100 text-center `}>
-                  {task.done ? (
-                    <div className="flex justify-center"><Check className={`text-green-600 font-black stroke-[4px] w-4 h-4`} /></div>
+                <td className={`p-1.5 px-6 border-b border-gray-100 whitespace-nowrap `}>{task.category}</td>
+                <td className={`p-1.5 px-6 border-b border-gray-100 `}>{task.epic}</td>
+                <td className={`p-1.5 px-6 border-b border-gray-100 text-center `}>
+                  {!!task.done ? (
+                    <div className="flex justify-center"><Check className={`text-green-600 font-black stroke-[4px] w-3.5 h-3.5`} /></div>
                   ) : (
-                    <div className="flex justify-center"><X className={`text-red-600 font-black stroke-[4px] w-4 h-4`} /></div>
+                    <div className="flex justify-center"><X className={`text-red-600 font-black stroke-[4px] w-3.5 h-3.5`} /></div>
                   )}
                 </td>
               </tr>

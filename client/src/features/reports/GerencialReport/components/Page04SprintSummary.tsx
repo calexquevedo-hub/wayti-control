@@ -37,15 +37,15 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
           </h2>
         </header>
 
-        <div className={`flex items-center gap-4 text-red-700 bg-red-50 border border-red-200 p-4 rounded-md mb-8`}>
-          <AlertCircle className={"w-8 h-8 flex-shrink-0"} />
+        <div className={`flex items-center gap-3 text-red-700 bg-red-50 border border-red-200 p-2.5 rounded-md mb-6`}>
+          <AlertCircle className={"w-6 h-6 flex-shrink-0"} />
           <div>
-            <p className={`font-bold uppercase tracking-widest text-xs`}>Atenção: Passivo Acumulado / Carryover</p>
-            <p className={"text-sm"}>A sprint atual contém itens não finalizados de períodos anteriores que impactam a capacidade produtiva.</p>
+            <p className={`font-bold uppercase tracking-widest text-[10px]`}>Atenção: Passivo Acumulado / Carryover</p>
+            <p className={"text-[11px] leading-tight"}>A sprint contém itens não finalizados de períodos anteriores que impactam a capacidade produtiva.</p>
           </div>
         </div>
-
-        <div className={`grid grid-cols-6 gap-3 mb-8`}>
+ 
+        <div className={`grid grid-cols-6 gap-3 mb-6`}>
           <MiniCard label="Carryover Anterior" value={data.carryoverFromLast} color="text-red-600" />
           <MiniCard label="Novas Tarefas" value={data.newTasks} color="text-blue-600" />
           <MiniCard label="Taxa Carryover" value={`${Math.round(data.carryoverRate)}%`} color="text-orange-600" />
@@ -53,7 +53,7 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
           <MiniCard label="Dias Restantes" value={data.daysRemaining} color="text-gray-800" />
           <MiniCard label="Data Fim" value={data.endDate} color="text-gray-800" isDate />
         </div>
-
+ 
         <div className={`flex-1 overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200`}>
           <h3 className={"bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest"}>
             Tarefas planejadas para a sprint
@@ -94,8 +94,8 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
 };
  
 const MiniCard = ({ label, value, color, isDate}: any) => (
-  <div className={`bg-white rounded border flex flex-col items-center justify-center text-center p-4 shadow-sm border-gray-200 min-h-[100px] rounded-lg`}>
-    <p className={`font-black ${isDate ? ("text-2xl tracking-normal") : ("text-4xl tracking-tighter")} ${color}`}>{value}</p>
-    <p className={`font-bold text-gray-400 uppercase tracking-widest mt-2 text-[9px]`}>{label}</p>
+  <div className={`bg-white rounded border flex flex-col items-center justify-center text-center p-3 shadow-sm border-gray-200 min-h-[80px] rounded-lg`}>
+    <p className={`font-black ${isDate ? ("text-xl tracking-normal") : ("text-3xl tracking-tighter")} ${color}`}>{value}</p>
+    <p className={`font-bold text-gray-400 uppercase tracking-widest mt-1 text-[8px]`}>{label}</p>
   </div>
 );

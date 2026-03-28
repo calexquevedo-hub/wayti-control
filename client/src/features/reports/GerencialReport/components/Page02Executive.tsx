@@ -69,19 +69,19 @@ export const Page02Executive: React.FC<Props> = ({ data }) => {
   );
 };
  
-const MetricCard = ({ label, value, subtext, borderColor}: any) => {
-  // Check if value is a long string (like "Sprint 13")
-  const isLongValue = typeof value === 'string' && value.length >= 8;
-  return (
-    <div className={`bg-white rounded-xl shadow-sm flex flex-col items-center justify-center text-center py-4 px-4 border-t-[6px] ${borderColor} h-full`}>
-      <h4 className={`font-black mb-1 ${isLongValue ? "text-3xl tracking-tighter" : "text-5xl"} text-slate-900`}>
-        {value}
-      </h4>
-      <p className={`font-bold text-slate-800 uppercase mb-0.5 text-[10px] tracking-wide`}>{label}</p>
-      <p className="text-[9px] text-slate-400 uppercase tracking-tight font-medium">{subtext}</p>
-    </div>
-  );
-};
+const MetricCard = ({ label, value, color, description, isLong }: any) => (
+  <div className={`bg-white rounded-xl border flex flex-col items-center justify-center text-center p-4 py-6 shadow-md border-gray-100 min-h-[160px]`}>
+    <p className={`font-black tracking-tighter ${isLong ? "text-2xl" : "text-6xl"} ${color} mb-3 leading-none`}>
+      {value}
+    </p>
+    <p className={`font-bold text-gray-500 uppercase tracking-widest text-[10px]`}>
+      {label}
+    </p>
+    {description && (
+      <p className={`text-[8px] text-gray-400 mt-1 uppercase font-medium`}>{description}</p>
+    )}
+  </div>
+);
  
 const StatusBadge = ({ status}: { status: string }) => {
   const isCritical = status === "Crítico";

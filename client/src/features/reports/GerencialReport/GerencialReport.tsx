@@ -4,6 +4,7 @@ import { Page01Cover } from "./components/Page01Cover";
 import { Page02Executive } from "./components/Page02Executive";
 import { Page03History } from "./components/Page03History";
 import { Page04SprintSummary } from "./components/Page04SprintSummary";
+import { Page05SprintTasks } from "./components/Page05SprintTasks";
 import { Page06SprintCharts } from "./components/Page06SprintCharts";
 import { Page07Risks } from "./components/Page07Risks";
 import { Page08NextSteps } from "./components/Page08NextSteps";
@@ -148,6 +149,10 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
  
         <div className="gerencial-page aspect-[16/9] w-full bg-white relative">
           <Page04SprintSummary data={data.sprintSummary} />
+        </div>
+ 
+        <div className="gerencial-page aspect-[16/9] w-full bg-white relative">
+          <Page05SprintTasks data={data.sprintSummary} />
         </div>
  
         <div className="gerencial-page aspect-[16/9] w-full bg-white relative">
