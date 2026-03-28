@@ -37,12 +37,8 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
           </h2>
         </header>
 
-        <div className={`flex items-center gap-3 text-red-700 bg-red-50 border border-red-200 p-2.5 rounded-md mb-6`}>
-          <AlertCircle className={"w-6 h-6 flex-shrink-0"} />
-          <div>
-            <p className={`font-bold uppercase tracking-widest text-[10px]`}>Atenção: Passivo Acumulado / Carryover</p>
-            <p className={"text-[11px] leading-tight"}>A sprint contém itens não finalizados de períodos anteriores que impactam a capacidade produtiva.</p>
-          </div>
+        <div className={`text-[10px] text-red-600 font-semibold uppercase tracking-widest mb-6`}>
+          📌 Observação: A sprint contém itens não finalizados de períodos anteriores (Carryover).
         </div>
  
         <div className={`grid grid-cols-6 gap-3 mb-6`}>

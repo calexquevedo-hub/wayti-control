@@ -56,11 +56,11 @@ export const Page05SprintTasks: React.FC<Props> = ({ data }) => {
                 </td>
                 <td className={`p-1.5 px-6 border-b border-gray-100 whitespace-nowrap `}>{task.category}</td>
                 <td className={`p-1.5 px-6 border-b border-gray-100 `}>{task.epic}</td>
-                <td className={`p-1.5 px-6 border-b border-gray-100 text-center `}>
+                <td className={`p-1.5 px-6 border-b border-gray-100 text-center font-bold`}>
                   {!!task.done ? (
-                    <div className="flex justify-center"><Check className={`text-green-600 font-black stroke-[4px] w-3.5 h-3.5`} /></div>
+                    <span className="text-green-600">Sim</span>
                   ) : (
-                    <div className="flex justify-center"><X className={`text-red-600 font-black stroke-[4px] w-3.5 h-3.5`} /></div>
+                    <span className="text-red-500">Não</span>
                   )}
                 </td>
               </tr>
