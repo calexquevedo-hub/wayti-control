@@ -125,6 +125,9 @@ export function TopNav({
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onOpenPreferences}>Preferências</DropdownMenuItem>
             <DropdownMenuItem>Centro de ajuda</DropdownMenuItem>
+            <DropdownMenuItem className="text-[10px] text-muted-foreground pointer-events-none">
+              Deploy: {new Date(__APP_BUILD_TIME__).toLocaleString('pt-BR')}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout}>Sair</DropdownMenuItem>
           </DropdownMenuContent>
