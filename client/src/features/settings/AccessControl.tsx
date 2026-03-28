@@ -90,6 +90,7 @@ export function AccessControl({
     email: "",
     profileId: "",
     isActive: true,
+    group: "",
   });
   const [tempPassword, setTempPassword] = useState<string | null>(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
@@ -138,7 +139,7 @@ export function AccessControl({
 
   const openCreateUser = () => {
     setUserMode("create");
-    setUserDraft({ id: "", name: "", email: "", profileId: "", isActive: true });
+    setUserDraft({ id: "", name: "", email: "", profileId: "", isActive: true, group: "" });
     setTempPassword(null);
     setUserDialogOpen(true);
   };
@@ -153,6 +154,7 @@ export function AccessControl({
       email: user.email,
       profileId,
       isActive: user.isActive,
+      group: user.group ?? "",
     });
     setTempPassword(null);
     setUserDialogOpen(true);
@@ -170,6 +172,7 @@ export function AccessControl({
           name: userDraft.name.trim(),
           email: userDraft.email.trim(),
           profileId: userDraft.profileId,
+          group: userDraft.group.trim(),
         });
         setUsers((prev) => [data.user, ...prev]);
         setTempPassword(data.tempPassword);
@@ -180,6 +183,7 @@ export function AccessControl({
           name: userDraft.name.trim(),
           profileId: userDraft.profileId,
           isActive: userDraft.isActive,
+          group: userDraft.group.trim(),
         });
         setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
         setUsersStatus("Usuário atualizado.");
@@ -322,6 +326,7 @@ export function AccessControl({
                         {typeof user.profile === "string"
                           ? profileNameById.get(user.profile) ?? "Sem perfil"
                           : user.profile?.name ?? "Sem perfil"}
+                        {user.group ? ` • ${user.group}` : ""}
                       </div>
                     </div>
                     <div className="mt-2 text-xs text-muted-foreground">
@@ -355,6 +360,7 @@ export function AccessControl({
                                   ? data.user.profile
                                   : data.user.profile?.id ?? "",
                               isActive: data.user.isActive,
+                              group: data.user.group ?? "",
                             });
                           } catch (error: any) {
                             setUsersStatus(error?.message ?? "Falha ao resetar senha.");
@@ -486,6 +492,14 @@ export function AccessControl({
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="grid gap-1">
+              <Label>Grupo (Empresa/Departamento)</Label>
+              <Input
+                value={userDraft.group}
+                onChange={(event) => setUserDraft((prev) => ({ ...prev, group: event.target.value }))}
+                placeholder="Ex: Xico Corp"
+              />
             </div>
             <div className="grid gap-1">
               <Label>Status</Label>

@@ -17,6 +17,7 @@ interface Props {
   token?: string;
   sprintId?: string;
   onClose?: () => void;
+  portalLogoUrl?: string;
 }
 
 export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
@@ -112,7 +113,7 @@ export const GerencialReport: React.FC<Props> = ({ token, sprintId }) => {
         <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md p-4 mb-8 flex justify-between items-center border-b shadow-sm exporting-hidden">
           <div className="space-y-1">
             <h2 className="text-xl font-bold text-gray-800">Preview do Relatório Gerencial</h2>
-            <p className="text-xs text-gray-500 font-mono tracking-tighter">
+            <p className="text-xs text-gray-500 font-mono tracking-normal">
               {data.coverInfo.sprintName} · {data.coverInfo.period}
             </p>
           </div>

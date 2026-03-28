@@ -1519,7 +1519,7 @@ export async function updateDomainItem(
   return (await response.json()) as DomainItem;
 }
 
-export async function createUser(token: string, payload: { name: string; email: string; profileId: string }) {
+export async function createUser(token: string, payload: { name: string; email: string; profileId: string; group?: string }) {
   const response = await fetch(`${API_URL}/api/users`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -1532,7 +1532,7 @@ export async function createUser(token: string, payload: { name: string; email: 
   return (await response.json()) as { user: User; tempPassword: string };
 }
 
-export async function updateUser(token: string, id: string, payload: { name: string; profileId: string; isActive: boolean }) {
+export async function updateUser(token: string, id: string, payload: { name: string; profileId: string; isActive: boolean; group?: string }) {
   const response = await fetch(`${API_URL}/api/users/${id}`, {
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },

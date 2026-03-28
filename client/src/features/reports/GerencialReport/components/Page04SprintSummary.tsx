@@ -32,12 +32,12 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
       
       <div className="flex-1 flex flex-col" style={{}}>
         <header className={"bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8"}>
-          <h2 className={`font-bold uppercase tracking-wider text-xl ml-8`}>
+          <h2 className={`font-bold uppercase tracking-tight text-xl ml-8`}>
             {data.name} | {data.dates} — {data.status}
           </h2>
         </header>
 
-        <div className={`text-[10px] text-red-600 font-semibold uppercase tracking-widest mb-6`}>
+        <div className={`text-[10px] text-red-600 font-semibold uppercase tracking-normal mb-6`}>
           📌 Observação: A sprint contém itens não finalizados de períodos anteriores (Carryover).
         </div>
  
@@ -51,7 +51,7 @@ export const Page04SprintSummary: React.FC<Props> = ({ data }) => {
         </div>
  
         <div className={`flex-1 overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200`}>
-          <h3 className={"bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-widest"}>
+          <h3 className={"bg-[#1a237e] text-white text-[10px] font-bold uppercase p-2 px-6 tracking-normal"}>
             Tarefas planejadas para a sprint
           </h3>
           <table className={`w-full text-left border-collapse `}>

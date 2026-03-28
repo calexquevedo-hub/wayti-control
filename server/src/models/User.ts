@@ -14,6 +14,7 @@ const UserSchema = new Schema(
     emailChangeExpiresAt: { type: Date },
     locale: { type: String, default: "pt-BR" },
     theme: { type: String, enum: ["light", "dark"], default: "dark" },
+    group: { type: String, trim: true },
     notificationPrefs: {
       email: { type: Boolean, default: true },
       slack: { type: Boolean, default: true },

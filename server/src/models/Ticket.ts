@@ -27,6 +27,7 @@ const TicketSchema = new Schema(
     resolutionNotes: { type: String },
     requesterId: { type: Schema.Types.ObjectId, ref: "User" },
     requesterEmail: { type: String },
+    group: { type: String, trim: true },
     openedAt: { type: Date, required: true },
     resolvedAt: { type: Date },
     closedAt: { type: Date },

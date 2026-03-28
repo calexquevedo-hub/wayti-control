@@ -27,7 +27,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
       <div className={`absolute left-0 top-0 bottom-0 bg-[#448aff] w-3`} />
       
       <header className={"bg-[#1a237e] text-white p-4 -mx-8 -mt-8 mb-8"}>
-        <h2 className={`font-bold uppercase tracking-wider text-xl ml-8`}>
+        <h2 className={`font-bold uppercase tracking-tight text-xl ml-8`}>
           {data.name} | {data.dates} — DETALHAMENTO
         </h2>
       </header>
@@ -35,7 +35,7 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
       <div className={`grid grid-cols-2 gap-8 flex-1 overflow-hidden `}>
         {/* Gráfico */}
         <div className="flex flex-col" style={{}}>
-          <h3 className={"text-xs font-bold uppercase tracking-widest text-[#1a237e] mb-6 border-b pb-2"}>
+          <h3 className={"text-xs font-bold uppercase tracking-normal text-[#1a237e] mb-6 border-b pb-2"}>
             Tarefas por Épico ({data.name})
           </h3>
           <div className={`flex-1 min-h-[280px] pr-8 mb-6`}>

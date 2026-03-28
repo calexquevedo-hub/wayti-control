@@ -34,7 +34,7 @@ router.get("/", requireAuth, checkPermission("users", "view"), async (_req, res)
 
 router.post("/", requireAuth, checkPermission("users", "manage"), async (req, res) => {
   try {
-    const payload = req.body as { email: string; name: string; profileId: string };
+    const payload = req.body as { email: string; name: string; profileId: string; group?: string };
     if (!payload.email || !payload.name || !payload.profileId) {
       return res.status(400).json({ message: "email, name e profileId são obrigatórios." });
     }
@@ -58,6 +58,7 @@ router.post("/", requireAuth, checkPermission("users", "manage"), async (req, re
       email,
       name: payload.name.trim(),
       profile: payload.profileId,
+      group: payload.group?.trim(),
       passwordHash: await bcrypt.hash(tempPassword, 10),
       isActive: true,
       mustChangePassword: true,
@@ -71,7 +72,7 @@ router.post("/", requireAuth, checkPermission("users", "manage"), async (req, re
 });
 
 router.patch("/:id", requireAuth, checkPermission("users", "manage"), async (req, res) => {
-  const payload = req.body as { name?: string; profileId?: string; isActive?: boolean };
+  const payload = req.body as { name?: string; profileId?: string; isActive?: boolean; group?: string };
   if (payload.profileId) {
     const profile = await ProfileModel.findById(payload.profileId);
     if (!profile) {
@@ -84,6 +85,7 @@ router.patch("/:id", requireAuth, checkPermission("users", "manage"), async (req
       name: payload.name,
       profile: payload.profileId,
       isActive: payload.isActive,
+      group: payload.group,
     },
     { new: true }
   );

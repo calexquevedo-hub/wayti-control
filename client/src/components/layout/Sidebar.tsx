@@ -73,14 +73,20 @@ interface SidebarProps {
 }
 
 export function Sidebar({ active, onSelect, permissions }: SidebarProps) {
+  const isRequester = !!permissions?.tickets?.view && !!permissions?.tickets?.create && !permissions?.tickets?.edit;
+
   const visibleGroups = navGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => canAccessPage(permissions, item.value)),
+      items: group.items.filter((item) => {
+        // Se for solicitante, só vê o Portal
+        if (isRequester) return item.value === "Portal";
+        return canAccessPage(permissions, item.value);
+      }),
     }))
     .filter((group) => group.items.length > 0);
 
-  const showFooterSettings = canAccessPage(permissions, footerSettingsItem.value);
+  const showFooterSettings = !isRequester && canAccessPage(permissions, footerSettingsItem.value);
   const FooterIcon = footerSettingsItem.icon;
 
   return (

@@ -44,6 +44,9 @@ const SystemParamsSchema = new Schema(
       lowHours: { type: Number, default: 240 },
     },
     emailSignature: { type: String, default: "" },
+    portalWelcomeTitle: { type: String, default: "Olá!" },
+    portalWelcomeSubtitle: { type: String, default: "Como o time de TI pode facilitar o seu dia hoje? Escolha um serviço ou busque ajuda rápida." },
+    portalLogoUrl: { type: String, default: "" },
     cannedResponses: [
       new Schema(
         {

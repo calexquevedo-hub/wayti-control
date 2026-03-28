@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { canAccessPage } from "@/lib/permissions";
+import { Layers } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { ProfilePermissions } from "@/types";
 
 type TopNavItem = {
@@ -64,6 +66,8 @@ interface TopNavProps {
   userEmail: string;
   onLogout: () => void;
   onOpenPreferences: () => void;
+  fullWidth?: boolean;
+  portalLogoUrl?: string;
 }
 
 export function TopNav({
@@ -73,6 +77,8 @@ export function TopNav({
   userEmail,
   onLogout,
   onOpenPreferences,
+  fullWidth = false,
+  portalLogoUrl,
 }: TopNavProps) {
   const allowedGroups = navGroups
     .map((group) => ({
@@ -83,31 +89,46 @@ export function TopNav({
 
   return (
     <header className="flex items-center justify-between gap-4 border-b border-border bg-card/70 px-6 py-4 backdrop-blur">
-      <div className="flex items-center">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-64">
-            {allowedGroups.map((group, index) => (
-              <div key={group.title}>
-                {index > 0 ? <DropdownMenuSeparator /> : null}
-                <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {group.title}
+      <div className="flex items-center gap-4">
+        {fullWidth ? (
+          <div className="flex items-center gap-3">
+            {portalLogoUrl ? (
+              <img src={portalLogoUrl} alt="Logo" className="h-8 w-auto object-contain" />
+            ) : (
+              <>
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                  <Layers className="h-5 w-5" />
                 </div>
-                {group.items.map((item) => (
-                  <DropdownMenuItem key={item.value} onClick={() => onSelect(item.value)}>
-                    <span className={item.value === active ? "font-semibold text-primary" : ""}>
-                      {item.label}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
-              </div>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <h1 className="text-xl font-bold text-foreground">WayTI</h1>
+              </>
+            )}
+          </div>
+        ) : (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Menu">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64">
+              {allowedGroups.map((group, index) => (
+                <div key={group.title}>
+                  {index > 0 ? <DropdownMenuSeparator /> : null}
+                  <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {group.title}
+                  </div>
+                  {group.items.map((item) => (
+                    <DropdownMenuItem key={item.value} onClick={() => onSelect(item.value)}>
+                      <span className={item.value === active ? "font-semibold text-primary" : ""}>
+                        {item.label}
+                      </span>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" aria-label="Notificações">

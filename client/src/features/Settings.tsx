@@ -34,7 +34,8 @@ type SubKey =
   | "respostas-prontas"
   | "integracao-imap"
   | "envio-smtp"
-  | "assinatura-padrao";
+  | "assinatura-padrao"
+  | "personalizacao-portal";
 
 interface SettingsProps {
   notifications?: NotificationItem[];
@@ -131,6 +132,7 @@ const sections: Array<{
     items: [
       { sub: "politicas-de-sla", label: "Políticas de SLA", canView: (p) => !!p?.settings?.manage },
       { sub: "respostas-prontas", label: "Respostas Prontas", canView: (p) => !!p?.settings?.manage },
+      { sub: "personalizacao-portal", label: "Customização do Portal", canView: (p) => !!p?.settings?.manage },
     ],
   },
   {
@@ -362,6 +364,56 @@ export function Settings({
                 <p className="mt-2 text-xs text-muted-foreground line-clamp-3">{tpl.body}</p>
               </div>
             ))}
+          </CardContent>
+        </Card>
+      );
+    }
+
+    if (activeSub === "personalizacao-portal") {
+      return (
+        <Card className="bg-card/70">
+          <CardHeader>
+            <CardTitle>Customização do Portal do Cliente</CardTitle>
+            <CardDescription>Configure a mensagem de boas-vindas do portal.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-semibold">Título de Boas-vindas</label>
+              <Input
+                value={systemParams.portalWelcomeTitle || ""}
+                onChange={(e) => setSystemParams(prev => ({ ...prev, portalWelcomeTitle: e.target.value }))}
+                placeholder="Ex: Olá!"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-semibold">URL do Logo (Opcional)</label>
+              <Input
+                value={systemParams.portalLogoUrl || ""}
+                onChange={(e) => setSystemParams(prev => ({ ...prev, portalLogoUrl: e.target.value }))}
+                placeholder="https://sua-empresa.com/logo.png"
+              />
+              <p className="text-[10px] text-muted-foreground">Deixe em branco para usar o logo padrão da WayTI.</p>
+            </div>
+            {systemStatus ? <p className="text-xs text-amber-300">{systemStatus}</p> : null}
+            <Button
+              onClick={async () => {
+                if (!token) return;
+                try {
+                  setSystemStatus("Salvando...");
+                  const updated = await updateSystemParams(token, {
+                    portalWelcomeTitle: systemParams.portalWelcomeTitle,
+                    portalWelcomeSubtitle: systemParams.portalWelcomeSubtitle,
+                    portalLogoUrl: systemParams.portalLogoUrl,
+                  });
+                  setSystemParams(prev => ({ ...prev, ...updated }));
+                  setSystemStatus("Customização do portal salva.");
+                } catch (error: any) {
+                  setSystemStatus(error?.message ?? "Falha ao salvar customização.");
+                }
+              }}
+            >
+              Salvar Customização
+            </Button>
           </CardContent>
         </Card>
       );

@@ -33,6 +33,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
       id: user.id,
       email: user.email,
       profile: user.profile,
+      group: user.group,
       mustChangePassword: user.mustChangePassword,
     };
     if (user.mustChangePassword && !req.originalUrl.includes("/auth/change-password")) {

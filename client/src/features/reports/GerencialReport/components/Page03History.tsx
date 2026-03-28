@@ -34,11 +34,12 @@ export const Page03History: React.FC<Props> = ({ data }) => {
       </div>
  
       {/* Legend - Positioned at bottom */}
-      <div className="mt-auto flex gap-12 text-[10px] font-bold uppercase tracking-widest text-gray-500 pb-8 justify-center">
-        <LegendItem color="bg-green-500" label="Concluído" />
-        <LegendItem color="bg-yellow-400" label="Carryover" />
-        <LegendItem color="bg-red-500" label="Carryover crítico" />
-        <LegendItem color="bg-purple-500" label="Em andamento" />
+      <div className="absolute bottom-6 left-0 right-0 flex flex-wrap gap-8 text-[9px] font-bold uppercase tracking-tight text-gray-500 justify-center px-8 border-t border-gray-100 pt-4 bg-white/50 backdrop-blur-sm">
+        <LegendItem color="bg-green-600" label="Concluída" />
+        <LegendItem color="bg-yellow-500" label="Carryover" />
+        <LegendItem color="bg-red-600" label="Crítico" />
+        <LegendItem color="bg-purple-600" label="Em andamento" />
+        <LegendItem color="bg-gray-400" label="Futura" />
       </div>
     </div>
   );

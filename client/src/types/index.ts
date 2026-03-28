@@ -115,6 +115,7 @@ export interface Ticket {
   subject: string;
   description?: string;
   resolutionNotes?: string;
+  group?: string;
   openedAt: Date;
   resolvedAt?: Date;
   closedAt?: Date;
@@ -398,6 +399,7 @@ export interface User {
   isActive: boolean;
   mustChangePassword: boolean;
   lastLoginAt?: Date;
+  group?: string;
   locale?: string;
   theme?: "light" | "dark";
   notificationPrefs?: {
@@ -434,6 +436,9 @@ export interface SystemParams {
     lowHours: number;
   };
   emailSignature?: string;
+  portalWelcomeTitle?: string;
+  portalWelcomeSubtitle?: string;
+  portalLogoUrl?: string;
   cannedResponses?: Array<{
     id: string;
     title: string;

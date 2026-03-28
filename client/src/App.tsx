@@ -30,6 +30,7 @@ import {
   rejectTicket,
   requestEmailChange,
   verifyEmailChange,
+  fetchSystemParams,
   updateMyProfile,
 } from "@/lib/api";
 import { loadViewsState, setActiveView } from "@/features/demands/views/views.storage";
@@ -40,6 +41,7 @@ import type {
   ExternalParty,
   KnowledgeArticle,
   ServiceCatalog,
+  SystemParams,
   Ticket,
   User,
 } from "@/types";
@@ -211,6 +213,7 @@ export default function App() {
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSaving, setPasswordSaving] = useState(false);
+  const [systemParams, setSystemParams] = useState<SystemParams | null>(null);
   const [prefOpen, setPrefOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailCode, setEmailCode] = useState("");
@@ -279,6 +282,11 @@ export default function App() {
     if (fallback) setActive(fallback);
   }, [user, permissions]);
 
+  useEffect(() => {
+    if (!user?.token) return;
+    fetchSystemParams(user.token).then(setSystemParams).catch(() => null);
+  }, [user?.token]);
+
   const content = useMemo(() => {
     if (!user) return null;
     switch (active) {
@@ -329,12 +337,26 @@ export default function App() {
       case "Portal":
         return (
           <Portal
+            currentUser={user}
+            tickets={tickets}
+            assets={assets}
             services={services}
             articles={articles}
+            portalWelcomeTitle={systemParams?.portalWelcomeTitle}
+            portalWelcomeSubtitle={systemParams?.portalWelcomeSubtitle}
+            portalLogoUrl={systemParams?.portalLogoUrl}
             onCreateTicket={async (payload) => {
               if (!user?.token) return;
               const created = await createTicket(user.token, payload);
               setTickets((prev) => [created, ...prev]);
+            }}
+            onAddComment={async (id, message) => {
+              if (!user?.token || !user?.email) return;
+              const updated = await addTicketComment(user.token, id, {
+                message,
+                author: user.email,
+              });
+              setTickets((prev) => prev.map((t) => (t.id === id ? updated : t)));
             }}
           />
         );
@@ -430,6 +452,7 @@ export default function App() {
     activeTicketViewId,
     routePath,
     routeSearch,
+    systemParams,
   ]);
 
   useEffect(() => {
@@ -620,6 +643,7 @@ export default function App() {
     <AppShell
       active={active}
       onSelect={handleSelectPage}
+      fullWidth={active === "Portal" && !permissions?.tickets?.edit}
       onSelectDemandView={(viewId) => {
         setActiveDemandViewId(viewId);
         setActiveView("demands", viewId);
@@ -635,6 +659,7 @@ export default function App() {
       userEmail={user.email}
       permissions={permissions}
       onLogout={logout}
+      portalLogoUrl={systemParams?.portalLogoUrl}
       onOpenPreferences={() => {
         setPrefOpen(true);
         setEmailStep("request");

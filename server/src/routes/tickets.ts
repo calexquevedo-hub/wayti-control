@@ -98,11 +98,12 @@ function isPortalUser(profile?: any) {
   );
 }
 
-function canAccessTicket(ticket: any, userId?: string) {
+function canAccessTicket(ticket: any, userId?: string, userGroup?: string) {
   if (!ticket) return false;
   if (!userId) return false;
-  if (!ticket.requesterId) return false;
-  return ticket.requesterId.toString() === userId;
+  if (ticket.requesterId?.toString() === userId) return true;
+  if (userGroup && ticket.group === userGroup) return true;
+  return false;
 }
 
 async function notifyApprovers({
@@ -168,11 +169,23 @@ async function nextTicketCode() {
 router.get("/", requireAuth, checkPermission("tickets", "view"), async (req, res) => {
   const { system, status, demandId, relatedAssetId } = req.query as Record<string, string | undefined>;
   const { queue, overdue, unlinked } = req.query as Record<string, string | undefined>;
-  const filter: Record<string, unknown> = {};
-  const userId = res.locals.user?.id as string | undefined;
-  if (isPortalUser(res.locals.user?.profile) && userId) {
-    filter.requesterId = userId;
+  const filter: Record<string, any> = {};
+  
+  const user = res.locals.user;
+  const permissions = user?.profile?.permissions;
+  const canEdit = !!permissions?.tickets?.edit;
+
+  if (!canEdit && user?.id) {
+    if (user.group) {
+      filter.$or = [
+        { requesterId: user.id },
+        { group: user.group }
+      ];
+    } else {
+      filter.requesterId = user.id;
+    }
   }
+
   if (system) filter.system = system;
   if (status) filter.status = status;
   if (demandId) filter.demandId = demandId;
@@ -261,6 +274,7 @@ router.post("/", requireAuth, checkPermission("tickets", "create"), async (req, 
     ...payload,
     requesterId: payload.requesterId ?? userId,
     requesterEmail: payload.requesterEmail ?? userEmail,
+    group: payload.group ?? res.locals.user?.group,
     channel: payload.channel ?? "Manual",
     code,
     priority,
@@ -480,9 +494,11 @@ router.post("/:id/comment", requireAuth, checkPermission("tickets", "edit"), asy
   if (!message || !author) {
     return res.status(400).json({ message: "message e author são obrigatórios." });
   }
-  if (isPortalUser(res.locals.user?.profile)) {
+  const user = res.locals.user;
+  const permissions = user?.profile?.permissions;
+  if (!permissions?.tickets?.edit) {
     const ticket = await TicketModel.findById(req.params.id);
-    if (!canAccessTicket(ticket, userId)) {
+    if (!canAccessTicket(ticket, userId, res.locals.user?.group)) {
       return res.status(403).json({ message: "Acesso restrito." });
     }
   }
