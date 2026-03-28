@@ -48,12 +48,6 @@ export const Page08NextSteps: React.FC<Props> = ({ data }) => {
           ))}
         </div>
       </div>
- 
-      <footer className="mt-auto text-center pt-8 border-t border-gray-200 print:hidden">
-        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
-          Integra Soluções • Gerência de TI • {new Date().toLocaleDateString("pt-BR")}
-        </p>
-      </footer>
     </div>
   );
 };
