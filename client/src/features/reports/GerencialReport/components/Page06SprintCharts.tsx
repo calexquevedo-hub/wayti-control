@@ -61,8 +61,8 @@ export const Page06SprintCharts: React.FC<Props> = ({ data }) => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className={`mt-8 text-[10px] text-gray-500 font-medium italic `}>
-            {topEpic ? `${topEpic.name} concentra ${topEpic.count} de ${data.tasks.length} tarefas (${topEpic.percentage}%).` : ""}
+          <p className={`mt-10 text-[12px] text-gray-700 font-medium italic `}>
+            {topEpic ? `Nota: O épico "${topEpic.name}" concentra ${topEpic.count} de ${data.tasks.length} tarefas (${topEpic.percentage}%).` : ""}
           </p>
         </div>
  
