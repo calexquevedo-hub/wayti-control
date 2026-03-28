@@ -73,10 +73,15 @@ const MetricCard = ({ label, value, subtext, borderColor}: any) => {
   // Check if value is a long string (like "Sprint 13")
   const isLongValue = typeof value === 'string' && value.length >= 8;
   return (
-    <div className={`bg-white rounded-xl shadow-sm flex flex-col items-center justify-center text-center py-8 px-4 border-t-[8px] ${borderColor} h-full`}>
-      <h4 className={`font-black mb-3 ${isLongValue ? "text-5xl tracking-tighter" : "text-7xl"} text-slate-900`}>{value}</h4>
-      <p className={`font-bold text-slate-800 uppercase mb-1.5 text-xs tracking-wider`}>{label}</p>
-      <p className="text-[10px] text-slate-400 uppercase tracking-tight font-medium">{subtext}</p>
+    <div className={`bg-white rounded-xl shadow-md flex flex-col items-center justify-center text-center py-10 px-4 border-t-[10px] ${borderColor} h-full transform transition-all`}>
+      <h4 
+        className="font-black mb-4 text-blue-800 tracking-tighter" 
+        style={{ fontSize: isLongValue ? '4.5rem' : '7.5rem', lineHeight: '1' }}
+      >
+        {value}
+      </h4>
+      <p className="font-bold text-slate-700 uppercase mb-2 text-sm tracking-[0.2em]">{label}</p>
+      <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">{subtext}</p>
     </div>
   );
 };
