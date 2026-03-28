@@ -11,7 +11,7 @@ interface Props {
 
 export const Page03History: React.FC<Props> = ({ data }) => {
   return (
-    <div className="w-full flex-1 flex flex-col p-8 relative overflow-hidden print:p-2 print:break-before-page print:flex print:flex-col print:min-h-screen">
+    <div className="w-full h-full flex flex-col p-8 relative overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-3 bg-[#448aff] print:w-2" />
       
       <header className="text-blue-900 border-b border-gray-300 pb-2 mb-8">
