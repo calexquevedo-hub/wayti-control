@@ -63,6 +63,15 @@ export function Portal({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [description, setDescription] = useState("");
   const [activeTab, setActiveTab] = useState("inicio");
+
+  const scrollToCatalog = () => {
+    setActiveTab("inicio");
+    setTimeout(() => {
+      const el = document.getElementById("catalog-search");
+      el?.focus();
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  };
   const [detailOpen, setDetailOpen] = useState(false);
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [newComment, setNewComment] = useState("");
@@ -114,7 +123,7 @@ export function Portal({
             {portalWelcomeSubtitle || "Como o time de TI pode facilitar o seu dia hoje? Escolha um serviço ou busque ajuda rápida."}
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
-             <Button size="lg" className="rounded-full shadow-glow" onClick={() => setActiveTab("inicio")}>
+             <Button size="lg" className="rounded-full shadow-glow" onClick={scrollToCatalog}>
                 <PlusCircle className="mr-2 h-5 w-5" />
                 Novo Chamado
              </Button>
@@ -180,6 +189,7 @@ export function Portal({
         <TabsContent value="inicio" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="flex flex-col gap-4">
             <Input
+              id="catalog-search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="🔍 O que você precisa? Ex: 'Mudar senha', 'Novo notebook'..."
