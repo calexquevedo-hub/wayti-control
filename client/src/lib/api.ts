@@ -1138,6 +1138,36 @@ export async function createTicket(token: string, payload: Partial<Ticket>) {
   };
 }
 
+export async function createPortalTicket(token: string, formData: FormData) {
+  const response = await fetch(`${API_URL}/api/tickets/portal`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new Error(data?.message ?? "Falha ao enviar chamado via portal.");
+  }
+  const data = (await response.json()) as Ticket;
+  return {
+    ...data,
+    openedAt: new Date(data.openedAt),
+    resolvedAt: data.resolvedAt ? new Date(data.resolvedAt) : undefined,
+    closedAt: data.closedAt ? new Date(data.closedAt) : undefined,
+    slaDueAt: data.slaDueAt ? new Date(data.slaDueAt) : null,
+    comments: data.comments?.map((comment) => ({
+      ...comment,
+      at: new Date(comment.at),
+    })),
+  };
+}
+
+export function getTicketPortalAttachmentUrl(ticketId: string, index: number, token: string) {
+  return `${API_URL}/api/tickets/${ticketId}/attachment/${index}?token=${token}`;
+}
+
 export async function deleteTicket(token: string, id: string) {
   const response = await fetch(`${API_URL}/api/tickets/${id}`, {
     method: "DELETE",

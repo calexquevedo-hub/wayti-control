@@ -32,6 +32,8 @@ import {
   verifyEmailChange,
   fetchSystemParams,
   updateMyProfile,
+  createPortalTicket,
+  getTicketPortalAttachmentUrl,
 } from "@/lib/api";
 import { loadViewsState, setActiveView } from "@/features/demands/views/views.storage";
 import type {
@@ -340,14 +342,12 @@ export default function App() {
             currentUser={user}
             tickets={tickets}
             assets={assets}
-            services={services}
-            articles={articles}
             portalWelcomeTitle={systemParams?.portalWelcomeTitle}
             portalWelcomeSubtitle={systemParams?.portalWelcomeSubtitle}
             portalLogoUrl={systemParams?.portalLogoUrl}
-            onCreateTicket={async (payload) => {
+            onCreatePortalTicket={async (formData) => {
               if (!user?.token) return;
-              const created = await createTicket(user.token, payload);
+              const created = await createPortalTicket(user.token, formData);
               setTickets((prev) => [created, ...prev]);
             }}
             onAddComment={async (id, message) => {

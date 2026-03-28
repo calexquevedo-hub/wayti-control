@@ -49,6 +49,14 @@ const TicketSchema = new Schema(
     approvalApproverRole: { type: String },
     approvalApproverId: { type: Schema.Types.ObjectId, ref: "User" },
     comments: [CommentSchema],
+    attachments: [
+      {
+        filename: { type: String },
+        path: { type: String },
+        contentType: { type: String },
+        size: { type: Number },
+      },
+    ],
   },
   {
     timestamps: true,

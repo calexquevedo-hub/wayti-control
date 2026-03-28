@@ -8,8 +8,12 @@ import {
   Clock, 
   AlertCircle,
   ExternalLink,
-  Laptop
+  Laptop,
+  ScrollText,
+  Paperclip,
+  Send
 } from "lucide-react";
+import { getTicketPortalAttachmentUrl } from "@/lib/api";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,19 +22,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Asset, KnowledgeArticle, ServiceCatalog, Ticket, User } from "@/types";
+import { AuthState } from "@/hooks/useAuth";
+import type { Asset, Ticket } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface PortalProps {
-  currentUser?: User;
+  currentUser?: AuthState | null;
   tickets: Ticket[];
   assets: Asset[];
-  services: ServiceCatalog[];
-  articles: KnowledgeArticle[];
   portalWelcomeTitle?: string;
   portalWelcomeSubtitle?: string;
   portalLogoUrl?: string;
-  onCreateTicket: (payload: Partial<Ticket>) => Promise<void>;
+  onCreatePortalTicket: (formData: FormData) => Promise<void>;
   onAddComment: (id: string, message: string) => Promise<void>;
 }
 
@@ -50,350 +53,214 @@ export function Portal({
   currentUser, 
   tickets, 
   assets, 
-  services, 
-  articles, 
   portalWelcomeTitle, 
   portalWelcomeSubtitle, 
   portalLogoUrl,
-  onCreateTicket, 
+  onCreatePortalTicket, 
   onAddComment 
 }: PortalProps) {
-  const [query, setQuery] = useState("");
-  const [selectedService, setSelectedService] = useState<ServiceCatalog | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
-  const [activeTab, setActiveTab] = useState("inicio");
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const scrollToCatalog = () => {
-    setActiveTab("inicio");
-    setTimeout(() => {
-      const el = document.getElementById("catalog-search");
-      el?.focus();
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 100);
-  };
   const [detailOpen, setDetailOpen] = useState(false);
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [newComment, setNewComment] = useState("");
   const [commentSaving, setCommentSaving] = useState(false);
 
   const myTickets = useMemo(() => {
-    return tickets.filter(t => t.status !== "Fechado" && t.status !== "Cancelado");
+    return tickets.sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime());
   }, [tickets]);
 
   const stats = useMemo(() => ({
-    open: myTickets.length,
+    open: myTickets.filter(t => t.status !== "Fechado" && t.status !== "Cancelado").length,
     assets: assets.filter(a => a.assignedTo?.id === currentUser?.id).length,
     resolved: tickets.filter(t => t.status === "Resolvido").length
   }), [myTickets, tickets, assets, currentUser]);
 
-  const filteredServices = useMemo(() => {
-    const visible = services.filter((item) => item.isVisible);
-    if (!query.trim()) return visible;
-    return visible.filter((item) =>
-      `${item.title} ${item.description ?? ""}`.toLowerCase().includes(query.toLowerCase())
-    );
-  }, [services, query]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const filteredArticles = useMemo(() => {
-    if (!query.trim()) return articles.slice(0, 6);
-    return articles.filter((item) =>
-      `${item.title} ${item.body}`.toLowerCase().includes(query.toLowerCase())
-    );
-  }, [articles, query]);
+    if (file.size > 1024 * 1024) {
+      alert("O arquivo deve ter no máximo 1MB.");
+      e.target.value = "";
+      return;
+    }
 
-  const groupedServices = useMemo(() => {
-    return filteredServices.reduce<Record<string, ServiceCatalog[]>>((acc, service) => {
-      const key = service.category;
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(service);
-      return acc;
-    }, {});
-  }, [filteredServices]);
+    const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("Apenas JPG, PNG e PDF são permitidos.");
+      e.target.value = "";
+      return;
+    }
+
+    setAttachment(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subject.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("subject", subject);
+      formData.append("description", description);
+      if (attachment) {
+        formData.append("attachment", attachment);
+      }
+      await onCreatePortalTicket(formData);
+      setSubject("");
+      setDescription("");
+      setAttachment(null);
+      const fileInput = document.getElementById("attachment-input") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    } catch (err) {
+      console.error(err);
+      alert("Falha ao enviar chamado.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col gap-8 pb-10">
+    <div className="flex flex-col gap-8 pb-10 max-w-5xl mx-auto">
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/5 to-background p-8 lg:p-12 border border-primary/10">
-        <div className="relative z-10 flex flex-col gap-4 lg:max-w-2xl">
+        <div className="relative z-10 flex flex-col gap-4">
           <h2 className="text-3xl font-bold tracking-tight lg:text-5xl text-foreground">
             {portalWelcomeTitle || <>Olá, <span className="text-primary">{currentUser?.name?.split(" ")[0] || "Visitante"}</span>!</>}
           </h2>
-          <p className="text-lg text-muted-foreground lg:text-xl">
-            {portalWelcomeSubtitle || "Como o time de TI pode facilitar o seu dia hoje? Escolha um serviço ou busque ajuda rápida."}
+          <p className="text-lg text-muted-foreground lg:text-xl max-w-2xl">
+            {portalWelcomeSubtitle || "Precisa de ajuda do time de TI? Abra uma solicitação abaixo e nós cuidamos do resto."}
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-             <Button size="lg" className="rounded-full shadow-glow" onClick={scrollToCatalog}>
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Novo Chamado
-             </Button>
-             <Button size="lg" variant="outline" className="rounded-full bg-background/50 backdrop-blur" onClick={() => setActiveTab("chamados")}>
-                <History className="mr-2 h-5 w-5" />
-                Meus Chamados ({stats.open})
-             </Button>
-          </div>
         </div>
         <div className="absolute top-0 right-0 -mr-20 hidden lg:block overflow-hidden h-full flex items-center justify-center pr-32">
            {portalLogoUrl ? (
-             <img src={portalLogoUrl} alt="Branding" className="h-48 w-auto opacity-20 object-contain rotate-12" />
+             <img src={portalLogoUrl} alt="Branding" className="h-48 w-auto opacity-10 object-contain rotate-12" />
            ) : (
              <div className="h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
            )}
         </div>
       </div>
 
-      {/* Stats Bar */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="border-none bg-primary/5 shadow-none transition hover:bg-primary/10 cursor-pointer" onClick={() => setActiveTab("chamados")}>
-          <CardContent className="flex items-center gap-4 pt-6 text-primary">
-            <Clock className="h-8 w-8" />
-            <div>
-              <p className="text-2xl font-bold">{stats.open}</p>
-              <p className="text-xs uppercase tracking-wider opacity-70">Chamados em aberto</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-none bg-emerald-500/5 shadow-none transition hover:bg-emerald-500/10">
-          <CardContent className="flex items-center gap-4 pt-6 text-emerald-500">
-            <CheckCircle2 className="h-8 w-8" />
-            <div>
-              <p className="text-2xl font-bold">{stats.resolved}</p>
-              <p className="text-xs uppercase tracking-wider opacity-70">Solucionados recentemente</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-none bg-amber-500/5 shadow-none transition hover:bg-amber-500/10">
-          <CardContent className="flex items-center gap-4 pt-6 text-amber-500">
-            <Laptop className="h-8 w-8" />
-            <div>
-              <p className="text-2xl font-bold">{stats.assets}</p>
-              <p className="text-xs uppercase tracking-wider opacity-70">Equipamentos atribuídos</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* New Ticket Form */}
+        <Card className="border-border/60 bg-card/40 backdrop-blur-sm rounded-3xl overflow-hidden shadow-glow-sm">
+          <CardHeader className="bg-primary/5 border-b border-primary/10">
+            <CardTitle className="text-xl flex items-center gap-2">
+              <PlusCircle className="h-5 w-5 text-primary" />
+              Abrir Novo Chamado
+            </CardTitle>
+            <CardDescription>Explique o que você precisa e anexe um print se necessário</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-foreground">Assunto / Título</label>
+                <Input 
+                  placeholder="Ex: Não consigo acessar o e-mail" 
+                  value={subject}
+                  onChange={e => setSubject(e.target.value)}
+                  className="rounded-xl bg-background/50"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-foreground">Descrição Detalhada</label>
+                <Textarea 
+                  placeholder="Conte-nos um pouco mais sobre o problema..." 
+                  rows={4}
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  className="rounded-xl bg-background/50 resize-none"
+                />
+              </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-muted/50 p-1 rounded-xl mb-6">
-          <TabsTrigger value="inicio" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-6">
-             <Search className="h-4 w-4" /> Catálogo
-          </TabsTrigger>
-          <TabsTrigger value="chamados" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-6">
-             <History className="h-4 w-4" /> Meus Chamados
-          </TabsTrigger>
-          <TabsTrigger value="ajuda" className="rounded-lg gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm px-6">
-             <HelpCircle className="h-4 w-4" /> Ajuda
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="inicio" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="flex flex-col gap-4">
-            <Input
-              id="catalog-search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="🔍 O que você precisa? Ex: 'Mudar senha', 'Novo notebook'..."
-              className="h-12 text-lg rounded-2xl bg-card/50 border-primary/20 focus:border-primary"
-            />
-            
-            <div className="grid gap-10">
-              {Object.entries(groupedServices).map(([category, items]) => (
-                <div key={category} className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-8 rounded-full bg-primary" />
-                    <h3 className="text-lg font-bold tracking-tight text-foreground uppercase">{category}</h3>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {items.map((service) => (
-                      <button
-                        key={service.id}
-                        className="group relative flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 p-5 text-left transition-all hover:border-primary/50 hover:bg-card/70 hover:shadow-glow-sm"
-                        onClick={() => {
-                          setSelectedService(service);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground">
-                           <PlusCircle className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-foreground leading-tight">{service.title}</p>
-                          <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                            {service.description || "Solicitação assistida de serviço de TI."}
-                          </p>
-                        </div>
-                        <div className="mt-auto pt-2 opacity-0 transition group-hover:opacity-100 flex items-center text-xs font-semibold text-primary">
-                           Solicitar <ExternalLink className="ml-1 h-3 w-3" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                   Print de Tela / Documento <span className="text-[10px] font-normal opacity-60">(Opcional • Max 1MB • JPG, PNG, PDF)</span>
+                </label>
+                <div className="relative">
+                  <Input 
+                    id="attachment-input"
+                    type="file" 
+                    onChange={handleFileChange}
+                    className="rounded-xl bg-background/50 cursor-pointer pt-2"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                  />
+                  {attachment && (
+                    <div className="absolute right-3 top-3">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
-        </TabsContent>
+              </div>
 
-        <TabsContent value="chamados" className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <Card className="border-border/60 bg-card/40 backdrop-blur-sm overflow-hidden rounded-2xl">
-             <CardHeader className="bg-muted/30">
-                <CardTitle className="text-lg">Meus Chamados Recentes</CardTitle>
-                <CardDescription>Acompanhe o status das suas solicitações</CardDescription>
-             </CardHeader>
-             <CardContent className="p-0">
-                {tickets.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                     <Clock className="h-12 w-12 opacity-20 mb-4" />
-                     <p>Você não possui chamados registrados.</p>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-border/40">
-                    {tickets.map((ticket) => (
-                      <div key={ticket.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 px-6 hover:bg-muted/20 transition cursor-pointer">
-                        <div className="flex flex-col gap-1">
-                           <div className="flex items-center gap-2">
-                             <span className="text-xs font-mono font-bold text-muted-foreground">{ticket.code}</span>
-                             <Badge variant={statusTone[ticket.status]} className="text-[10px] leading-tight px-2 py-0">
-                                {ticket.status}
-                             </Badge>
-                           </div>
-                           <p className="font-semibold text-foreground">{ticket.subject}</p>
+              <Button 
+                type="submit" 
+                className="w-full rounded-xl h-12 text-lg shadow-glow font-bold mt-2"
+                disabled={isSubmitting || !subject.trim()}
+              >
+                {isSubmitting ? "Enviando..." : "Enviar Solicitação"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* My Recent Tickets */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" />
+              Meus Chamados
+            </h3>
+            {stats.open > 0 && (
+               <Badge variant="secondary" className="rounded-full">{stats.open} Ativos</Badge>
+            )}
+          </div>
+
+          <div className="h-[500px] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-primary/20">
+            <div className="space-y-3">
+              {myTickets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-muted/20 rounded-3xl border border-dashed border-border/60">
+                  <Clock className="h-12 w-12 opacity-20 mb-4" />
+                  <p>Nenhum chamado registrado.</p>
+                </div>
+              ) : (
+                myTickets.map((ticket) => (
+                  <Card key={ticket.id} className="group border-border/60 bg-card/40 hover:border-primary/40 transition-all rounded-2xl cursor-pointer overflow-hidden shadow-none" onClick={() => {
+                    setActiveTicket(ticket);
+                    setDetailOpen(true);
+                  }}>
+                    <CardContent className="p-4 flex items-center justify-between gap-4">
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono font-bold text-muted-foreground">{ticket.code}</span>
+                          <Badge variant={statusTone[ticket.status]} className="text-[10px] leading-tight px-2 py-0">
+                            {ticket.status}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-6 mt-3 sm:mt-0 text-sm text-muted-foreground">
-                           <div className="flex flex-col items-end">
-                              <span className="text-xs uppercase font-bold text-muted-foreground/60">Abertura</span>
-                              <span>{new Date(ticket.openedAt).toLocaleDateString("pt-BR")}</span>
-                           </div>
-                           <div className="flex flex-col items-end min-w-[100px]">
-                              <span className="text-xs uppercase font-bold text-muted-foreground/60">Responsável</span>
-                              <span>{ticket.assignee || "Pendente"}</span>
-                           </div>
-                           <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="hover:text-primary"
-                              onClick={() => {
-                                 setActiveTicket(ticket);
-                                 setDetailOpen(true);
-                              }}
-                           >
-                              <ExternalLink className="h-4 w-4" />
-                           </Button>
-                        </div>
+                        <p className="font-bold text-foreground truncate">{ticket.subject}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Aberto em {new Date(ticket.openedAt).toLocaleDateString("pt-BR")} 
+                          {ticket.assignee ? ` • Gestor: ${ticket.assignee}` : " • Aguardando técnico"}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
-             </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="ajuda" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="grid gap-4 lg:grid-cols-2">
-            {filteredArticles.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum artigo encontrado.</p>
-            ) : (
-              filteredArticles.map((article) => (
-                <Card key={article.id} className="group border-border/60 bg-card/40 hover:border-primary/40 transition-all rounded-2xl cursor-pointer overflow-hidden">
-                  <div className="h-2 w-full bg-primary/20 group-hover:bg-primary transition" />
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center justify-between">
-                      {article.title}
-                      <HelpCircle className="h-4 w-4 text-muted-foreground group-hover:text-primary transition" />
-                    </CardTitle>
-                    <CardDescription className="line-clamp-2">
-                      {article.body}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    {article.relatedServiceId ? (
-                      <Badge variant="outline" className="text-[10px]">
-                        Serviço Relacionado: {article.relatedServiceId.title}
-                      </Badge>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground italic">Guia geral</span>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl rounded-3xl overflow-hidden">
-          <DialogHeader className="bg-primary/5 -mx-6 -mt-6 p-6 pb-4 border-b border-primary/10">
-            <div className="flex items-center gap-3">
-               <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-primary/20 text-primary">
-                  <PlusCircle className="h-6 w-6" />
-               </div>
-               <div>
-                  <DialogTitle className="text-xl">{selectedService?.title ?? "Novo chamado"}</DialogTitle>
-                  <p className="text-sm text-muted-foreground">Solicitação via {selectedService?.category}</p>
-               </div>
-            </div>
-          </DialogHeader>
-          <div className="grid gap-6 mt-4 text-sm">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-1">
-                <p className="text-xs font-bold uppercase text-muted-foreground">SLA Esperado</p>
-                <p className="text-base font-semibold">{selectedService?.defaultSLA ?? "-"} horas</p>
-              </div>
-              <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-1">
-                <p className="text-xs font-bold uppercase text-muted-foreground">Complexidade</p>
-                <p className="text-base font-semibold">
-                  {selectedService?.defaultPriority === "P0" ? "Crítico" : 
-                   selectedService?.defaultPriority === "P1" ? "Alta" : "Média/Baixa"}
-                </p>
-              </div>
-            </div>
-            
-            {selectedService?.requiresApproval && (
-              <div className="flex items-center gap-3 rounded-2xl bg-amber-500/10 p-4 text-amber-500 border border-amber-500/20">
-                <AlertCircle className="h-5 w-5 shrink-0" />
-                <p className="text-xs leading-none">Este serviço exige aprovação prévia do gestor ou área técnica.</p>
-              </div>
-            )}
-
-            <div className="grid gap-2">
-              <label className="font-bold text-foreground">Como podemos ajudar?</label>
-              <Textarea
-                rows={5}
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="Descreva detalhes que possam agilizar o seu atendimento."
-                className="rounded-2xl border-border/60 focus:border-primary resize-none bg-muted/10"
-              />
+                      <Button variant="ghost" size="icon" className="shrink-0 group-hover:text-primary transition">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
-          <DialogFooter className="mt-4 gap-2">
-            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="rounded-xl">
-              Voltar
-            </Button>
-            <Button
-              className="rounded-xl shadow-glow px-8"
-              onClick={async () => {
-                if (!selectedService) return;
-                await onCreateTicket({
-                  subject: selectedService.title,
-                  description,
-                  serviceId: selectedService.id,
-                  category: selectedService.category,
-                  queue: "TI Interna",
-                  status: "Novo",
-                  openedAt: new Date(),
-                  channel: "Portal",
-                });
-                setDescription("");
-                setDialogOpen(false);
-              }}
-            >
-              Confirmar Solicitação
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-3xl rounded-3xl overflow-hidden flex flex-col h-[80vh]">
           <DialogHeader className="bg-primary/5 -mx-6 -mt-6 p-6 pb-4 border-b border-primary/10 shrink-0">
@@ -428,6 +295,30 @@ export function Portal({
               <p className="text-xs font-bold uppercase text-muted-foreground mb-2">Descrição da Solicitação</p>
               <p className="text-sm whitespace-pre-wrap">{activeTicket?.description || "Sem descrição detalhada."}</p>
             </div>
+
+            {activeTicket?.attachments && activeTicket.attachments.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase text-muted-foreground">Anexos</p>
+                <div className="grid gap-2">
+                  {activeTicket.attachments.map((att, idx) => (
+                    <a
+                      key={idx}
+                      href={getTicketPortalAttachmentUrl(activeTicket.id, idx, currentUser?.token || "")}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-muted/10 hover:bg-muted/20 transition group"
+                    >
+                      <Paperclip className="h-5 w-5 text-primary" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate">{att.filename}</p>
+                        <p className="text-[10px] text-muted-foreground">{(att.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-4">
                <div className="flex items-center gap-2">

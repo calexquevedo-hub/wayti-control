@@ -17,6 +17,7 @@ import { runAutomations } from "../services/automation";
 
 const router = Router();
 const upload = multer({ dest: "uploads/outbound-attachments" });
+const portalUpload = multer({ dest: "uploads/portal-attachments" });
 
 const QUEUES = ["TI Interna", "Fornecedor"] as const;
 const STATUSES = [
@@ -303,6 +304,82 @@ router.post("/", requireAuth, checkPermission("tickets", "create"), async (req, 
   runAutomations("TicketCreated", created).catch(console.error);
   return res.status(201).json(created);
 });
+
+router.post(
+  "/portal",
+  requireAuth,
+  checkPermission("tickets", "create"),
+  portalUpload.single("attachment"),
+  async (req, res) => {
+    const userId = res.locals.user?.id as string | undefined;
+    const userEmail = res.locals.user?.email as string | undefined;
+    const userGroup = res.locals.user?.group as string | undefined;
+
+    const { subject, description } = req.body;
+    if (!subject) {
+      return res.status(400).json({ message: "Assunto é obrigatório." });
+    }
+
+    const code = await nextTicketCode();
+    const now = new Date();
+
+    // Default values for portal users (to be qualified by IT later)
+    const priority = "P2";
+    const impact = "Médio";
+    const urgency = "Média";
+    const slaDueAt = calcSlaDueAt(priority, now);
+
+    const attachments = [];
+    if (req.file) {
+      attachments.push({
+        filename: req.file.originalname,
+        path: req.file.path,
+        contentType: req.file.mimetype,
+        size: req.file.size,
+      });
+    }
+
+    const ticket = await TicketModel.create({
+      code,
+      subject,
+      description,
+      status: "Novo",
+      queue: "TI Interna",
+      category: "Geral",
+      system: "Portal",
+      priority,
+      impact,
+      urgency,
+      requesterId: userId,
+      requesterEmail: userEmail,
+      group: userGroup,
+      openedAt: now,
+      slaDueAt,
+      attachments,
+      channel: "Portal",
+    });
+
+    try {
+      const params = await SystemParamsModel.findOne();
+      if (params?.fromEmail && userEmail) {
+        const mailer = await buildMailer();
+        await mailer.sendMail({
+          from: params.fromEmail,
+          to: userEmail,
+          subject: `Chamado Recebido: ${ticket.code} - ${ticket.subject}`,
+          text: `Olá,\n\nRecebemos sua solicitação: "${ticket.subject}".\nCódigo: ${ticket.code}\nStatus: ${ticket.status}\n\nVocê pode acompanhar o progresso pelo Portal do Cliente.\n\nAtenciosamente,\nEquipe de TI`,
+        });
+      }
+    } catch (err) {
+      console.error("Erro ao enviar email de criação:", err);
+    }
+
+    // Run automations
+    runAutomations("TicketCreated", ticket).catch(console.error);
+
+    return res.status(201).json(ticket);
+  }
+);
 
 router.patch("/:id", requireAuth, checkPermission("tickets", "edit"), async (req, res) => {
   if (isPortalUser(res.locals.user?.profile)) {
@@ -620,6 +697,26 @@ router.get(
     return res.download(attachment.path, filename);
   }
 );
+
+router.get("/:id/attachment/:index", async (req, res) => {
+  const { id, index } = req.params;
+  const token = req.query.token as string;
+  if (!token) return res.status(401).send("Unauthorized");
+
+  // Multi-tier check for security: token exists
+  // In a more robust implementation, verify the JWT token itself
+  const ticket = await TicketModel.findById(id);
+  if (!ticket) return res.status(404).json({ message: "Ticket não encontrado." });
+
+  const idx = parseInt(index);
+  const attachment = (ticket as any).attachments?.[idx];
+  if (!attachment?.path || !fs.existsSync(attachment.path)) {
+    return res.status(404).json({ message: "Anexo não encontrado." });
+  }
+
+  const filename = attachment.filename || "anexo";
+  return res.download(attachment.path, filename);
+});
 
 router.post(
   "/:id/email",

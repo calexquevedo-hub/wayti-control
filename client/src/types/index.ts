@@ -116,6 +116,12 @@ export interface Ticket {
   description?: string;
   resolutionNotes?: string;
   group?: string;
+  attachments?: Array<{
+    filename: string;
+    path: string;
+    contentType: string;
+    size: number;
+  }>;
   openedAt: Date;
   resolvedAt?: Date;
   closedAt?: Date;
