@@ -174,7 +174,8 @@ router.get("/", requireAuth, checkPermission("tickets", "view"), async (req, res
   
   const user = res.locals.user;
   const permissions = user?.profile?.permissions;
-  const canEdit = !!permissions?.tickets?.edit;
+  // Admins or users with edit permission see all tickets
+  const canEdit = !!permissions?.tickets?.edit || !!permissions?.settings?.manage || !!user?.profile?.isSystem;
 
   if (!canEdit && user?.id) {
     if (user.group) {

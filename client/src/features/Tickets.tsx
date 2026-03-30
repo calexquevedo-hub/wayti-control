@@ -629,18 +629,19 @@ export function Tickets({
       if (quickFilter === "unlinked") return !ticket.demandId;
       return ticket.status !== "Fechado" && ticket.status !== "Cancelado";
     });
-    return withQuick.filter((ticket: any) => {
+    const withStandard = withQuick.filter((ticket: any) => {
       const matchSystem = systemFilter === "all" || ticket.system === systemFilter;
       const matchStatus = statusFilter === "all" || ticket.status === statusFilter;
       const matchQueue = queueFilter === "all" || ticket.queue === queueFilter;
       const matchSearch =
         !search.trim() ||
-        `${ticket.code} ${ticket.subject} ${ticket.system} ${ticket.category}`
+        `${ticket.code} ${ticket.subject} ${ticket.system} ${ticket.category} ${ticket.requesterEmail}`
           .toLowerCase()
           .includes(search.toLowerCase());
       return matchSystem && matchStatus && matchQueue && matchSearch;
     });
-    const withWorkMode = withQuick.filter((ticket: any) => {
+    
+    const withWorkMode = withStandard.filter((ticket: any) => {
       if (workMode === "mine") {
         const name = currentUser?.name || currentUser?.email;
         if (!name) return false;
