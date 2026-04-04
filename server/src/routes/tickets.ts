@@ -178,9 +178,14 @@ router.get("/", requireAuth, checkPermission("tickets", "view"), async (req, res
   
   // Any user that is NOT a "Solicitante" but has "view" permission should see all tickets.
   // This avoids situations where an Admin was being filtered because the "edit" flag was missed in their profile.
-  const canEdit = profileName !== "Solicitante" && !!permissions?.tickets?.view;
+  const isSolicitante = profileName === "Solicitante";
+  const hasSettingsManage = !!permissions?.settings?.manage;
+  const hasTicketsEdit = !!permissions?.tickets?.edit;
+  const isAgentOrAdmin = hasSettingsManage || hasTicketsEdit;
+  
+  const canViewAll = isAgentOrAdmin || (!isSolicitante && !!permissions?.tickets?.view);
 
-  if (!canEdit && user?.id) {
+  if (!canViewAll && user?.id) {
     if (user.group) {
       filter.$or = [
         { requesterId: user.id },
